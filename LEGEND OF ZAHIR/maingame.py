@@ -7,57 +7,157 @@ from MINIGAME2 import run_pemdas_game
 from MINIGAME4 import main as run_language_matching_game
 from MINIGAME5 import main as run_boss_battle
 from soundmanager import sound_manager
+from tutorial import *
 import sys
 import time
 
 class Game:
-    """
-    Main game class that handles the game loop, initialization, and core game logic.
-    """
-
     def __init__(self):
-        """
-        Initialize the game, set up the display, clock, and load assets.
-        """
-        pygame.init()  # Initialize all pygame modules
-        pygame.mixer.init()  # Initialize the mixer for music
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))  # Create the game window
-        pygame.display.set_caption("Legend of Zahir")  # Set the window caption
-        self.clock = pygame.time.Clock()  # Create a clock object to control the frame rate
-        self.font = pygame.font.Font(None, 32)  # Load a default font for text rendering
-        self.running = True  # Flag to control the main game loop
-        sound_manager.play_music()  # Start playing background music
-        self.start_time = 0  # Initialize start time
-        self.elapsed_time = 0  # Initialize elapsed time
+        pygame.init()
+        pygame.mixer.init()
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        pygame.display.set_caption("Legend of Zahir")
+        self.clock = pygame.time.Clock()
+        self.font = pygame.font.Font(None, 32)
+        self.running = True
+        
+        # Initialize tutorial system first
+        self.tutorial_system = TutorialSystem(self)
+        self.in_tutorial = True
+        
+        # Initialize game components
+        sound_manager.play_music()
+        self.start_time = time.time()
+        self.elapsed_time = 0
         
         # Load sprite sheets
         self.character_spritesheet = Spritesheet('knight_strip.png')
         self.enemy_spritesheet = Spritesheet('skeleton_strip.png')
         self.terrain_spritesheet = Spritesheet('dungeon2.jpg')
-
-                
-        # Modified game state tracking
-        self.game_sequence = [
-            'main',     # Start with main game
-            'pemdas',   # First minigame
-            'main',     # Back to main game
-            'language', # Second minigame
-            'main',     # Back to main game again
-            'boss'      # Final boss battle
-        ]
+        
+        # Initialize game state immediately
+        self.allsprites = pygame.sprite.LayeredUpdates()
+        self.blocks = pygame.sprite.LayeredUpdates()
+        self.enemies = pygame.sprite.LayeredUpdates()
+        self.attacks = pygame.sprite.LayeredUpdates()
+        self.bullets = pygame.sprite.LayeredUpdates()
+        
+        # Create initial game world
+        self.createTilemap()
+        self.create_enemies()
+        self.playing = True
+        
+        # Game sequence setup
+        self.game_sequence = ['main', 'pemdas', 'main', 'language', 'main', 'boss']
         self.current_sequence_index = 0
         self.total_sequences = len(self.game_sequence)
 
+    def game_loop(self):
+        """
+        Modified main game loop that shows gameplay during tutorial
+        """
+        # Tutorial loop with gameplay
+        while self.running and self.in_tutorial:
+            # Handle events
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    return
+                
+                # Handle both tutorial and game events
+                self.tutorial_system.handle_input(events)
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.player.shoot(pygame.mouse.get_pos())
+                    sound_manager.play_sound('bullet')
+                
+                # Check if tutorial is completed
+                if self.tutorial_system.tutorial_completed:
+                    self.in_tutorial = False
+                    break
+            
+            # Update game state during tutorial
+            self.allsprites.update()
+            
+            # Draw game and tutorial overlay
+            self.screen.fill(BACKGROUND_COLOR)
+            self.allsprites.draw(self.screen)
+            self.player.draw_health_bar(self.screen)
+            self.player.draw_exp_bar(self.screen)
+            self.player.draw_stats(self.screen)
+            self.draw_timer()
+            
+            # Draw tutorial overlay last
+            self.tutorial_system.draw(self.screen)
+            
+            pygame.display.update()
+            self.clock.tick(FPS)
         
-        # Game state variables
-        self.minigames_completed = 0  # Counter for completed minigames
-        self.current_level = 0  # Current level (0 = main game, 1-3 = minigames)
-        self.total_levels = 4  # Total number of levels (1 main game + 3 minigames)
+        # Continue with main game loop
+        while self.running and self.current_sequence_index < self.total_sequences:
+            current_mode = self.game_sequence[self.current_sequence_index]
+            
+            if current_mode == 'main':
+                result = self.run_main_game_sequence()
+            else:
+                result = self.run_minigame_sequence(current_mode)
+            
+            if result == "quit":
+                self.running = False
+                break
+            
+            if result == "completed":
+                # Show appropriate transition message based on next game
+                if self.current_sequence_index + 1 < self.total_sequences:
+                    next_mode = self.game_sequence[self.current_sequence_index + 1]
+                    if next_mode == 'pemdas':
+                        self.show_level_complete_dialogue("Main game complete! Press Enter for PEMDAS Challenge")
+                    elif next_mode == 'language':
+                        self.show_level_complete_dialogue("Main game complete! Press Enter for Language Challenge")
+                    elif next_mode == 'boss':
+                        self.show_level_complete_dialogue("Main game complete! Press Enter for Final Boss Battle")
+                    elif next_mode == 'main':
+                        self.show_level_complete_dialogue("Minigame complete! Press Enter to return to main game")
+                
+                self.current_sequence_index += 1
+            elif result == "died":
+                if not self.restart_level_prompt():
+                    self.running = False
+                    break
 
-        self.minigames = ['pemdas', 'language', 'boss'] # List of minigames
-        self.current_minigame_index = 0  # Index of the current minigame
-        self.in_main_game = True # Flag to indicate if we're in the main game or a minigame
-        self.main_game_completed = False
+        if self.current_sequence_index >= self.total_sequences:
+            self.show_congratulations()
+        
+        self.show_final_results()
+
+
+    def intro_screen(self):
+        """
+        Display the game's intro screen and handle game start option.
+        """
+        title = self.font.render('Legend of Zahir', True, WHITE)
+        title_rect = title.get_rect(center=(WIDTH/2, HEIGHT/3))
+
+        play_button = pygame.Rect(WIDTH/2 - 50, HEIGHT/2, 100, 50)
+        play_text = self.font.render('Play', True, BLACK)
+
+        intro_running = True
+        while intro_running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    return
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if play_button.collidepoint(event.pos):
+                        intro_running = False
+                        return
+
+            self.screen.fill(BLACK)
+            self.screen.blit(title, title_rect)
+            pygame.draw.rect(self.screen, WHITE, play_button)
+            self.screen.blit(play_text, (play_button.x + 30, play_button.y + 15))
+            pygame.display.update()
+            self.clock.tick(FPS)
 
     def createTilemap(self):
         """
@@ -77,7 +177,7 @@ class Game:
         Set up a new game, create sprite groups, and initialize game objects.
         """
         # Initialize sprite groups
-        self.all_sprites = pygame.sprite.LayeredUpdates()
+        self.allsprites = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
         self.enemies = pygame.sprite.LayeredUpdates()
         self.attacks = pygame.sprite.LayeredUpdates()
@@ -92,20 +192,26 @@ class Game:
         """
         Handle game events, including quitting and mouse clicks.
         """
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:  # If the window's close button is clicked
+        events = pygame.event.get()
+        
+        # Handle tutorial input first
+        if hasattr(self, 'tutorial_system') and self.tutorial_system.active:
+            self.tutorial_system.handle_input(events)
+            
+        for event in events:
+            if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
-            if event.type == pygame.MOUSEBUTTONDOWN:  # If a mouse button is pressed
-                if event.button == 1:  # If it's the left mouse button
-                    self.player.shoot(pygame.mouse.get_pos())  # Make the player shoot
-                    sound_manager.play_sound('bullet')  # Play the bullet sound
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1 and not self.tutorial_system.active:
+                    self.player.shoot(pygame.mouse.get_pos())
+                    sound_manager.play_sound('bullet')
 
     def update(self):
         """
         Update game objects and check for game over or victory conditions.
         """
-        self.all_sprites.update()  # Update all sprite objects
+        self.allsprites.update()  # Update all sprite objects
         self.elapsed_time = time.time() - self.start_time  # Update elapsed time
 
         if self.player.health <= 0:  # If player's health is depleted
@@ -121,16 +227,21 @@ class Game:
             self.playing = False  # End the current level
 
     def draw(self):
-        """
-        Draw all game objects and UI elements to the screen.
-        """
-        self.screen.fill(BACKGROUND_COLOR)  # Fill the screen with the background color
-        self.all_sprites.draw(self.screen)  # Draw all sprites to the screen
-        self.player.draw_health_bar(self.screen)  # Draw player's health bar
-        self.player.draw_exp_bar(self.screen)  # Draw player's experience bar
-        self.player.draw_stats(self.screen)  # Draw player's stats
-        self.draw_timer()  # Draw the game timer
-        pygame.display.update()  #s Update the display to show all drawn content
+            """
+            Draw all game objects and UI elements to the screen.
+            """
+            self.screen.fill(BACKGROUND_COLOR)
+            self.allsprites.draw(self.screen)
+            self.player.draw_health_bar(self.screen)
+            self.player.draw_exp_bar(self.screen)
+            self.player.draw_stats(self.screen)
+            self.draw_timer()
+            
+            # Draw tutorial if active
+            if self.tutorial_system.active:
+                self.tutorial_system.draw(self.screen)
+                
+            pygame.display.update()
 
     def draw_timer(self):
         """
@@ -162,7 +273,7 @@ class Game:
         for _ in range(3):  # Create 3 enemies
             enemy = Enemy.create_random(self)  # Create an enemy at a random position
             self.enemies.add(enemy)  # Add to enemies group
-            self.all_sprites.add(enemy)  # Add to all sprites group
+            self.allsprites.add(enemy)  # Add to all sprites group
 
     def game_over(self):
         """
@@ -255,32 +366,6 @@ class Game:
             pygame.display.update()
             self.clock.tick(FPS)
 
-    def intro_screen(self):
-        """
-        Display the game's intro screen and handle game start option.
-        """
-        title = self.font.render('Legend of Zahir', True, WHITE)
-        title_rect = title.get_rect(center=(WIDTH/2, HEIGHT/3))
-
-        play_button = pygame.Rect(WIDTH/2 - 50, HEIGHT/2, 100, 50)
-        play_text = self.font.render('Play', True, BLACK)
-
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                    return
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if play_button.collidepoint(event.pos):
-                        return
-
-            self.screen.fill(BLACK)
-            self.screen.blit(title, title_rect)
-            pygame.draw.rect(self.screen, WHITE, play_button)
-            self.screen.blit(play_text, (play_button.x + 30, play_button.y + 15))
-            pygame.display.update()
-            self.clock.tick(FPS)
-
     def show_level_complete_dialogue(self, message):
         """
         Display a dialogue box with a message when a level is completed.
@@ -307,46 +392,6 @@ class Game:
             self.screen.blit(dialogue_box, dialogue_box_rect)
             pygame.display.update()
             self.clock.tick(FPS)
-
-    def game_loop(self):
-        """
-        Modified main game loop that follows the specific sequence
-        """
-        while self.running and self.current_sequence_index < self.total_sequences:
-            current_mode = self.game_sequence[self.current_sequence_index]
-            
-            if current_mode == 'main':
-                result = self.run_main_game_sequence()
-            else:
-                result = self.run_minigame_sequence(current_mode)
-            
-            if result == "quit":
-                self.running = False
-                break
-            
-            if result == "completed":
-                # Show appropriate transition message based on next game
-                if self.current_sequence_index + 1 < self.total_sequences:
-                    next_mode = self.game_sequence[self.current_sequence_index + 1]
-                    if next_mode == 'pemdas':
-                        self.show_level_complete_dialogue("Main game complete! Press Enter for PEMDAS Challenge")
-                    elif next_mode == 'language':
-                        self.show_level_complete_dialogue("Main game complete! Press Enter for Language Challenge")
-                    elif next_mode == 'boss':
-                        self.show_level_complete_dialogue("Main game complete! Press Enter for Final Boss Battle")
-                    elif next_mode == 'main':
-                        self.show_level_complete_dialogue("Minigame complete! Press Enter to return to main game")
-                
-                self.current_sequence_index += 1
-            elif result == "died":
-                if not self.restart_level_prompt():
-                    self.running = False
-                    break
-
-        if self.current_sequence_index >= self.total_sequences:
-            self.show_congratulations()
-        
-        self.show_final_results()
 
     def run_main_game(self):
         """
