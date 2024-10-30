@@ -1,111 +1,175 @@
 import pygame
-from MINIGAME3 import FruitCatcher
+import sys
+import os
+import time
 
-class MainGame:
-    """
-    MainGame class represents the primary game structure,
-    integrating both the main game and a mini-game (Fruit Catcher).
-    """
-
+class ContinentGame:
     def __init__(self):
-        """
-        Initialize the MainGame object.
-        Sets up the Pygame window, clock, and game states.
-        """
         pygame.init()
-        self.screen = pygame.display.set_mode((800, 600))
-        pygame.display.set_caption("Main Game with Mini-Game")
-        self.clock = pygame.time.Clock()
-        self.fruit_catcher = FruitCatcher(800, 600)
-        self.game_state = "main_menu"  # Can be "main_menu", "main_game", "mini_game"
+        self.width = 800
+        self.height = 600
+        self.screen = pygame.display.set_mode((self.width, self.height))
+        pygame.display.set_caption("Label the Continents!")
+
+        # Colors
+        self.WHITE = (255, 255, 255)
+        self.BLACK = (0, 0, 0)
+        self.RED = (255, 0, 0)
+        self.GREEN = (0, 255, 0)
+        self.BLUE = (0, 0, 255)
+
+        # Load and scale map
+        self.map_img = pygame.image.load('continent_map.jpg')
+        self.map_img = pygame.transform.scale(self.map_img, (600, 400))
+        self.map_rect = self.map_img.get_rect(center=(self.width//2, self.height//2))
+
+        # Define continent areas (x, y, width, height)
+        self.continent_areas = {
+            'North America': pygame.Rect(150, 100, 150, 120),
+            'South America': pygame.Rect(220, 250, 100, 120),
+            'Europe': pygame.Rect(350, 100, 80, 80),
+            'Africa': pygame.Rect(350, 200, 100, 120),
+            'Asia': pygame.Rect(430, 100, 150, 120),
+            'Australia': pygame.Rect(500, 250, 80, 80),
+            'Antarctica': pygame.Rect(300, 350, 200, 40)
+        }
+
+        # Continents data
+        self.continents = [
+            {'name': 'North America', 'pos': (50, 500), 
+             'hint': 'Contains Canada and USA'},
+            {'name': 'South America', 'pos': (200, 500),
+             'hint': 'Home to the Amazon Rainforest'},
+            {'name': 'Europe', 'pos': (350, 500),
+             'hint': 'Contains France and Germany'},
+            {'name': 'Africa', 'pos': (500, 500),
+             'hint': 'Largest hot desert in the world'},
+            {'name': 'Asia', 'pos': (650, 500),
+             'hint': 'Largest continent'},
+            {'name': 'Australia', 'pos': (750, 500),
+             'hint': 'Smallest continent'},
+            {'name': 'Antarctica', 'pos': (100, 550),
+             'hint': 'Coldest continent'}
+        ]
+
+        self.font = pygame.font.Font(None, 24)
+        self.dragging = None
+        self.completed = [False] * len(self.continents)
+        self.score = 0
+        self.show_hint = None
+        self.start_time = time.time()
+        self.game_time = 0
+        
+        # Debug mode flag
+        self.debug_mode = False
+
+    def draw_labels(self):
+        # Draw continent areas in debug mode
+        if self.debug_mode:
+            for name, area in self.continent_areas.items():
+                pygame.draw.rect(self.screen, (255, 0, 0, 128), area, 1)
+
+        for i, continent in enumerate(self.continents):
+            if not self.completed[i]:
+                text = self.font.render(continent['name'], True, self.BLACK)
+                text_rect = text.get_rect(center=continent['pos'])
+                pygame.draw.rect(self.screen, self.WHITE, text_rect.inflate(10, 10))
+                pygame.draw.rect(self.screen, self.BLACK, text_rect.inflate(10, 10), 1)
+                self.screen.blit(text, text_rect)
+
+                if self.show_hint == i:
+                    hint_text = self.font.render(continent['hint'], True, self.BLUE)
+                    hint_rect = hint_text.get_rect(center=(self.width//2, self.height - 50))
+                    pygame.draw.rect(self.screen, self.WHITE, hint_rect.inflate(10, 5))
+                    self.screen.blit(hint_text, hint_rect)
+
+    def check_position(self, continent_idx):
+        continent = self.continents[continent_idx]
+        name = continent['name']
+        pos = continent['pos']
+        
+        # Create a point rect for collision detection
+        point_rect = pygame.Rect(pos[0] - 5, pos[1] - 5, 10, 10)
+        
+        # Check if the point is within the correct continent area
+        if self.continent_areas[name].colliderect(point_rect):
+            self.completed[continent_idx] = True
+            self.score += 1
+            # Center the label in the continent area
+            area = self.continent_areas[name]
+            self.continents[continent_idx]['pos'] = (area.centerx, area.centery)
+            return True
+        return False
+
+    def draw_correct_feedback(self):
+        feedback_text = self.font.render('Correct!', True, self.GREEN)
+        feedback_rect = feedback_text.get_rect(center=(self.width//2, 30))
+        pygame.draw.rect(self.screen, self.BLACK, feedback_rect.inflate(20, 10))
+        self.screen.blit(feedback_text, feedback_rect)
+        pygame.display.flip()
+        pygame.time.wait(500)
 
     def run(self):
-        """
-        Main game loop.
-        Handles events, updates game state, and renders the appropriate screen.
-        """
         running = True
         while running:
-            events = pygame.event.get()
-            for event in events:
+            current_time = time.time()
+            self.game_time = int(current_time - self.start_time)
+
+            for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                elif event.type == pygame.KEYDOWN:
-                    self.handle_keydown(event)
 
-            self.update_current_state(events)
-            self.render_current_state()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    for i, continent in enumerate(self.continents):
+                        if not self.completed[i]:
+                            text_rect = self.font.render(continent['name'], True, self.BLACK).get_rect(center=continent['pos'])
+                            if text_rect.collidepoint(event.pos):
+                                self.dragging = i
+                                self.show_hint = i
+
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    if self.dragging is not None:
+                        if self.check_position(self.dragging):
+                            self.draw_correct_feedback()
+                        self.dragging = None
+                        self.show_hint = None
+
+                elif event.type == pygame.MOUSEMOTION:
+                    if self.dragging is not None:
+                        self.continents[self.dragging]['pos'] = event.pos
+
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_r:  # Reset game
+                        self.__init__()
+                    elif event.key == pygame.K_d:  # Toggle debug mode
+                        self.debug_mode = not self.debug_mode
+
+            # Drawing
+            self.screen.fill(self.BLACK)
+            self.screen.blit(self.map_img, self.map_rect)
+            self.draw_labels()
+
+            # Draw score and time
+            score_text = self.font.render(f'Score: {self.score}/{len(self.continents)}', True, self.WHITE)
+            time_text = self.font.render(f'Time: {self.game_time}s', True, self.WHITE)
+            self.screen.blit(score_text, (10, 10))
+            self.screen.blit(time_text, (10, 40))
+
+            # Draw instructions
+            reset_text = self.font.render('Press R to reset | D for debug mode', True, self.WHITE)
+            self.screen.blit(reset_text, (10, 70))
+
+            if self.score == len(self.continents):
+                win_text = self.font.render(f'Congratulations! Completed in {self.game_time} seconds!', True, self.GREEN)
+                win_rect = win_text.get_rect(center=(self.width//2, 50))
+                pygame.draw.rect(self.screen, self.BLACK, win_rect.inflate(20, 10))
+                self.screen.blit(win_text, win_rect)
 
             pygame.display.flip()
-            self.clock.tick(60)
 
         pygame.quit()
+        sys.exit()
 
-    def handle_keydown(self, event):
-        """
-        Handle keyboard input events.
-        
-        Args:
-            event (pygame.event.Event): The keyboard event to handle.
-        """
-        if event.key == pygame.K_m:
-            self.game_state = "mini_game"
-            self.fruit_catcher.reset()
-        elif event.key == pygame.K_ESCAPE:
-            self.game_state = "main_menu"
-
-    def update_current_state(self, events):
-        """
-        Update the current game state.
-        
-        Args:
-            events (list): List of pygame events to process.
-        """
-        if self.game_state == "main_game":
-            self.update_main_game()
-        elif self.game_state == "mini_game":
-            self.fruit_catcher.update(events)
-            if self.fruit_catcher.game_over:
-                self.game_state = "main_game"
-
-    def render_current_state(self):
-        """
-        Render the current game state to the screen.
-        """
-        if self.game_state == "main_menu":
-            self.draw_main_menu()
-        elif self.game_state == "main_game":
-            self.draw_main_game()
-        elif self.game_state == "mini_game":
-            self.fruit_catcher.draw(self.screen)
-
-    def draw_main_menu(self):
-        """
-        Draw the main menu screen.
-        """
-        self.screen.fill((0, 0, 0))  # Black background
-        font = pygame.font.Font(None, 36)
-        title = font.render("Main Game", True, (255, 255, 255))
-        instructions = font.render("Press SPACE to start, M for mini-game", True, (255, 255, 255))
-        self.screen.blit(title, (400 - title.get_width() // 2, 200))
-        self.screen.blit(instructions, (400 - instructions.get_width() // 2, 300))
-
-    def update_main_game(self):
-        """
-        Update the main game logic.
-        """
-        # Add your main game update logic here
-        pass
-
-    def draw_main_game(self):
-        """
-        Draw the main game screen.
-        """
-        self.screen.fill((0, 100, 0))  # Green background for main game
-        font = pygame.font.Font(None, 36)
-        text = font.render("Main Game Running", True, (255, 255, 255))
-        self.screen.blit(text, (400 - text.get_width() // 2, 300))
-
-if __name__ == "__main__":
-    game = MainGame()
+if __name__ == '__main__':
+    game = ContinentGame()
     game.run()
