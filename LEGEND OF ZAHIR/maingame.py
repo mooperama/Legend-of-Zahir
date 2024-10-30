@@ -266,14 +266,12 @@ class Game:
         if len(self.enemies) == 0:
             return "completed"  # Level completed
 
+
     def create_enemies(self):
-        """
-        Create a set number of enemies at random positions.
-        """
-        for _ in range(3):  # Create 3 enemies
-            enemy = Enemy.create_random(self)  # Create an enemy at a random position
-            self.enemies.add(enemy)  # Add to enemies group
-            self.add(enemy)  # Add to all sprites group
+        for _ in range(3):
+            enemy = Enemy.create_random(self)
+            self.enemies.add(enemy)
+            self.allsprites.add(enemy)  # Changed from self.add(enemy)
 
     def game_over(self):
         """
