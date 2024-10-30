@@ -23,13 +23,13 @@ PLAYER_SPEED = 90
 PLAYER_WIDTH, PLAYER_HEIGHT = 100, 100
 BOSS_WIDTH, BOSS_HEIGHT = 170, 170
 
-PLAYER_SPRITE_IMAGE = pygame.image.load(os.path.join('Minigame 5 Assets', 'Player Sprite.png'))
+PLAYER_SPRITE_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets', 'Player Sprite.png'))
 PLAYER_SPRITE = pygame.transform.rotate(pygame.transform.scale(PLAYER_SPRITE_IMAGE, (PLAYER_WIDTH, PLAYER_HEIGHT)), 90)
 
-BOSS_SPRITE_IMAGE = pygame.image.load(os.path.join('Minigame 5 Assets', 'Boss Sprite.png'))
+BOSS_SPRITE_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets/Boss Sprite.png'))
 BOSS_SPRITE = pygame.transform.rotate(pygame.transform.scale(BOSS_SPRITE_IMAGE, (BOSS_WIDTH, BOSS_HEIGHT)), 270)
 
-PLAYER_HEALTH_IMAGE = pygame.image.load(os.path.join('Minigame 5 Assets', 'Player health icon.jpg'))
+PLAYER_HEALTH_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets/Player health icon.jpg'))
 PLAYER_HEALTH = pygame.transform.scale(PLAYER_HEALTH_IMAGE, (30,30))
 
 # COLORS
@@ -43,7 +43,7 @@ POPUP_COLOR = (0, 0, 0, 128) #128 is opacity
 
 # GAME ELEMENTS
 WALL = pygame.Rect(WIDTH // 2 - 10, 0, 10, HEIGHT)
-BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join('Minigame 5 Assets', 'Dungeon Background.jpg')), (WIDTH, HEIGHT))
+BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets/Dungeon Background.png')), (WIDTH, HEIGHT))
 
 BOSS_HIT = pygame.USEREVENT + 1
 PLAYER_HIT = pygame.USEREVENT + 2
