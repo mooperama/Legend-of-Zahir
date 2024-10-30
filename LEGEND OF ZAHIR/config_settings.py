@@ -1,6 +1,6 @@
 # Screen settings (pixel sizes)
 WIDTH = 960
-HEIGHT = 624
+HEIGHT = 540
 FPS = 60
 TILESIZE = 48
 BULLETSIZE = 16
