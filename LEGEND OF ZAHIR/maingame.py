@@ -34,9 +34,9 @@ class Game:
         self.elapsed_time = 0
         
         # Load sprite sheets
-        self.character_spritesheet = Spritesheet('C:/Users/PC/Desktop/Legend-of-Zahir/LEGEND OF ZAHIR/knight_strip.png')
-        self.enemy_spritesheet = Spritesheet('C:/Users/PC/Desktop/Legend-of-Zahir/LEGEND OF ZAHIR/skeleton_strip.png')
-        self.terrain_spritesheet = Spritesheet('C:/Users/PC/Desktop/Legend-of-Zahir/LEGEND OF ZAHIR/dungeon2.jpg')
+        self.character_spritesheet = Spritesheet('LEGEND OF ZAHIR/knight_strip.png')
+        self.enemy_spritesheet = Spritesheet('LEGEND OF ZAHIR/skeleton_strip.png')
+        self.terrain_spritesheet = Spritesheet('LEGEND OF ZAHIR/dungeon2.jpg')
         
         # Initialize game state immediately
         self.allsprites = pygame.sprite.LayeredUpdates()
@@ -269,14 +269,12 @@ class Game:
         if len(self.enemies) == 0:
             return "completed"  # Level completed
 
+
     def create_enemies(self):
-        """
-        Create a set number of enemies at random positions.
-        """
-        for _ in range(3):  # Create 3 enemies
-            enemy = Enemy.create_random(self)  # Create an enemy at a random position
-            self.enemies.add(enemy)  # Add to enemies group
-            self.allsprites.add(enemy)  # Add to all sprites group
+        for _ in range(3):
+            enemy = Enemy.create_random(self)
+            self.enemies.add(enemy)
+            self.allsprites.add(enemy)  # Changed from self.add(enemy)
 
     def game_over(self):
         """

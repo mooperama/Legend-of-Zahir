@@ -38,7 +38,7 @@ class Enemy(pygame.sprite.Sprite):
         self.animation_loop = 1
         self.last_update = pygame.time.get_ticks()
 
-        self.sprite_sheet = pygame.image.load('C:/Users/PC/Desktop/Legend-of-Zahir/LEGEND OF ZAHIR/skeleton_strip.png')
+        self.sprite_sheet = pygame.image.load('LEGEND OF ZAHIR/skeleton_strip.png')
         self.load_animations()
         
         self.image = self.game.enemy_spritesheet.get_sprite(1, 0, 15, 15) 
