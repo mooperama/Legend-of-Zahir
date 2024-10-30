@@ -5,8 +5,10 @@ import string
 
 pygame.init()
 
+#HELLOOOO DO U SEE THIS NYEHEHE 
+
 # CONSTANTS
-WIDTH, HEIGHT = 960, 720
+WIDTH, HEIGHT = 960, 540
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("BOSS BATTLE!!")
 FPS = 60
@@ -21,13 +23,13 @@ PLAYER_SPEED = 90
 PLAYER_WIDTH, PLAYER_HEIGHT = 100, 100
 BOSS_WIDTH, BOSS_HEIGHT = 170, 170
 
-PLAYER_SPRITE_IMAGE = pygame.image.load(os.path.join('Project Assets', 'Player Sprite.png'))
+PLAYER_SPRITE_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR','Minigame 5 Assets', 'Player Sprite.png'))
 PLAYER_SPRITE = pygame.transform.rotate(pygame.transform.scale(PLAYER_SPRITE_IMAGE, (PLAYER_WIDTH, PLAYER_HEIGHT)), 90)
 
-BOSS_SPRITE_IMAGE = pygame.image.load(os.path.join('Project Assets', 'Boss Sprite.png'))
+BOSS_SPRITE_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR', 'Minigame 5 Assets', 'Boss Sprite.png'))
 BOSS_SPRITE = pygame.transform.rotate(pygame.transform.scale(BOSS_SPRITE_IMAGE, (BOSS_WIDTH, BOSS_HEIGHT)), 270)
 
-PLAYER_HEALTH_IMAGE = pygame.image.load(os.path.join('Project Assets', 'Player health icon.jpg'))
+PLAYER_HEALTH_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR', 'Minigame 5 Assets', 'Player health icon.jpg'))
 PLAYER_HEALTH = pygame.transform.scale(PLAYER_HEALTH_IMAGE, (30,30))
 
 # COLORS
@@ -40,8 +42,8 @@ GREEN = (0, 255, 0)
 POPUP_COLOR = (0, 0, 0, 128) #128 is opacity
 
 # GAME ELEMENTS
-WALL = pygame.Rect(WIDTH // 2 - 10, 0, 20, HEIGHT)
-BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join('Project Assets', 'Dungeon Background.jpg')), (WIDTH, HEIGHT))
+WALL = pygame.Rect(WIDTH // 2 - 10, 0, 10, HEIGHT)
+BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join('LEGEND OF ZAHIR', 'Minigame 5 Assets', 'Dungeon Background.jpg')), (WIDTH, HEIGHT))
 
 BOSS_HIT = pygame.USEREVENT + 1
 PLAYER_HIT = pygame.USEREVENT + 2
@@ -115,9 +117,9 @@ def player_movement(keys_pressed, player):
     Checks if a key is pressed, and makes corresponding player movements 
     if certain keys are pressed.
     """
-    if keys_pressed[pygame.K_a] and player.x - VEL > 0:  # left
+    if keys_pressed[pygame.K_a] and player.x - VEL > WALL.x:  # left
         player.x -= VEL
-    if keys_pressed[pygame.K_d] and player.x + VEL + player.width > WALL.x:  # right
+    if keys_pressed[pygame.K_d] and player.x + VEL + player.width < WIDTH :  # right
         player.x += VEL
     if keys_pressed[pygame.K_w] and player.y - VEL > 0:  # up
         player.y -= VEL
@@ -249,6 +251,8 @@ def main():
                         player_input += event.unicode.upper()
                     elif event.key == pygame.K_BACKSPACE:
                         player_input = player_input[:-1]
+                    elif event.key == pygame.K_SPACE:
+                        player_input += " "
                     elif event.key == pygame.K_RETURN:
                     #Entering the player input
                         if player_input == word:
@@ -261,7 +265,7 @@ def main():
                             player_hp -= 1
                         player_input = ""
                         popup_active = False
-            elif can_shoot == True and event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and bullets_fired < MAG:
+            elif can_shoot == True and event.type ==  pygame.MOUSEBUTTONDOWN and event.button == 1 and bullets_fired < MAG:
                 '''
                 #player shooting
                 CONDITIONS:
