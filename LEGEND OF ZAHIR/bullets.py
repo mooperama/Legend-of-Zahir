@@ -18,7 +18,7 @@ class Bullet(pygame.sprite.Sprite):
         """
         self.game = game
         self._layer = PLAYER_LAYER
-        self.groups = self.game.all_sprites, self.game.bullets
+        self.groups = self.game.allsprites, self.game.bullets
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         self.x = x

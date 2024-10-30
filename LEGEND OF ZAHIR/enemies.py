@@ -21,7 +21,7 @@ class Enemy(pygame.sprite.Sprite):
         """
         self.game = game
         self._layer = ENEMY_LAYER
-        self.groups = self.game.all_sprites, self.game.enemies
+        self.groups = self.game.allsprites, self.game.enemies
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         self.x = x * TILESIZE
@@ -38,7 +38,7 @@ class Enemy(pygame.sprite.Sprite):
         self.animation_loop = 1
         self.last_update = pygame.time.get_ticks()
 
-        self.sprite_sheet = pygame.image.load('skeleton_strip.png')
+        self.sprite_sheet = pygame.image.load('LEGEND OF ZAHIR/skeleton_strip.png')
         self.load_animations()
         
         self.image = self.game.enemy_spritesheet.get_sprite(1, 0, 15, 15) 

@@ -19,7 +19,7 @@ class SoundManager:
         pygame.mixer.init()
         self.sounds = {}
         self.music = None
-        self.sound_path = os.path.join('assets', 'sounds',)
+        self.sound_path = os.path.join('LEGEND OF ZAHIR','assets', 'sounds',)
 
     def get_sound_path(self, folder, filename):
         """
