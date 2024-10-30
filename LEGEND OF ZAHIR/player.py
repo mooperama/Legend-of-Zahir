@@ -18,7 +18,7 @@ class Player(pygame.sprite.Sprite):
         """
         self.game = game
         self._layer = PLAYER_LAYER
-        self.groups = self.game.all_sprites
+        self.groups = self.game.allsprites
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         self.x = x * TILESIZE
@@ -130,25 +130,25 @@ class Player(pygame.sprite.Sprite):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
             #camera movement 
-            for sprite in self.game.all_sprites:
+            for sprite in self.game.allsprites:
                 sprite.rect.x += PLAYER_SPEED
             self.x_change -= PLAYER_SPEED
             self.facing = 'left'
         if keys[pygame.K_d]:
             #camera movement 
-            for sprite in self.game.all_sprites:
+            for sprite in self.game.allsprites:
                 sprite.rect.x -= PLAYER_SPEED        
             self.x_change += PLAYER_SPEED
             self.facing = 'right'
         if keys[pygame.K_w]:
             #camera movement 
-            for sprite in self.game.all_sprites:
+            for sprite in self.game.allsprites:
                 sprite.rect.y += PLAYER_SPEED
             self.y_change -= PLAYER_SPEED
             self.facing = 'up'
         if keys[pygame.K_s]:
             #camera movement 
-            for sprite in self.game.all_sprites:
+            for sprite in self.game.allsprites:
                 sprite.rect.y -= PLAYER_SPEED
             self.y_change += PLAYER_SPEED
             self.facing = 'down'
@@ -166,13 +166,13 @@ class Player(pygame.sprite.Sprite):
                 if self.x_change > 0:
                     self.rect.x = hits[0].rect.left - self.rect.width
                     #camera focused
-                    for sprite in self.game.all_sprites: 
+                    for sprite in self.game.allsprites: 
                         sprite.rect.x += PLAYER_SPEED
 
                 if self.x_change < 0:
                     self.rect.x = hits[0].rect.right
                     #camera focused
-                    for sprite in self.game.all_sprites:
+                    for sprite in self.game.allsprites:
                         sprite.rect.x -= PLAYER_SPEED
 
         if direction == "y":
@@ -181,13 +181,13 @@ class Player(pygame.sprite.Sprite):
                 if self.y_change > 0:
                     self.rect.y = hits[0].rect.top - self.rect.height
                     #camera focused
-                    for sprite in self.game.all_sprites:
+                    for sprite in self.game.allsprites:
                         sprite.rect.y += PLAYER_SPEED
 
                 if self.y_change < 0:
                     self.rect.y = hits[0].rect.bottom
                     #camera focused
-                    for sprite in self.game.all_sprites:
+                    for sprite in self.game.allsprites:
                         sprite.rect.y -= PLAYER_SPEED
 
     def animate(self):

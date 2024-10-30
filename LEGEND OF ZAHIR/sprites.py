@@ -42,7 +42,7 @@ class Block(pygame.sprite.Sprite):
         """
         self.game = game
         self._layer = BLOCK_LAYER  # Set the rendering layer for the block
-        self.groups = self.game.all_sprites, self.game.blocks  # Add to relevant sprite groups
+        self.groups = self.game.allsprites, self.game.blocks  # Add to relevant sprite groups
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         # Convert tile coordinates to pixel coordinates
