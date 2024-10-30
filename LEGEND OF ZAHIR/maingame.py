@@ -12,7 +12,7 @@ import sys
 import time
 
 """
-i luv jessica ng
+i luv jessica ng (i cant commit)
 """
 class Game:
     def __init__(self):
