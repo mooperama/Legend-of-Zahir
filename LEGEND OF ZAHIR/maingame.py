@@ -11,6 +11,9 @@ from tutorial import *
 import sys
 import time
 
+"""
+i luv jessica ng
+"""
 class Game:
     def __init__(self):
         pygame.init()
