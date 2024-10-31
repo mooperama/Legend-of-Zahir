@@ -39,14 +39,14 @@ class MemoryGame:
         self.enemy_spritesheet = Spritesheet('LEGEND OF ZAHIR/skeleton_strip.png')
         self.terrain_spritesheet = Spritesheet('LEGEND OF ZAHIR/dungeon2.jpg')
         
-        # Load tile images
+        # Load unlit candles
         self.tile_images = [
             pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile1.png').convert_alpha(),
             pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile2.png').convert_alpha(),
             pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile3.png').convert_alpha(),
             pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile4.png').convert_alpha()
         ]
-        # Load flash images (bright versions of tiles)
+        # Load lit candles
         self.flash_images = [
             pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile1_flash.png').convert_alpha(),
             pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile2_flash.png').convert_alpha(),
