@@ -43,12 +43,12 @@ POPUP_COLOR = (0, 0, 0, 128) #128 is opacity
 
 # GAME ELEMENTS
 WALL = pygame.Rect(WIDTH // 2 - 10, 0, 10, HEIGHT)
-BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets/Dungeon Background.png')), (WIDTH, HEIGHT))
+BACKGROUND = pygame.transform.scale(pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets/Alt Dungeon Background.png')), (WIDTH, HEIGHT))
 
 BOSS_HIT = pygame.USEREVENT + 1
 PLAYER_HIT = pygame.USEREVENT + 2
 
-FONT = pygame.font.SysFont('comicsans', 40)
+FONT = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 30)
 
 POPUP_DURATION = 8000 #8 Seconds (in miliseconds)
 SHOOTING_PHASE_DURATION = 10000 #10 Seconds (in miliseconds)
@@ -61,7 +61,7 @@ def create_text_input(shuffled_word):
     popup.fill(WHITE)
     pygame.draw.rect(popup, BLACK, popup.get_rect(), 5)
 
-    font = pygame.font.SysFont('comicsans', 30)
+    font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 20)
     text1 = font.render("Unscramble the Southeast Asian", True, BLACK)
     text2 = font.render("country to unlock 3 bullets:", True, BLACK)
     text3 = font.render(f"{shuffled_word}", True, BLACK)
@@ -78,7 +78,7 @@ def draw_window(player, boss, playerBullets, bossBullets, player_hp, boss_hp, sh
     Draws the background, wall, player, and boss on to the screen
     """
     WIN.blit(BACKGROUND, (0, 0))
-    pygame.draw.rect(WIN, BLACK, WALL)
+    #pygame.draw.rect(WIN, BLACK, WALL)
     WIN.blit(PLAYER_SPRITE, (player.x, player.y))
     WIN.blit(BOSS_SPRITE, (boss.x, boss.y))
 

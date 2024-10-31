@@ -38,21 +38,21 @@ class ContinentGame:
         self.continents = [
             {'name': 'North America', 'pos': (90, 530), 
             'hint': 'Contains Canada and USA'},
-            {'name': 'South America', 'pos': (225, 530),
+            {'name': 'South America', 'pos': (240, 530),
             'hint': 'Home to the Amazon Rainforest'},
-            {'name': 'Europe', 'pos': (330, 530),
+            {'name': 'Europe', 'pos': (355, 530),
             'hint': 'Contains France and Germany'},
-            {'name': 'Africa', 'pos': (400, 530),
+            {'name': 'Africa', 'pos': (430, 530),
             'hint': 'Largest hot desert in the world'},
-            {'name': 'Asia', 'pos': (460, 530),
+            {'name': 'Asia', 'pos': (490, 530),
             'hint': 'Largest continent'},
-            {'name': 'Australia', 'pos': (530, 530),
+            {'name': 'Australia', 'pos': (565, 530),
             'hint': 'Smallest continent'},
-            {'name': 'Antarctica', 'pos': (630, 530),
+            {'name': 'Antarctica', 'pos': (670, 530),
             'hint': 'Coldest continent'}
         ]
 
-        self.font = pygame.font.Font(None, 24)
+        self.font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 15)
         self.dragging = None
         self.completed = [False] * len(self.continents)
         self.score = 0

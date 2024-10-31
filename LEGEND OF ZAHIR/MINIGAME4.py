@@ -15,8 +15,8 @@ CARD_WIDTH, CARD_HEIGHT = 140, 100
 CARD_MARGIN = 15
 
 # Font
-FONT = pygame.font.Font(None, 36)
-TIMER_FONT = pygame.font.Font(None, 48)
+FONT = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 15)
+TIMER_FONT = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 40)
 
 # Language pairs
 ALL_LANGUAGES = [

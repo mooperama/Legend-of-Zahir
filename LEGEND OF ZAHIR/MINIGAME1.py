@@ -148,7 +148,7 @@ class MemoryGame:
             pygame.draw.rect(self.screen, color, square)
         
         # Draw score
-        font = pygame.font.Font(None, 36)
+        font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 36)
         score_text = font.render(f"Score: {self.score}/1", True, WHITE)
         self.screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, 10))
         
