@@ -8,7 +8,7 @@ from sprites import *
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y, direction):
         super().__init__()
-        self.image = pygame.Surface([BULLETSIZE, BULLETSIZE])
+        self.image = pygame.Surface([BULLETSIZE,BULLETSIZE])
         self.image.fill(WHITE)
         self.rect = self.image.get_rect()
         self.rect.x = x
@@ -34,7 +34,7 @@ class MemoryGame:
         self.screen = screen
         self.clock = clock
         
-        # Load spritesheets
+        # Load spritesheets FIRST
         self.character_spritesheet = Spritesheet('LEGEND OF ZAHIR/knight_strip.png')
         self.enemy_spritesheet = Spritesheet('LEGEND OF ZAHIR/skeleton_strip.png')
         self.terrain_spritesheet = Spritesheet('LEGEND OF ZAHIR/dungeon2.jpg')
@@ -52,8 +52,9 @@ class MemoryGame:
         self.player_sequence = []
         self.score = 0
         self.game_state = "show_sequence"
+        self.win_displayed = False  # Add this to track if win has been shown
         
-        # Create the map
+        # Create the map first
         self.create_map()
         
         # Square properties
@@ -67,27 +68,33 @@ class MemoryGame:
         self.square_colors = [RED, GREEN, BLUE, YELLOW]
         self.current_flash = None
         self.flash_start = time.time()
-        self.flash_duration = 0.5
+        self.flash_duration = 0.5  # Shortened to match original game
         self.sequence_index = 0
 
     def create_map(self):
+        """Create the game map from MEMORY_TILEMAP using Block class"""
         for i, row in enumerate(MEMORY_TILEMAP):
             for j, column in enumerate(row):
                 if column == "W":
-                    Block(self, j, i)
+                    Block(self, j, i)  # Create wall using main game's Block class
                 elif column == "P":
-                    self.player = Player(self, j, i)
+                    # Create player and store reference
+                    self.player = Player(self, j, i)  # Use main game's Player class
                     self.allsprites.add(self.player)
 
     def display_sequence(self):
+        """Display the sequence of colors by flashing them one at a time"""
         current_time = time.time()
         
-        if len(self.sequence) == 0:
-            self.sequence = [random.randint(0, 3)]
+        # Generate new sequence if needed
+        if len(self.sequence) == 0:  # Changed condition to be more explicit
+            self.sequence = [random.randint(0, 3) for _ in range(self.score + 1)]
             self.sequence_index = 0
             self.current_flash = self.sequence[0]
             self.flash_start = current_time
             self.player_sequence = []
+
+        # If we're not currently flashing a color, move to the next one
         elif self.current_flash is None:
             if self.sequence_index < len(self.sequence):
                 self.current_flash = self.sequence[self.sequence_index]
@@ -99,20 +106,28 @@ class MemoryGame:
                 self.player_sequence.append(i)
                 bullet.kill()
                 
-                # Check if the shot matches the sequence
                 if self.player_sequence[-1] != self.sequence[len(self.player_sequence) - 1]:
                     self.game_state = "game_over"
                 elif len(self.player_sequence) == len(self.sequence):
                     self.score += 1
-                    if self.score >= 1:
-                        self.game_state = "win"  # Set game_state to "win"
+                    if self.score >= 5:
+                        self.game_state = "win"
+                        self.win_displayed = True  # Set flag when win condition met
                         return True
+                    
+                    # Only continue with new sequence if we haven't won
+                    self.sequence = []
+                    self.sequence_index = 0
+                    self.current_flash = None
+                    self.player_sequence = []
+                    self.game_state = "show_sequence"
                 return True
         return False
 
     def update(self):
-        # Do nothing if game is won
-        if self.game_state == "win":
+        # Check for win condition first
+        if self.score >= 5:
+            self.game_state = "win"
             return
             
         self.allsprites.update()
@@ -138,21 +153,22 @@ class MemoryGame:
 
     def draw(self):
         self.screen.fill(BLACK)
+        
+        # Draw all sprites (includes walls and player)
         self.allsprites.draw(self.screen)
         
-        # Draw squares
+        # Draw the colored squares
         for i, square in enumerate(self.squares):
             color = self.square_colors[i]
             if self.current_flash == i:
-                color = WHITE
+                color = WHITE  # Flash white when active
             pygame.draw.rect(self.screen, color, square)
         
         # Draw score
         font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 36)
-        score_text = font.render(f"Score: {self.score}/1", True, WHITE)
+        score_text = font.render(f"Score: {self.score}/5", True, WHITE)  # Updated to show 5 as the target
         self.screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, 10))
-        
-        # Draw win/game over messages
+
         if self.game_state == "win":
             win_text = font.render("Congratulations! You Won!", True, WHITE)
             self.screen.blit(win_text, (WIDTH // 2 - win_text.get_width() // 2, HEIGHT // 2))
@@ -161,15 +177,23 @@ class MemoryGame:
             self.screen.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 2))
 
     def shoot(self, target_pos):
+        """
+        Create a bullet aimed at the target position.
+        Args:
+            target_pos: (x, y) tuple of the mouse click position
+        """
         player_center = self.player.rect.center
+        # Calculate direction vector
         dx = target_pos[0] - player_center[0]
         dy = target_pos[1] - player_center[1]
+        # Normalize direction
         length = (dx**2 + dy**2)**0.5
         if length > 0:
             dx = dx/length
             dy = dy/length
         direction = [dx, dy]
         
+        # Create bullet with proper parameters
         bullet = Bullet(player_center[0], player_center[1], direction)
         self.bullets.add(bullet)
         self.allsprites.add(bullet)
@@ -183,21 +207,21 @@ def run_memory_game(screen, clock):
             if event.type == pygame.QUIT:
                 return "quit"
             elif event.type == pygame.MOUSEBUTTONDOWN and game.game_state == "player_turn":
-                if event.button == 1:
+                if event.button == 1:  # Left click
                     game.shoot(pygame.mouse.get_pos())
         
         game.update()
         game.draw()
         
-        # Stop the game immediately upon win
+        # Check win condition first
         if game.game_state == "win":
             pygame.display.flip()
-            time.sleep(2)  # Display win message briefly
+            time.sleep(2)  # Show win message for 2 seconds
             return "completed"
         elif game.game_state == "game_over":
             pygame.display.flip()
             time.sleep(2)
-            return "died"
+            return "died" if game.score == 0 else "completed"
             
         pygame.display.flip()
         clock.tick(FPS)
