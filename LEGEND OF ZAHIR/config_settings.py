@@ -64,6 +64,36 @@ TILEMAP = [
     'WWWWWWWWWWWWWWWWWWWW',
 ]
 
+# Add this to your config_settings.py file
+
+# Memory Game Tilemap
+# . = Blank space (floor)
+# W = Wall
+# P = Player starting position
+MEMORY_TILEMAP = [
+    'WWWWWWWWWWWWWWWWWWWW',
+    'W..................W',
+    'W..................W',
+    'W..................W',
+    'W........WW........W',
+    'W.......WWWW.......W',
+    'W......WW..WW......W',
+    'W.....WW....WW.....W',
+    'W....WW......WW....W',
+    'W...WW...P....WW...W',
+    'W...WW........WW...W',
+    'W....WW......WW....W',
+    'W.....WW....WW.....W',
+    'W......WW..WW......W',
+    'W.......WWWW.......W',
+    'W........WW........W',
+    'W..................W',
+    'W..................W',
+    'W..................W',
+    'WWWWWWWWWWWWWWWWWWWW'
+]
+
+
 # Game states
 INTRO = 0
 PLAYING = 1
