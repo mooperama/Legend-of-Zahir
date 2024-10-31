@@ -8,6 +8,7 @@ from MINIGAME4 import main as run_language_matching_game
 from MINIGAME5 import main as run_boss_battle
 from soundmanager import sound_manager
 from tutorial import *
+from save_system import *
 import sys
 import time
 
@@ -55,6 +56,22 @@ class Game:
         self.game_sequence = ['main', 'pemdas', 'main', 'language', 'main', 'boss']
         self.current_sequence_index = 0
         self.total_sequences = len(self.game_sequence)
+           
+        # Add after other initializations
+        self.save_system = ZahirSaveSystem()
+
+    # Add these methods to the Game class
+    def save_current_game(self):
+        return self.save_system.save_game(self)
+
+    def load_saved_game(self, save_name):
+        return self.save_system.load_game(save_name, self)
+
+    def show_save_load_menu(self):
+        """Show a menu for saving/loading games"""
+        saves = self.save_system.list_saves()
+        # Implement menu UI here using pygame
+        # You can add this to your pause menu or create a separate menu
 
     def game_loop(self):
         """
