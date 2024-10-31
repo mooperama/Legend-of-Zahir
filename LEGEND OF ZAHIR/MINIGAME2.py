@@ -66,6 +66,7 @@ class TimezoneGame:
         
         self.score = 0
         self.total_questions = 0
+        self.lives = 4  # Player starts with 4 lives
         self.generate_question()
         self.create_buttons()
         self.selected_answer = None
@@ -73,7 +74,6 @@ class TimezoneGame:
         self.game_over = False
         self.create_continue_button()
 
-    # [Previous TimezoneGame methods remain the same...]
     def create_continue_button(self):
         button_width = 160
         button_height = 45
@@ -117,6 +117,11 @@ class TimezoneGame:
             self.buttons.append(button)
 
     def draw_question_screen(self):
+        # Draw lives
+        lives_text = f"Lives: {'❤' * self.lives}"
+        lives_surface = self.font.render(lives_text, True, RED)
+        self.screen.blit(lives_surface, (WIDTH - 150, 20))
+
         question_text = f"Convert time from {self.source_tz_name} to {self.target_tz_name}"
         text_surface = self.title_font.render(question_text, True, BLACK)
         text_rect = text_surface.get_rect(center=(WIDTH//2, HEIGHT//6))
@@ -158,14 +163,17 @@ class TimezoneGame:
             final_score_text = self.title_font.render(
                 f"Final Score: {self.score}/{self.total_questions}", True, BLACK
             )
-            restart_text = self.font.render("Press SPACE to finish", True, BLACK)
+            if self.lives <= 0:
+                status_text = self.font.render("Out of lives!", True, RED)
+            else:
+                status_text = self.font.render("Press SPACE to finish", True, BLACK)
             
             self.screen.blit(game_over_text, 
                            (WIDTH//2 - game_over_text.get_width()//2, HEIGHT//3))
             self.screen.blit(final_score_text, 
                            (WIDTH//2 - final_score_text.get_width()//2, HEIGHT//2))
-            self.screen.blit(restart_text,
-                           (WIDTH//2 - restart_text.get_width()//2, HEIGHT*2//3))
+            self.screen.blit(status_text,
+                           (WIDTH//2 - status_text.get_width()//2, HEIGHT*2//3))
         elif self.show_result:
             self.draw_result_screen()
         else:
@@ -180,12 +188,15 @@ class TimezoneGame:
 
             if self.game_over:
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                    if self.score >= 7:  # Need 7/10 to pass
+                    if self.lives <= 0:
+                        return "died"
+                    elif self.score >= 2:  # Need 2/3 to pass
                         return "completed"
-                    return "died"
+                    else:
+                        return "died"
             elif self.show_result:
                 if self.continue_button.handle_event(event):
-                    if self.total_questions >= 10:
+                    if self.total_questions >= 3 or self.lives <= 0:  # Changed from 10 to 3
                         self.game_over = True
                     else:
                         self.generate_question()
@@ -200,6 +211,8 @@ class TimezoneGame:
                         self.total_questions += 1
                         if self.selected_answer == self.correct_answer:
                             self.score += 1
+                        else:
+                            self.lives -= 1  # Lose a life for wrong answer
 
         return None
 
