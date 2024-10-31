@@ -39,6 +39,27 @@ class MemoryGame:
         self.enemy_spritesheet = Spritesheet('LEGEND OF ZAHIR/skeleton_strip.png')
         self.terrain_spritesheet = Spritesheet('LEGEND OF ZAHIR/dungeon2.jpg')
         
+        # Load tile images
+        self.tile_images = [
+            pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile1.png').convert_alpha(),
+            pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile2.png').convert_alpha(),
+            pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile3.png').convert_alpha(),
+            pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile4.png').convert_alpha()
+        ]
+        # Load flash images (bright versions of tiles)
+        self.flash_images = [
+            pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile1_flash.png').convert_alpha(),
+            pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile2_flash.png').convert_alpha(),
+            pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile3_flash.png').convert_alpha(),
+            pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile4_flash.png').convert_alpha()
+        ]
+        
+        # Resize images to match tile size
+        self.tile_size = TILESIZE * 2
+        for i in range(len(self.tile_images)):
+            self.tile_images[i] = pygame.transform.scale(self.tile_images[i], (self.tile_size, self.tile_size))
+            self.flash_images[i] = pygame.transform.scale(self.flash_images[i], (self.tile_size, self.tile_size))
+        
         # Initialize sprite groups
         self.allsprites = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
@@ -47,30 +68,57 @@ class MemoryGame:
         self.bullets = pygame.sprite.LayeredUpdates()
         
         # Game state variables
-        self.colors = [RED, GREEN, BLUE, YELLOW]
         self.sequence = []
         self.player_sequence = []
         self.score = 0
         self.game_state = "show_sequence"
-        self.win_displayed = False  # Add this to track if win has been shown
+        self.win_displayed = False
         
         # Create the map first
         self.create_map()
         
         # Square properties
-        self.square_size = TILESIZE * 2
         self.squares = [
-            pygame.Rect(TILESIZE, TILESIZE, self.square_size, self.square_size),
-            pygame.Rect(WIDTH - TILESIZE * 3, TILESIZE, self.square_size, self.square_size),
-            pygame.Rect(TILESIZE, HEIGHT - TILESIZE * 3, self.square_size, self.square_size),
-            pygame.Rect(WIDTH - TILESIZE * 3, HEIGHT - TILESIZE * 3, self.square_size, self.square_size)
+            pygame.Rect(TILESIZE, TILESIZE, self.tile_size, self.tile_size),
+            pygame.Rect(WIDTH - TILESIZE * 3, TILESIZE, self.tile_size, self.tile_size),
+            pygame.Rect(TILESIZE, HEIGHT - TILESIZE * 3, self.tile_size, self.tile_size),
+            pygame.Rect(WIDTH - TILESIZE * 3, HEIGHT - TILESIZE * 3, self.tile_size, self.tile_size)
         ]
-        self.square_colors = [RED, GREEN, BLUE, YELLOW]
+        
         self.current_flash = None
         self.flash_start = time.time()
-        self.flash_duration = 0.5  # Shortened to match original game
+        self.flash_duration = 0.5
         self.sequence_index = 0
+        self.flash_alpha = 255  # For fade effect
 
+    def draw(self):
+        self.screen.fill(BLACK)
+        
+        # Draw all sprites (includes walls and player)
+        self.allsprites.draw(self.screen)
+        
+        # Draw the tiles
+        for i, square in enumerate(self.squares):
+            # Draw normal or flashing tile
+            if self.current_flash == i:
+                # Draw flashing tile
+                self.screen.blit(self.flash_images[i], square)
+            else:
+                # Draw normal tile
+                self.screen.blit(self.tile_images[i], square)
+        
+        # Draw score
+        font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 36)
+        score_text = font.render(f"Score: {self.score}/5", True, WHITE)
+        self.screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, 10))
+
+        if self.game_state == "win":
+            win_text = font.render("Congratulations! You Won!", True, WHITE)
+            self.screen.blit(win_text, (WIDTH // 2 - win_text.get_width() // 2, HEIGHT // 2))
+        elif self.game_state == "game_over":
+            game_over_text = font.render("Game Over!", True, WHITE)
+            self.screen.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 2))
+            
     def create_map(self):
         """Create the game map from MEMORY_TILEMAP using Block class"""
         for i, row in enumerate(MEMORY_TILEMAP):
@@ -150,31 +198,6 @@ class MemoryGame:
                         self.game_state = "player_turn"
             else:
                 self.display_sequence()
-
-    def draw(self):
-        self.screen.fill(BLACK)
-        
-        # Draw all sprites (includes walls and player)
-        self.allsprites.draw(self.screen)
-        
-        # Draw the colored squares
-        for i, square in enumerate(self.squares):
-            color = self.square_colors[i]
-            if self.current_flash == i:
-                color = WHITE  # Flash white when active
-            pygame.draw.rect(self.screen, color, square)
-        
-        # Draw score
-        font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 36)
-        score_text = font.render(f"Score: {self.score}/5", True, WHITE)  # Updated to show 5 as the target
-        self.screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, 10))
-
-        if self.game_state == "win":
-            win_text = font.render("Congratulations! You Won!", True, WHITE)
-            self.screen.blit(win_text, (WIDTH // 2 - win_text.get_width() // 2, HEIGHT // 2))
-        elif self.game_state == "game_over":
-            game_over_text = font.render("Game Over!", True, WHITE)
-            self.screen.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 2))
 
     def shoot(self, target_pos):
         """
