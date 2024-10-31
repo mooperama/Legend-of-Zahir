@@ -402,7 +402,7 @@ class Game:
             str: The result of the minigame ("completed" or "died").
         """
         if minigame == 'timezone':
-            result = run_pemdas_game(self.screen, self.clock)
+            result = run_timezone_game(self.screen, self.clock)
         elif minigame == 'language':
             result = run_language_matching_game()
         elif minigame == 'boss':
@@ -508,7 +508,7 @@ class Game:
         Run a specific minigame
         """
         if minigame_type == 'timezone':
-            return run_pemd_game(self.screen, self.clock)
+            return run_timezone_game(self.screen, self.clock)
         elif minigame_type == 'language':
             return run_language_matching_game()
         elif minigame_type == 'boss':
@@ -537,7 +537,7 @@ class Game:
         """
         # Force the order of minigames
         if self.current_minigame_index == 0:
-            return run_pemdas_game(self.screen, self.clock)
+            return run_timezone_game(self.screen, self.clock)
         elif self.current_minigame_index == 1:
             return run_language_matching_game()
         elif self.current_minigame_index == 2:
