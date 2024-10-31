@@ -25,31 +25,31 @@ class ContinentGame:
 
         # Define continent areas (x, y, width, height)
         self.continent_areas = {
-            'North America': pygame.Rect(150, 100, 150, 120),
-            'South America': pygame.Rect(220, 250, 100, 120),
-            'Europe': pygame.Rect(350, 100, 80, 80),
-            'Africa': pygame.Rect(350, 200, 100, 120),
-            'Asia': pygame.Rect(430, 100, 150, 120),
-            'Australia': pygame.Rect(500, 250, 80, 80),
-            'Antarctica': pygame.Rect(300, 350, 200, 40)
+            'North America': pygame.Rect(200, 150, 120, 100),
+            'South America': pygame.Rect(250, 280, 80, 100),
+            'Europe': pygame.Rect(380, 150, 60, 60),
+            'Africa': pygame.Rect(380, 240, 80, 100),
+            'Asia': pygame.Rect(460, 150, 120, 100),
+            'Australia': pygame.Rect(600, 350, 60, 60),
+            'Antarctica': pygame.Rect(320, 480, 160, 30)
         }
 
         # Continents data
         self.continents = [
-            {'name': 'North America', 'pos': (50, 500), 
-             'hint': 'Contains Canada and USA'},
-            {'name': 'South America', 'pos': (200, 500),
-             'hint': 'Home to the Amazon Rainforest'},
-            {'name': 'Europe', 'pos': (350, 500),
-             'hint': 'Contains France and Germany'},
-            {'name': 'Africa', 'pos': (500, 500),
-             'hint': 'Largest hot desert in the world'},
-            {'name': 'Asia', 'pos': (650, 500),
-             'hint': 'Largest continent'},
-            {'name': 'Australia', 'pos': (750, 500),
-             'hint': 'Smallest continent'},
-            {'name': 'Antarctica', 'pos': (100, 550),
-             'hint': 'Coldest continent'}
+            {'name': 'North America', 'pos': (100, 530), 
+            'hint': 'Contains Canada and USA'},
+            {'name': 'South America', 'pos': (220, 530),
+            'hint': 'Home to the Amazon Rainforest'},
+            {'name': 'Europe', 'pos': (340, 530),
+            'hint': 'Contains France and Germany'},
+            {'name': 'Africa', 'pos': (460, 530),
+            'hint': 'Largest hot desert in the world'},
+            {'name': 'Asia', 'pos': (580, 530),
+            'hint': 'Largest continent'},
+            {'name': 'Australia', 'pos': (700, 530),
+            'hint': 'Smallest continent'},
+            {'name': 'Antarctica', 'pos': (400, 560),
+            'hint': 'Coldest continent'}
         ]
 
         self.font = pygame.font.Font(None, 24)
