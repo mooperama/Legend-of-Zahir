@@ -19,7 +19,7 @@ class ContinentGame:
         self.BLUE = (0, 0, 255)
 
         # Load and scale map
-        self.map_img = pygame.image.load ('LEGEND OF ZAHIR/world_map_blank.jpg')
+        self.map_img = pygame.image.load ('LEGEND OF ZAHIR/world_map_blank.png')
         self.map_img = pygame.transform.scale(self.map_img, (600, 400))
         self.map_rect = self.map_img.get_rect(center=(self.width//2, self.height//2))
 

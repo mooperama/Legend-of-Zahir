@@ -12,7 +12,7 @@ import sys
 import time
 
 """
-i luv jessica ng (i cant commit)
+i luv jessica ng (i cant commit)w
 """
 class Game:
     def __init__(self):
@@ -29,7 +29,7 @@ class Game:
         self.in_tutorial = True
         
         # Initialize game components
-        sound_manager.play_music()
+        sound_manager.play_music() 
         self.start_time = time.time()
         self.elapsed_time = 0
         
