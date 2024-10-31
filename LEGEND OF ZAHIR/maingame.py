@@ -3,7 +3,7 @@ from sprites import *
 from config_settings import *
 from enemies import *
 from player import *
-from MINIGAME2 import run_pemdas_game
+from MINIGAME2 import run_timezone_game
 from MINIGAME4 import main as run_language_matching_game
 from MINIGAME5 import main as run_boss_battle
 from soundmanager import sound_manager
@@ -53,7 +53,7 @@ class Game:
         self.playing = True
         
         # Game sequence setup
-        self.game_sequence = ['main', 'pemdas', 'main', 'language', 'main', 'boss']
+        self.game_sequence = ['main', 'timezone', 'main', 'language', 'main', 'boss']
         self.current_sequence_index = 0
         self.total_sequences = len(self.game_sequence)
            
@@ -131,8 +131,8 @@ class Game:
                 # Show appropriate transition message based on next game
                 if self.current_sequence_index + 1 < self.total_sequences:
                     next_mode = self.game_sequence[self.current_sequence_index + 1]
-                    if next_mode == 'pemdas':
-                        self.show_level_complete_dialogue("Main game complete! Press Enter for PEMDAS Challenge")
+                    if next_mode == 'timezone':
+                        self.show_level_complete_dialogue("Main game complete! Press Enter for Timezone Challenge")
                     elif next_mode == 'language':
                         self.show_level_complete_dialogue("Main game complete! Press Enter for Language Challenge")
                     elif next_mode == 'boss':
@@ -401,7 +401,7 @@ class Game:
         Returns:
             str: The result of the minigame ("completed" or "died").
         """
-        if minigame == 'pemdas':
+        if minigame == 'timezone':
             result = run_pemdas_game(self.screen, self.clock)
         elif minigame == 'language':
             result = run_language_matching_game()
@@ -507,8 +507,8 @@ class Game:
         """
         Run a specific minigame
         """
-        if minigame_type == 'pemdas':
-            return run_pemdas_game(self.screen, self.clock)
+        if minigame_type == 'timezone':
+            return run_pemd_game(self.screen, self.clock)
         elif minigame_type == 'language':
             return run_language_matching_game()
         elif minigame_type == 'boss':
@@ -521,7 +521,7 @@ class Game:
         """
         sequence_names = {
             'main': 'Main Game',
-            'pemdas': 'PEMDAS Challenge',
+            'timezone': 'TIMEZONE Challenge',
             'language': 'Language Match',
             'boss': 'Boss Battle'
         }
