@@ -148,7 +148,7 @@ class Game:
         text = ''
         done = False
 
-        prompt = self.font.render('Enter Your Name:', True, WHITE)
+        prompt = self.font.render('Please Enter Your Player Name:', True, WHITE)
         prompt_rect = prompt.get_rect(center=(WIDTH/2, HEIGHT/2 - 50))
 
         enter_text = self.font.render('Press ENTER when done', True, WHITE)
