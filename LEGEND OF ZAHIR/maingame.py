@@ -8,6 +8,7 @@ from MINIGAME4 import main as run_language_matching_game
 from MINIGAME5 import main as run_boss_battle
 from soundmanager import sound_manager
 from tutorial import *
+from save_system import *
 import sys
 import time
 
@@ -23,6 +24,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 32)
         self.running = True
+        self.player_name = ""  # Add this line to store player name
         
         # Initialize tutorial system first
         self.tutorial_system = TutorialSystem(self)
@@ -54,6 +56,22 @@ class Game:
         self.game_sequence = ['main', 'pemdas', 'main', 'language', 'main', 'boss']
         self.current_sequence_index = 0
         self.total_sequences = len(self.game_sequence)
+           
+        # Add after other initializations
+        self.save_system = ZahirSaveSystem()
+
+    # Add these methods to the Game class
+    def save_current_game(self):
+        return self.save_system.save_game(self)
+
+    def load_saved_game(self, save_name):
+        return self.save_system.load_game(save_name, self)
+
+    def show_save_load_menu(self):
+        """Show a menu for saving/loading games"""
+        saves = self.save_system.list_saves()
+        # Implement menu UI here using pygame
+        # You can add this to your pause menu or create a separate menu
 
     def game_loop(self):
         """
@@ -134,9 +152,70 @@ class Game:
         self.show_final_results()
 
 
+    def name_entry_screen(self):
+        """
+        Display a screen for the player to enter their name.
+        Returns the entered name.
+        """
+        input_box = pygame.Rect(WIDTH/2 - 100, HEIGHT/2, 200, 32)
+        color_inactive = pygame.Color('lightskyblue3')
+        color_active = pygame.Color('dodgerblue2')
+        color = color_inactive
+        active = False
+        text = ''
+        done = False
+
+        prompt = self.font.render('Please Enter Your Player Name:', True, WHITE)
+        prompt_rect = prompt.get_rect(center=(WIDTH/2, HEIGHT/2 - 50))
+
+        enter_text = self.font.render('Press ENTER when done', True, WHITE)
+        enter_rect = enter_text.get_rect(center=(WIDTH/2, HEIGHT/2 + 50))
+
+        while not done:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    return ''
+                
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    active = input_box.collidepoint(event.pos)
+                    color = color_active if active else color_inactive
+                
+                if event.type == pygame.KEYDOWN:
+                    if active:
+                        if event.key == pygame.K_RETURN:
+                            done = True
+                        elif event.key == pygame.K_BACKSPACE:
+                            text = text[:-1]
+                        else:
+                            # Limit name length to 15 characters
+                            if len(text) < 15:
+                                text += event.unicode
+
+            self.screen.fill(BLACK)
+            
+            # Draw prompt
+            self.screen.blit(prompt, prompt_rect)
+            
+            # Draw the input box
+            txt_surface = self.font.render(text, True, color)
+            width = max(200, txt_surface.get_width()+10)
+            input_box.w = width
+            input_box.centerx = WIDTH/2
+            pygame.draw.rect(self.screen, color, input_box, 2)
+            self.screen.blit(txt_surface, (input_box.x+5, input_box.y+5))
+            
+            # Draw enter instruction
+            self.screen.blit(enter_text, enter_rect)
+            
+            pygame.display.flip()
+            self.clock.tick(FPS)
+
+        return text if text else "Player"  # Return "Player" if no name entered
+
     def intro_screen(self):
         """
-        Display the game's intro screen and handle game start option.
+        Modified intro screen to transition to name entry
         """
         title = self.font.render('Legend of Zahir', True, WHITE)
         title_rect = title.get_rect(center=(WIDTH/2, HEIGHT/3))
@@ -153,6 +232,7 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if play_button.collidepoint(event.pos):
                         intro_running = False
+                        self.player_name = self.name_entry_screen()  # Get player name
                         return
 
             self.screen.fill(BLACK)
@@ -240,6 +320,10 @@ class Game:
             self.player.draw_stats(self.screen)
             self.draw_timer()
             
+            # Draw player name
+            name_text = self.font.render(self.player_name, True, BLACK)
+            self.screen.blit(name_text, (10, 10))
+
             # Draw tutorial if active
             if self.tutorial_system.active:
                 self.tutorial_system.draw(self.screen)
