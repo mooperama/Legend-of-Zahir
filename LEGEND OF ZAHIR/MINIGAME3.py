@@ -36,19 +36,19 @@ class ContinentGame:
 
         # Continents data
         self.continents = [
-            {'name': 'North America', 'pos': (100, 530), 
+            {'name': 'North America', 'pos': (90, 530), 
             'hint': 'Contains Canada and USA'},
-            {'name': 'South America', 'pos': (220, 530),
+            {'name': 'South America', 'pos': (225, 530),
             'hint': 'Home to the Amazon Rainforest'},
-            {'name': 'Europe', 'pos': (340, 530),
+            {'name': 'Europe', 'pos': (330, 530),
             'hint': 'Contains France and Germany'},
-            {'name': 'Africa', 'pos': (460, 530),
+            {'name': 'Africa', 'pos': (400, 530),
             'hint': 'Largest hot desert in the world'},
-            {'name': 'Asia', 'pos': (580, 530),
+            {'name': 'Asia', 'pos': (460, 530),
             'hint': 'Largest continent'},
-            {'name': 'Australia', 'pos': (700, 530),
+            {'name': 'Australia', 'pos': (530, 530),
             'hint': 'Smallest continent'},
-            {'name': 'Antarctica', 'pos': (400, 560),
+            {'name': 'Antarctica', 'pos': (630, 530),
             'hint': 'Coldest continent'}
         ]
 
@@ -79,7 +79,7 @@ class ContinentGame:
 
                 if self.show_hint == i:
                     hint_text = self.font.render(continent['hint'], True, self.BLUE)
-                    hint_rect = hint_text.get_rect(center=(self.width//2, self.height - 50))
+                    hint_rect = hint_text.get_rect(center=(self.width//2, self.height - 40))
                     pygame.draw.rect(self.screen, self.WHITE, hint_rect.inflate(10, 5))
                     self.screen.blit(hint_text, hint_rect)
 
