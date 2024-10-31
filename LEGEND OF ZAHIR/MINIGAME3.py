@@ -2,24 +2,24 @@ import pygame
 import sys
 import os
 import time
+from config_settings import *
 
 class ContinentGame:
-    def __init__(self):
-        pygame.init()
-        self.width = 800
-        self.height = 600
-        self.screen = pygame.display.set_mode((self.width, self.height))
-        pygame.display.set_caption("Label the Continents!")
+    def __init__(self, screen, clock):
+        self.screen = screen
+        self.clock = clock
+        self.width = WIDTH
+        self.height = HEIGHT
 
         # Colors
-        self.WHITE = (255, 255, 255)
-        self.BLACK = (0, 0, 0)
-        self.RED = (255, 0, 0)
-        self.GREEN = (0, 255, 0)
-        self.BLUE = (0, 0, 255)
+        self.WHITE = WHITE
+        self.BLACK = BLACK
+        self.RED = RED
+        self.GREEN = GREEN
+        self.BLUE = BLUE
 
         # Load and scale map
-        self.map_img = pygame.image.load ('LEGEND OF ZAHIR/world_map_blank.png')
+        self.map_img = pygame.image.load('LEGEND OF ZAHIR/world_map_blank.png')
         self.map_img = pygame.transform.scale(self.map_img, (600, 400))
         self.map_rect = self.map_img.get_rect(center=(self.width//2, self.height//2))
 
@@ -59,9 +59,47 @@ class ContinentGame:
         self.show_hint = None
         self.start_time = time.time()
         self.game_time = 0
-        
-        # Debug mode flag
         self.debug_mode = False
+        self.game_complete = False
+        self.completion_time = 0
+
+    def show_completion_screen(self):
+        overlay = pygame.Surface((self.width, self.height))
+        overlay.fill(self.BLACK)
+        overlay.set_alpha(200)
+        self.screen.blit(overlay, (0, 0))
+
+        # Draw congratulations text
+        congrats_font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 30)
+        texts = [
+            f"Congratulations!",
+            f"You've mastered all continents!",
+            f"Time: {self.completion_time} seconds",
+            "Press ENTER to continue"
+        ]
+
+        y_offset = self.height//2 - (len(texts) * 40)
+        for i, text in enumerate(texts):
+            if i == 0:  # Main congratulations text
+                text_surface = congrats_font.render(text, True, self.GREEN)
+            else:  # Other text
+                text_surface = self.font.render(text, True, self.WHITE)
+            text_rect = text_surface.get_rect(center=(self.width//2, y_offset + i * 40))
+            self.screen.blit(text_surface, text_rect)
+
+        pygame.display.flip()
+        
+        # Wait for ENTER key
+        waiting = True
+        while waiting:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return "quit"
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RETURN:
+                        waiting = False
+                        return "completed"
+        return "completed"
 
     def draw_labels(self):
         # Draw continent areas in debug mode
@@ -88,16 +126,16 @@ class ContinentGame:
         name = continent['name']
         pos = continent['pos']
         
-        # Create a point rect for collision detection
         point_rect = pygame.Rect(pos[0] - 5, pos[1] - 5, 10, 10)
         
-        # Check if the point is within the correct continent area
         if self.continent_areas[name].colliderect(point_rect):
             self.completed[continent_idx] = True
             self.score += 1
-            # Center the label in the continent area
             area = self.continent_areas[name]
             self.continents[continent_idx]['pos'] = (area.centerx, area.centery)
+            if self.score == len(self.continents):
+                self.completion_time = self.game_time
+                self.game_complete = True
             return True
         return False
 
@@ -117,7 +155,13 @@ class ContinentGame:
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
+                    return "quit"
+                    
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_r:  # Reset game
+                        self.__init__(self.screen, self.clock)
+                    elif event.key == pygame.K_d:  # Toggle debug mode
+                        self.debug_mode = not self.debug_mode
 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     for i, continent in enumerate(self.continents):
@@ -131,18 +175,14 @@ class ContinentGame:
                     if self.dragging is not None:
                         if self.check_position(self.dragging):
                             self.draw_correct_feedback()
+                            if self.game_complete:
+                                return self.show_completion_screen()
                         self.dragging = None
                         self.show_hint = None
 
                 elif event.type == pygame.MOUSEMOTION:
                     if self.dragging is not None:
                         self.continents[self.dragging]['pos'] = event.pos
-
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_r:  # Reset game
-                        self.__init__()
-                    elif event.key == pygame.K_d:  # Toggle debug mode
-                        self.debug_mode = not self.debug_mode
 
             # Drawing
             self.screen.fill(self.BLACK)
@@ -159,17 +199,23 @@ class ContinentGame:
             reset_text = self.font.render('Press R to reset | D for debug mode', True, self.WHITE)
             self.screen.blit(reset_text, (10, 70))
 
-            if self.score == len(self.continents):
-                win_text = self.font.render(f'Congratulations! Completed in {self.game_time} seconds!', True, self.GREEN)
-                win_rect = win_text.get_rect(center=(self.width//2, 50))
-                pygame.draw.rect(self.screen, self.BLACK, win_rect.inflate(20, 10))
-                self.screen.blit(win_text, win_rect)
-
             pygame.display.flip()
+            self.clock.tick(FPS)
 
-        pygame.quit()
-        sys.exit()
+        return "quit"
+
+def run_continent_game(screen, clock):
+    """
+    Wrapper function to run the continent game
+    Returns "completed", "quit"
+    """
+    game = ContinentGame(screen, clock)
+    return game.run()
 
 if __name__ == '__main__':
-    game = ContinentGame()
-    game.run()
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    clock = pygame.time.Clock()
+    result = run_continent_game(screen, clock)
+    pygame.quit()
+    sys.exit()

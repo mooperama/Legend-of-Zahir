@@ -4,6 +4,7 @@ from config_settings import *
 from enemies import *
 from player import *
 from MINIGAME2 import run_timezone_game
+from MINIGAME3 import run_continent_game
 from MINIGAME4 import main as run_language_matching_game
 from MINIGAME5 import main as run_boss_battle
 from soundmanager import sound_manager
@@ -53,7 +54,7 @@ class Game:
         self.playing = True
         
         # Game sequence setup
-        self.game_sequence = ['main', 'timezone', 'main', 'language', 'main', 'boss']
+        self.game_sequence = ['main', 'timezone', 'main', 'language','main','continent','main', 'boss']
         self.current_sequence_index = 0
         self.total_sequences = len(self.game_sequence)
            
@@ -135,6 +136,8 @@ class Game:
                         self.show_level_complete_dialogue("Main game complete! Press Enter for Timezone Challenge")
                     elif next_mode == 'language':
                         self.show_level_complete_dialogue("Main game complete! Press Enter for Language Challenge")
+                    elif next_mode == 'continent':
+                        self.show_level_complete_dialogue("Main game complete! Press Enter for The Continent Challenge")
                     elif next_mode == 'boss':
                         self.show_level_complete_dialogue("Main game complete! Press Enter for Final Boss Battle")
                     elif next_mode == 'main':
@@ -405,6 +408,8 @@ class Game:
             result = run_timezone_game(self.screen, self.clock)
         elif minigame == 'language':
             result = run_language_matching_game()
+        elif minigame == 'continent':
+            result = run_continent_game()
         elif minigame == 'boss':
             result = run_boss_battle()
         
@@ -511,6 +516,8 @@ class Game:
             return run_timezone_game(self.screen, self.clock)
         elif minigame_type == 'language':
             return run_language_matching_game()
+        elif minigame_type == 'continent':
+            return run_continent_game(self.screen, self.clock)
         elif minigame_type == 'boss':
             return run_boss_battle()
         return "quit"
@@ -523,6 +530,7 @@ class Game:
             'main': 'Main Game',
             'timezone': 'TIMEZONE Challenge',
             'language': 'Language Match',
+            'continent': 'Continent Challenge',
             'boss': 'Boss Battle'
         }
         
@@ -541,6 +549,8 @@ class Game:
         elif self.current_minigame_index == 1:
             return run_language_matching_game()
         elif self.current_minigame_index == 2:
+            return run_continent_game()
+        elif self.current_minigame_index == 3:
             return run_boss_battle()
         
         return "quit"
