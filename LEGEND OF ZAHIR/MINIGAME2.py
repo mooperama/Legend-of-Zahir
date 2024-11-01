@@ -13,6 +13,12 @@ RED = (255, 0, 0)
 LIGHT_GREEN = (200, 255, 200)
 LIGHT_RED = (255, 200, 200)
 
+# Font configurations
+FONT_PATH = 'LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf'
+REGULAR_SIZE = 15
+MEDIUM_SIZE = 25
+LARGE_SIZE = 40
+
 # Simplified timezone definitions (UTC offsets in hours)
 TIMEZONES = {
     'New York': -5,
@@ -59,14 +65,16 @@ class TimezoneGame:
     def __init__(self, screen, clock):
         self.screen = screen
         self.clock = clock
-        self.font = pygame.font.Font(None, 32)
-        self.title_font = pygame.font.Font(None, 40)
-        self.time_font = pygame.font.Font(None, 48)
+        
+        # Initialize fonts with Nokia style
+        self.regular_font = pygame.font.Font(FONT_PATH, REGULAR_SIZE)
+        self.medium_font = pygame.font.Font(FONT_PATH, MEDIUM_SIZE)
+        self.large_font = pygame.font.Font(FONT_PATH, LARGE_SIZE)
         
         self.score = 0
         self.total_questions = 0
-        self.correct_answers = 0  # New counter for correct answers
-        self.lives = 4  # Player starts with 4 lives
+        self.correct_answers = 0
+        self.lives = 4
         self.generate_question()
         self.create_buttons()
         self.selected_answer = None
@@ -119,59 +127,59 @@ class TimezoneGame:
     def draw_question_screen(self):
         # Draw lives
         lives_text = f"Lives: {'❤' * self.lives}"
-        lives_surface = self.font.render(lives_text, True, RED)
+        lives_surface = self.regular_font.render(lives_text, True, RED)
         self.screen.blit(lives_surface, (WIDTH - 150, 20))
 
         # Draw correct answers counter
         correct_text = f"Correct Answers: {self.correct_answers}/3"
-        correct_surface = self.font.render(correct_text, True, GREEN)
+        correct_surface = self.regular_font.render(correct_text, True, GREEN)
         self.screen.blit(correct_surface, (20, 60))
 
         question_text = f"Convert time from {self.source_tz_name} to {self.target_tz_name}"
-        text_surface = self.title_font.render(question_text, True, BLACK)
+        text_surface = self.medium_font.render(question_text, True, BLACK)
         text_rect = text_surface.get_rect(center=(WIDTH//2, HEIGHT//6))
         self.screen.blit(text_surface, text_rect)
 
         time_text = f"{self.source_hour:02d}:{self.source_minute:02d}"
-        time_surface = self.time_font.render(time_text, True, BLACK)
+        time_surface = self.large_font.render(time_text, True, BLACK)
         time_rect = time_surface.get_rect(center=(WIDTH//2, HEIGHT//3))
         self.screen.blit(time_surface, time_rect)
 
         for button in self.buttons:
-            button.draw(self.screen, self.font)
+            button.draw(self.screen, self.regular_font)
 
     def draw_result_screen(self):
         result_text = "Correct!" if self.selected_answer == self.correct_answer else "Wrong!"
         color = GREEN if self.selected_answer == self.correct_answer else RED
-        result_surface = self.title_font.render(result_text, True, color)
+        result_surface = self.medium_font.render(result_text, True, color)
         result_rect = result_surface.get_rect(center=(WIDTH//2, HEIGHT//6))
         self.screen.blit(result_surface, result_rect)
 
         explanation_text = f"The correct time in {self.target_tz_name} is {self.correct_answer}"
-        explanation_surface = self.font.render(explanation_text, True, BLACK)
+        explanation_surface = self.regular_font.render(explanation_text, True, BLACK)
         explanation_rect = explanation_surface.get_rect(center=(WIDTH//2, HEIGHT//3))
         self.screen.blit(explanation_surface, explanation_rect)
 
         for button in self.buttons:
-            button.draw(self.screen, self.font)
+            button.draw(self.screen, self.regular_font)
 
-        self.continue_button.draw(self.screen, self.font)
+        self.continue_button.draw(self.screen, self.regular_font)
 
     def draw(self):
         self.screen.fill(WHITE)
 
-        score_text = self.font.render(f"Score: {self.score}/{self.total_questions}", True, BLACK)
+        score_text = self.regular_font.render(f"Score: {self.score}/{self.total_questions}", True, BLACK)
         self.screen.blit(score_text, (20, 20))
 
         if self.game_over:
-            game_over_text = self.title_font.render("Game Over!", True, BLACK)
-            final_score_text = self.title_font.render(
+            game_over_text = self.large_font.render("Game Over!", True, BLACK)
+            final_score_text = self.medium_font.render(
                 f"Correct Answers: {self.correct_answers}/3", True, BLACK
             )
             if self.lives <= 0:
-                status_text = self.font.render("Out of lives!", True, RED)
+                status_text = self.regular_font.render("Out of lives!", True, RED)
             else:
-                status_text = self.font.render(
+                status_text = self.regular_font.render(
                     "Victory! Press SPACE to finish" if self.correct_answers >= 3 
                     else "Not enough correct answers! Press SPACE to finish", 
                     True, 
