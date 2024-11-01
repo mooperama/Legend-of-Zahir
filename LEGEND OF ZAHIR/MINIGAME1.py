@@ -76,14 +76,14 @@ class MemoryGame:
         # Load and store candle images
         try:
             # Load unlit candle (black) - we'll use this same image for all unlit states
-            black_candle = pygame.image.load('LEGEND OF ZAHIR/Minigame 1 Assets/Black candle.jpg').convert_alpha()
+            black_candle = pygame.image.load('LEGEND OF ZAHIR/Minigame 1 Assets/Black candle.png').convert_alpha()
             
             # Load lit candles
             colored_candles = [
-                'LEGEND OF ZAHIR/Minigame 1 Assets/Blue candle.jpg',
-                'LEGEND OF ZAHIR/Minigame 1 Assets/Orange candle.jpg',
-                'LEGEND OF ZAHIR/Minigame 1 Assets/Purple candle.jpg',
-                'LEGEND OF ZAHIR/Minigame 1 Assets/Red candle.jpg'
+                'LEGEND OF ZAHIR/Minigame 1 Assets/Blue candle.png',
+                'LEGEND OF ZAHIR/Minigame 1 Assets/Orange candle.png',
+                'LEGEND OF ZAHIR/Minigame 1 Assets/Purple candle.png',
+                'LEGEND OF ZAHIR/Minigame 1 Assets/Red candle.png'
             ]
             
             # Set up tile size
