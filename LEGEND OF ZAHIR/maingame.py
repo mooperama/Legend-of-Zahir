@@ -65,19 +65,7 @@ class Game:
         
         # Add keyboard state tracking for save system
         self.keys_pressed = set()  # Track currently pressed keys
-        
-    # Add these methods to the Game class
-    def save_current_game(self):
-        return self.save_system.save_game(self)
 
-    def load_saved_game(self, save_name):
-        return self.save_system.load_game(save_name, self)
-
-    def show_save_load_menu(self):
-        """Show a menu for saving/loading games"""
-        saves = self.save_system.list_saves()
-        # Implement menu UI here using pygame
-        # You can add this to your pause menu or create a separate menu
 
     def game_loop(self):
         """
