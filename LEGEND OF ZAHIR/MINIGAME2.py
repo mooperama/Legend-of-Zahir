@@ -2,8 +2,8 @@ import pygame
 import random
 
 # Constants
-WIDTH = 800
-HEIGHT = 600
+WIDTH = 960
+HEIGHT = 540
 FPS = 60
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
