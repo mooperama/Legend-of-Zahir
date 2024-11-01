@@ -10,6 +10,7 @@ from MINIGAME4 import main as run_language_matching_game
 from MINIGAME5 import main as run_boss_battle
 from soundmanager import sound_manager
 from tutorial import *
+from dialogue import DialogueSystem
 from save_system import SaveSystem, SaveLoadMenu
 import os
 import sys
@@ -68,11 +69,15 @@ class Game:
         # Add keyboard state tracking for save system
         self.keys_pressed = set()  # Track currently pressed keys
 
+        self.dialogue_system = DialogueSystem(self.screen, self.clock)
 
     def game_loop(self):
         """
-        Modified main game loop that shows gameplay during tutorial
+        Main game loop with integrated dialogue and tutorial systems.
         """
+        # Show intro dialogue before starting
+        self.dialogue_system.show_dialogue('intro')
+        
         # Tutorial loop with gameplay
         while self.running and self.in_tutorial:
             # Handle events
@@ -91,6 +96,7 @@ class Game:
                 # Check if tutorial is completed
                 if self.tutorial_system.tutorial_completed:
                     self.in_tutorial = False
+                    self.dialogue_system.show_dialogue('after_tutorial')
                     break
             
             # Update game state during tutorial
@@ -110,7 +116,7 @@ class Game:
             pygame.display.update()
             self.clock.tick(FPS)
         
-        # Continue with main game loop
+        # Main game sequence loop
         while self.running and self.current_sequence_index < self.total_sequences:
             current_mode = self.game_sequence[self.current_sequence_index]
             
@@ -124,33 +130,49 @@ class Game:
                 break
             
             if result == "completed":
-                # Show appropriate transition message based on next game
-                if self.current_sequence_index + 1 < self.total_sequences:
-                    next_mode = self.game_sequence[self.current_sequence_index + 1]
-                    if next_mode == 'candle memory':
-                        self.show_level_complete_dialogue("Main game complete! Press Enter for Candle Challenge")
-                    elif next_mode == 'timezone':
-                        self.show_level_complete_dialogue("Main game complete! Press Enter for Timezone Challenge")
-                    elif next_mode == 'language':
-                        self.show_level_complete_dialogue("Main game complete! Press Enter for Language Challenge")
-                    elif next_mode == 'continent':
-                        self.show_level_complete_dialogue("Main game complete! Press Enter for The Continent Challenge")
-                    elif next_mode == 'boss':
-                        self.show_level_complete_dialogue("Main game complete! Press Enter for Final Boss Battle")
-                    elif next_mode == 'main':
-                        self.show_level_complete_dialogue("Minigame complete! Press Enter to return to main game")
+                # Handle dialogue sequences based on completion
+                if current_mode == 'main':
+                    # Show appropriate dialogue based on sequence
+                    if self.current_sequence_index == 0:  # After first main sequence
+                        self.dialogue_system.show_dialogue('after_tutorial')
+                        self.show_level_complete_dialogue("Press Enter for Candle Memory Challenge")
+                    elif self.current_sequence_index == 2:  # After memory game
+                        self.dialogue_system.show_dialogue('after_memory')
+                        self.show_level_complete_dialogue("Press Enter for Timezone Challenge")
+                    elif self.current_sequence_index == 4:  # After timezone game
+                        self.dialogue_system.show_dialogue('after_timezone')
+                        self.show_level_complete_dialogue("Press Enter for Language Challenge")
+                    elif self.current_sequence_index == 6:  # After language game
+                        self.dialogue_system.show_dialogue('after_language')
+                        self.show_level_complete_dialogue("Press Enter for The Continent Challenge")
+                    elif self.current_sequence_index == 8:  # Before boss battle
+                        self.dialogue_system.show_dialogue('after_continent')
+                        self.dialogue_system.show_dialogue('before_boss')
+                        self.show_level_complete_dialogue("Press Enter for Final Boss Battle")
+                elif current_mode == 'candle memory':
+                    self.show_level_complete_dialogue("Candle Memory completed! Press Enter to continue")
+                elif current_mode == 'timezone':
+                    self.show_level_complete_dialogue("Timezone Challenge completed! Press Enter to continue")
+                elif current_mode == 'language':
+                    self.show_level_complete_dialogue("Language Challenge completed! Press Enter to continue")
+                elif current_mode == 'continent':
+                    self.show_level_complete_dialogue("Continent Challenge completed! Press Enter to continue")
+                elif current_mode == 'boss':
+                    self.dialogue_system.show_dialogue('victory')
                 
                 self.current_sequence_index += 1
+                
             elif result == "died":
                 if not self.restart_level_prompt():
                     self.running = False
                     break
-
+        
+        # Game completion check
         if self.current_sequence_index >= self.total_sequences:
+            self.dialogue_system.show_dialogue('victory')
             self.show_congratulations()
         
         self.show_final_results()
-
 
     def name_entry_screen(self):
         """
