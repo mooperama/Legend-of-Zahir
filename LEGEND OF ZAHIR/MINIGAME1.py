@@ -41,14 +41,14 @@ class MemoryGame:
         
         # Load unlit candles
         self.tile_images = [
-            pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile1.png').convert_alpha(), #1 black candle
+            pygame.image.load('LEGEND OF ZAHIR/Minigame 1 Assets/Black candle.jpg').convert_alpha(), #1 black candle
         ]
         # Load lit candles
         self.flash_images = [
-            pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile1_flash.png').convert_alpha(),
-            pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile2_flash.png').convert_alpha(),
-            pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile3_flash.png').convert_alpha(),
-            pygame.image.load('LEGEND OF ZAHIR/assets/tiles/tile4_flash.png').convert_alpha()
+            pygame.image.load('LEGEND OF ZAHIR/Minigame 1 Assets/Blue candle.jpg').convert_alpha(),
+            pygame.image.load('LEGEND OF ZAHIR/Minigame 1 Assets/Orange candle.jpg').convert_alpha(),
+            pygame.image.load('LEGEND OF ZAHIR/Minigame 1 Assets/Purple candle.jpg').convert_alpha(),
+            pygame.image.load('LEGEND OF ZAHIR/Minigame 1 Assets/Red candle.jpg').convert_alpha()
         ]
         
         # Resize images to match tile size
