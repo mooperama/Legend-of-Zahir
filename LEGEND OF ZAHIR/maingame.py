@@ -62,6 +62,8 @@ class Game:
            
         # Initialize save system
         self.save_system = SaveSystem()
+
+        self.paused = False  # Add this line
         
         # Add keyboard state tracking for save system
         self.keys_pressed = set()  # Track currently pressed keys
@@ -269,18 +271,10 @@ class Game:
         self.playing = True  # Set the game state to playing
         self.start_time = time.time()  # Record the start time
 
+# Replace the existing events method with this:
     def events(self):
-        """
-        Handle game events, including quitting and mouse clicks.
-        """
-
-        events = pygame.event.get()
-        
-        # Handle tutorial input first
-        if hasattr(self, 'tutorial_system') and self.tutorial_system.active:
-            self.tutorial_system.handle_input(events)
-            
-        for event in events:
+        """Handle game events with save system integration."""
+        for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
@@ -289,48 +283,43 @@ class Game:
             elif event.type == pygame.KEYDOWN:
                 self.keys_pressed.add(event.key)
                 
-                # ESC key opens save/load menu
-                if event.key == pygame.K_ESCAPE:
+                # Handle save system shortcuts
+                if event.key == pygame.K_ESCAPE and not self.paused:
+                    self.paused = True
                     self.show_save_load_menu()
-                    
-                # Q for quick save
-                elif event.key == pygame.K_q:
+                    self.paused = False
+                elif event.key == pygame.K_q and not self.paused:
                     self.quick_save()
-                    
-                # R for quick load (loads most recent save)
-                elif event.key == pygame.K_r:
+                elif event.key == pygame.K_r and not self.paused:
                     self.quick_load()
                     
             # Handle key release events
             elif event.type == pygame.KEYUP:
                 self.keys_pressed.discard(event.key)
                 
-            # Handle shooting
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            # Handle shooting when not paused
+            if event.type == pygame.MOUSEBUTTONDOWN and not self.paused:
                 if event.button == 1 and not self.tutorial_system.active:
                     self.player.shoot(pygame.mouse.get_pos())
                     sound_manager.play_sound('bullet')
 
 
+# Replace the existing update method with this:
     def update(self):
-        """
-        Update game objects and check for game over or victory conditions.
-        """
-        self.allsprites.update()  # Update all sprite objects
-        self.elapsed_time = time.time() - self.start_time  # Update elapsed time
+        """Update game state when not paused."""
+        if not self.paused:
+            self.allsprites.update()
+            self.elapsed_time = time.time() - self.start_time
 
-        if self.player.health <= 0:  # If player's health is depleted
-            self.playing = False  # End the game
+            if self.player.health <= 0:
+                self.playing = False
 
-        # Check for bullet collisions with enemies
-        hits = pygame.sprite.groupcollide(self.bullets, self.enemies, True, True)
-        for hit in hits:
-            # Handle enemy hit (could add score, play sound, etc.)
-            pass
-
-        if len(self.enemies) == 0:  # If all enemies are defeated
-            self.playing = False  # End the current level
-
+            # Check for bullet collisions
+            hits = pygame.sprite.groupcollide(self.bullets, self.enemies, True, True)
+            
+            if len(self.enemies) == 0:
+                self.playing = False
+                
     def draw(self):
             """
             Draw all game objects and UI elements to the screen.
@@ -647,25 +636,35 @@ class Game:
             self.clock.tick(FPS)
 
 
+# Replace the existing quick_save method with this:
     def quick_save(self):
-        """Perform a quick save with auto-generated name"""
-        if self.save_system.save_game(self):
-            self.show_message("Game saved successfully!", duration=1.5)
-        else:
-            self.show_message("Failed to save game!", duration=1.5)
-
-    def quick_load(self):
-        """Load the most recent save file"""
-        saves = self.save_system.list_saves()
-        if saves:
-            # Sort saves by date and get most recent
-            saves.sort(key=lambda x: x['date'], reverse=True)
-            if self.save_system.load_game(saves[0]['name'], self):
-                self.show_message("Game loaded successfully!", duration=1.5)
+        """Perform a quick save with auto-generated name."""
+        try:
+            if self.save_system.save_game(self):
+                self.show_message("Game saved! (Q)", duration=1.0)
             else:
-                self.show_message("Failed to load game!", duration=1.5)
-        else:
-            self.show_message("No save files found!", duration=1.5)
+                self.show_message("Save failed! (Q)", duration=1.0)
+        except Exception as e:
+            print(f"Error in quick save: {e}")
+            self.show_message("Save error! (Q)", duration=1.0)
+
+# Replace the existing quick_load method with this:
+    def quick_load(self):
+        """Load the most recent save file."""
+        try:
+            saves = self.save_system.list_saves()
+            if saves:
+                # Sort saves by date and get most recent
+                saves.sort(key=lambda x: x['date'], reverse=True)
+                if self.save_system.load_game(saves[0]['name'], self):
+                    self.show_message("Game loaded! (R)", duration=1.0)
+                else:
+                    self.show_message("Load failed! (R)", duration=1.0)
+            else:
+                self.show_message("No saves found! (R)", duration=1.0)
+        except Exception as e:
+            print(f"Error in quick load: {e}")
+            self.show_message("Load error! (R)", duration=1.0)
 
     def show_message(self, message, duration=2.0):
         """
@@ -707,41 +706,84 @@ class Game:
                 if event.type == pygame.KEYDOWN:
                     return
 
+    # Replace the existing show_save_load_menu method with this:
     def show_save_load_menu(self):
-        """Show the save/load menu and handle user interaction"""
-        menu = SaveLoadMenu(self)
-        menu_active = True
-        
-        while menu_active and self.running:
-            # Handle events
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                    return
-                
-                result = menu.handle_input(event)
-                if result == 'back':
-                    menu_active = False
-                elif result == 'save':
-                    if self.save_system.save_game(self):
-                        self.show_message("Game saved successfully!")
-                    else:
-                        self.show_message("Failed to save game!")
-                elif result == 'load':
-                    saves = self.save_system.list_saves()
-                    if saves and menu.selected_index < len(saves):
-                        if self.save_system.load_game(saves[menu.selected_index]['name'], self):
-                            self.show_message("Game loaded successfully!")
-                            menu_active = False
-                        else:
-                            self.show_message("Failed to load game!")
+        """Show the save/load menu and handle user interaction."""
+        try:
+            menu = SaveLoadMenu(self)
+            menu_active = True
+            paused = True
             
-            # Draw
-            self.draw()  # Draw game state in background
-            menu.draw()  # Draw menu overlay
-            pygame.display.flip()
-            self.clock.tick(FPS)
+            # Store the current game screen
+            background = pygame.Surface((WIDTH, HEIGHT))
+            background.blit(self.screen, (0, 0))
+            
+            while menu_active and self.running and paused:
+                # Handle events
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.running = False
+                        return
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            menu_active = False
+                            paused = False
+                            break
+                        
+                        # Handle menu input
+                        result = menu.handle_input(event)
+                        if result == 'back':
+                            menu_active = False
+                            paused = False
+                        elif result == 'save':
+                            self.handle_save_action(menu)
+                        elif result == 'load':
+                            if self.handle_load_action(menu):
+                                menu_active = False
+                                paused = False
+                
+                # Draw menu
+                if paused:
+                    self.screen.blit(background, (0, 0))
+                    menu.draw()
+                    pygame.display.flip()
+                    self.clock.tick(30)
+                    
+        except Exception as e:
+            print(f"Error in save/load menu: {e}")
+            self.show_message("An error occurred in the menu", duration=2.0)
+    def handle_save_action(self, menu):
+        """Handle save game action."""
+        try:
+            success = self.save_system.save_game(self)
+            if success:
+                self.show_message("Game saved successfully!", duration=1.5)
+            else:
+                self.show_message("Failed to save game!", duration=1.5)
+        except Exception as e:
+            print(f"Error saving game: {e}")
+            self.show_message("Error saving game!", duration=1.5)
 
+    def handle_load_action(self, menu):
+        """
+        Handle load game action.
+        Returns:
+            bool: True if load successful, False otherwise
+        """
+        try:
+            saves = self.save_system.list_saves()
+            if saves and menu.selected_index < len(saves):
+                if self.save_system.load_game(saves[menu.selected_index]['name'], self):
+                    self.show_message("Game loaded successfully!", duration=1.5)
+                    return True
+                else:
+                    self.show_message("Failed to load game!", duration=1.5)
+            return False
+        except Exception as e:
+            print(f"Error loading game: {e}")
+            self.show_message("Error loading game!", duration=1.5)
+            return False
+            
     def reset_game(self):
         """
         Modified reset method to properly handle save system
