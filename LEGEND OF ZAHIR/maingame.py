@@ -3,13 +3,15 @@ from sprites import *
 from config_settings import *
 from enemies import *
 from player import *
+from MINIGAME1 import run_memory_game
 from MINIGAME2 import run_timezone_game
 from MINIGAME3 import run_continent_game
 from MINIGAME4 import main as run_language_matching_game
 from MINIGAME5 import main as run_boss_battle
 from soundmanager import sound_manager
 from tutorial import *
-from save_system import *
+from save_system import SaveSystem, SaveLoadMenu
+import os
 import sys
 import time
 
@@ -54,25 +56,16 @@ class Game:
         self.playing = True
         
         # Game sequence setup
-        self.game_sequence = ['main', 'timezone', 'main', 'language','main','continent','main', 'boss']
+        self.game_sequence = ['main', 'candle memory', 'main', 'timezone', 'main', 'language','main','continent','main', 'boss']
         self.current_sequence_index = 0
         self.total_sequences = len(self.game_sequence)
            
-        # Add after other initializations
-        self.save_system = ZahirSaveSystem()
+        # Initialize save system
+        self.save_system = SaveSystem()
+        
+        # Add keyboard state tracking for save system
+        self.keys_pressed = set()  # Track currently pressed keys
 
-    # Add these methods to the Game class
-    def save_current_game(self):
-        return self.save_system.save_game(self)
-
-    def load_saved_game(self, save_name):
-        return self.save_system.load_game(save_name, self)
-
-    def show_save_load_menu(self):
-        """Show a menu for saving/loading games"""
-        saves = self.save_system.list_saves()
-        # Implement menu UI here using pygame
-        # You can add this to your pause menu or create a separate menu
 
     def game_loop(self):
         """
@@ -132,7 +125,9 @@ class Game:
                 # Show appropriate transition message based on next game
                 if self.current_sequence_index + 1 < self.total_sequences:
                     next_mode = self.game_sequence[self.current_sequence_index + 1]
-                    if next_mode == 'timezone':
+                    if next_mode == 'candle memory':
+                        self.show_level_complete_dialogue("Main game complete! Press Enter for Candle Challenge")
+                    elif next_mode == 'timezone':
                         self.show_level_complete_dialogue("Main game complete! Press Enter for Timezone Challenge")
                     elif next_mode == 'language':
                         self.show_level_complete_dialogue("Main game complete! Press Enter for Language Challenge")
@@ -278,6 +273,7 @@ class Game:
         """
         Handle game events, including quitting and mouse clicks.
         """
+
         events = pygame.event.get()
         
         # Handle tutorial input first
@@ -288,10 +284,33 @@ class Game:
             if event.type == pygame.QUIT:
                 self.playing = False
                 self.running = False
+                
+            # Handle key press events
+            elif event.type == pygame.KEYDOWN:
+                self.keys_pressed.add(event.key)
+                
+                # ESC key opens save/load menu
+                if event.key == pygame.K_ESCAPE:
+                    self.show_save_load_menu()
+                    
+                # Q for quick save
+                elif event.key == pygame.K_q:
+                    self.quick_save()
+                    
+                # R for quick load (loads most recent save)
+                elif event.key == pygame.K_r:
+                    self.quick_load()
+                    
+            # Handle key release events
+            elif event.type == pygame.KEYUP:
+                self.keys_pressed.discard(event.key)
+                
+            # Handle shooting
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1 and not self.tutorial_system.active:
                     self.player.shoot(pygame.mouse.get_pos())
                     sound_manager.play_sound('bullet')
+
 
     def update(self):
         """
@@ -404,7 +423,9 @@ class Game:
         Returns:
             str: The result of the minigame ("completed" or "died").
         """
-        if minigame == 'timezone':
+        if minigame == 'candle memory':
+            result = run_memory_game(self.screen, self.clock)
+        elif minigame == 'timezone':
             result = run_timezone_game(self.screen, self.clock)
         elif minigame == 'language':
             result = run_language_matching_game()
@@ -512,7 +533,9 @@ class Game:
         """
         Run a specific minigame
         """
-        if minigame_type == 'timezone':
+        if minigame_type == 'candle memory':
+            return run_memory_game(self.screen, self.clock)
+        elif minigame_type == 'timezone':
             return run_timezone_game(self.screen, self.clock)
         elif minigame_type == 'language':
             return run_language_matching_game()
@@ -528,6 +551,7 @@ class Game:
         """
         sequence_names = {
             'main': 'Main Game',
+            'candle memory': 'Candle Challenge',
             'timezone': 'TIMEZONE Challenge',
             'language': 'Language Match',
             'continent': 'Continent Challenge',
@@ -545,12 +569,14 @@ class Game:
         """
         # Force the order of minigames
         if self.current_minigame_index == 0:
-            return run_timezone_game(self.screen, self.clock)
+            return run_memory_game(self.screen, self.clock)
         elif self.current_minigame_index == 1:
-            return run_language_matching_game()
+            return run_timezone_game(self.screen, self.clock)
         elif self.current_minigame_index == 2:
-            return run_continent_game()
+            return run_language_matching_game()
         elif self.current_minigame_index == 3:
+            return run_continent_game()
+        elif self.current_minigame_index == 4:
             return run_boss_battle()
         
         return "quit"
@@ -620,16 +646,116 @@ class Game:
             pygame.display.update()
             self.clock.tick(FPS)
 
+
+    def quick_save(self):
+        """Perform a quick save with auto-generated name"""
+        if self.save_system.save_game(self):
+            self.show_message("Game saved successfully!", duration=1.5)
+        else:
+            self.show_message("Failed to save game!", duration=1.5)
+
+    def quick_load(self):
+        """Load the most recent save file"""
+        saves = self.save_system.list_saves()
+        if saves:
+            # Sort saves by date and get most recent
+            saves.sort(key=lambda x: x['date'], reverse=True)
+            if self.save_system.load_game(saves[0]['name'], self):
+                self.show_message("Game loaded successfully!", duration=1.5)
+            else:
+                self.show_message("Failed to load game!", duration=1.5)
+        else:
+            self.show_message("No save files found!", duration=1.5)
+
+    def show_message(self, message, duration=2.0):
+        """
+        Show a temporary message on screen
+        
+        Args:
+            message (str): Message to display
+            duration (float): How long to show message in seconds
+        """
+        # Create semi-transparent overlay
+        overlay = pygame.Surface((WIDTH, HEIGHT))
+        overlay.fill((0, 0, 0))
+        overlay.set_alpha(128)
+        
+        # Render message
+        font = pygame.font.Font(None, 36)
+        text = font.render(message, True, WHITE)
+        text_rect = text.get_rect(center=(WIDTH/2, HEIGHT/2))
+        
+        # Calculate end time
+        end_time = time.time() + duration
+        
+        # Show message
+        while time.time() < end_time:
+            # Draw current game state
+            self.draw()
+            
+            # Draw message overlay
+            self.screen.blit(overlay, (0, 0))
+            self.screen.blit(text, text_rect)
+            
+            pygame.display.flip()
+            self.clock.tick(FPS)
+            
+            # Check for early exit
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return
+                if event.type == pygame.KEYDOWN:
+                    return
+
+    def show_save_load_menu(self):
+        """Show the save/load menu and handle user interaction"""
+        menu = SaveLoadMenu(self)
+        menu_active = True
+        
+        while menu_active and self.running:
+            # Handle events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    return
+                
+                result = menu.handle_input(event)
+                if result == 'back':
+                    menu_active = False
+                elif result == 'save':
+                    if self.save_system.save_game(self):
+                        self.show_message("Game saved successfully!")
+                    else:
+                        self.show_message("Failed to save game!")
+                elif result == 'load':
+                    saves = self.save_system.list_saves()
+                    if saves and menu.selected_index < len(saves):
+                        if self.save_system.load_game(saves[menu.selected_index]['name'], self):
+                            self.show_message("Game loaded successfully!")
+                            menu_active = False
+                        else:
+                            self.show_message("Failed to load game!")
+            
+            # Draw
+            self.draw()  # Draw game state in background
+            menu.draw()  # Draw menu overlay
+            pygame.display.flip()
+            self.clock.tick(FPS)
+
     def reset_game(self):
         """
-        Reset all game state variables to start a new game.
+        Modified reset method to properly handle save system
         """
         self.minigames_completed = 0
         self.current_level = 0
         self.elapsed_time = 0
         self.in_main_game = True
         self.current_minigame_index = 0
-        # Reset any other necessary game state variables
+        self.current_sequence_index = 0
+        self.in_tutorial = True
+        if hasattr(self, 'tutorial_system'):
+            self.tutorial_system.reset()
+        # Any other state variables that need resetting
 
 # Game initialization and main loop
 g = Game()  # Create a new Game instance
