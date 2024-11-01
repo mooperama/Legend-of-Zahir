@@ -3,6 +3,7 @@ from sprites import *
 from config_settings import *
 from enemies import *
 from player import *
+from MINIGAME1 import run_memory_game
 from MINIGAME2 import run_timezone_game
 from MINIGAME3 import run_continent_game
 from MINIGAME4 import main as run_language_matching_game
@@ -54,7 +55,7 @@ class Game:
         self.playing = True
         
         # Game sequence setup
-        self.game_sequence = ['main', 'timezone', 'main', 'language','main','continent','main', 'boss']
+        self.game_sequence = ['main', 'candle memory', 'main', 'timezone', 'main', 'language','main','continent','main', 'boss']
         self.current_sequence_index = 0
         self.total_sequences = len(self.game_sequence)
            
@@ -132,7 +133,9 @@ class Game:
                 # Show appropriate transition message based on next game
                 if self.current_sequence_index + 1 < self.total_sequences:
                     next_mode = self.game_sequence[self.current_sequence_index + 1]
-                    if next_mode == 'timezone':
+                    if next_mode == 'candle memory':
+                        self.show_level_complete_dialogue("Main game complete! Press Enter for Candle Challenge")
+                    elif next_mode == 'timezone':
                         self.show_level_complete_dialogue("Main game complete! Press Enter for Timezone Challenge")
                     elif next_mode == 'language':
                         self.show_level_complete_dialogue("Main game complete! Press Enter for Language Challenge")
@@ -404,7 +407,9 @@ class Game:
         Returns:
             str: The result of the minigame ("completed" or "died").
         """
-        if minigame == 'timezone':
+        if minigame == 'candle memory':
+            result = run_memory_game(self.screen, self.clock)
+        elif minigame == 'timezone':
             result = run_timezone_game(self.screen, self.clock)
         elif minigame == 'language':
             result = run_language_matching_game()
@@ -512,7 +517,9 @@ class Game:
         """
         Run a specific minigame
         """
-        if minigame_type == 'timezone':
+        if minigame_type == 'candle memory':
+            return run_memory_game(self.screen, self.clock)
+        elif minigame_type == 'timezone':
             return run_timezone_game(self.screen, self.clock)
         elif minigame_type == 'language':
             return run_language_matching_game()
@@ -528,6 +535,7 @@ class Game:
         """
         sequence_names = {
             'main': 'Main Game',
+            'candle memory': 'Candle Challenge',
             'timezone': 'TIMEZONE Challenge',
             'language': 'Language Match',
             'continent': 'Continent Challenge',
@@ -545,12 +553,14 @@ class Game:
         """
         # Force the order of minigames
         if self.current_minigame_index == 0:
-            return run_timezone_game(self.screen, self.clock)
+            return run_memory_game(self.screen, self.clock)
         elif self.current_minigame_index == 1:
-            return run_language_matching_game()
+            return run_timezone_game(self.screen, self.clock)
         elif self.current_minigame_index == 2:
-            return run_continent_game()
+            return run_language_matching_game()
         elif self.current_minigame_index == 3:
+            return run_continent_game()
+        elif self.current_minigame_index == 4:
             return run_boss_battle()
         
         return "quit"

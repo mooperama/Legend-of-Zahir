@@ -6,56 +6,104 @@ from player import *
 from sprites import *
 
 class Bullet(pygame.sprite.Sprite):
+    """
+    A projectile that can be fired by the player.
+    
+    Attributes:
+        image: The bullet's visual representation
+        rect: The bullet's position and size
+        speed: Movement speed of the bullet
+        dx, dy: Direction components
+        x, y: Precise floating-point position
+    """
     def __init__(self, x, y, direction):
+        """
+        Initialize a new bullet.
+        
+        Args:
+            x (float): Starting x position
+            y (float): Starting y position
+            direction (list): [dx, dy] normalized direction vector
+        """
         super().__init__()
-        self.image = pygame.Surface([BULLETSIZE,BULLETSIZE])
+        self.image = pygame.Surface([BULLETSIZE, BULLETSIZE])
         self.image.fill(WHITE)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
         
-        # Set speed and direction
         self.speed = 10
         self.dx = direction[0] * self.speed
         self.dy = direction[1] * self.speed
         
-        # Store position as float for precise movement
         self.x = float(x)
         self.y = float(y)
         
     def update(self):
+        """Update bullet position based on its direction and speed."""
         self.x += self.dx
         self.y += self.dy
         self.rect.x = int(self.x)
         self.rect.y = int(self.y)
 
 class MemoryGame:
+    """
+    A memory game where players shoot targets in sequence.
+    
+    The game displays a sequence of colored candles that the player must
+    replicate by shooting them in the correct order.
+    """
     def __init__(self, screen, clock):
+        """
+        Initialize the memory game.
+        
+        Args:
+            screen: Pygame display surface
+            clock: Pygame clock object
+        """
         self.screen = screen
         self.clock = clock
         
-        # Load spritesheets FIRST
+        # Load spritesheets
         self.character_spritesheet = Spritesheet('LEGEND OF ZAHIR/knight_strip.png')
         self.enemy_spritesheet = Spritesheet('LEGEND OF ZAHIR/skeleton_strip.png')
         self.terrain_spritesheet = Spritesheet('LEGEND OF ZAHIR/dungeon2.jpg')
         
-        # Load unlit candles
-        self.tile_images = [
-            pygame.image.load('LEGEND OF ZAHIR/Minigame 1 Assets/Black candle.jpg').convert_alpha(), #1 black candle
-        ]
-        # Load lit candles
-        self.flash_images = [
-            pygame.image.load('LEGEND OF ZAHIR/Minigame 1 Assets/Blue candle.jpg').convert_alpha(),
-            pygame.image.load('LEGEND OF ZAHIR/Minigame 1 Assets/Orange candle.jpg').convert_alpha(),
-            pygame.image.load('LEGEND OF ZAHIR/Minigame 1 Assets/Purple candle.jpg').convert_alpha(),
-            pygame.image.load('LEGEND OF ZAHIR/Minigame 1 Assets/Red candle.jpg').convert_alpha()
-        ]
+        # Initialize image lists
+        self.tile_images = []
+        self.flash_images = []
         
-        # Resize images to match tile size
-        self.tile_size = TILESIZE * 2
-        for i in range(len(self.tile_images)):
-            self.tile_images[i] = pygame.transform.scale(self.tile_images[i], (self.tile_size, self.tile_size))
-            self.flash_images[i] = pygame.transform.scale(self.flash_images[i], (self.tile_size, self.tile_size))
+        # Load and store candle images
+        try:
+            # Load unlit candle (black) - we'll use this same image for all unlit states
+            black_candle = pygame.image.load('LEGEND OF ZAHIR/Minigame 1 Assets/Black candle.jpg').convert_alpha()
+            
+            # Load lit candles
+            colored_candles = [
+                'LEGEND OF ZAHIR/Minigame 1 Assets/Blue candle.jpg',
+                'LEGEND OF ZAHIR/Minigame 1 Assets/Orange candle.jpg',
+                'LEGEND OF ZAHIR/Minigame 1 Assets/Purple candle.jpg',
+                'LEGEND OF ZAHIR/Minigame 1 Assets/Red candle.jpg'
+            ]
+            
+            # Set up tile size
+            self.tile_size = TILESIZE * 2
+            
+            # Create tile images (all black candles)
+            for _ in range(4):  # We need 4 black candles
+                resized_black = pygame.transform.scale(black_candle, (self.tile_size, self.tile_size))
+                self.tile_images.append(resized_black)
+            
+            # Load and resize colored candles
+            for candle_path in colored_candles:
+                colored_candle = pygame.image.load(candle_path).convert_alpha()
+                resized_colored = pygame.transform.scale(colored_candle, (self.tile_size, self.tile_size))
+                self.flash_images.append(resized_colored)
+                
+        except pygame.error as e:
+            print(f"Couldn't load image: {e}")
+            pygame.quit()
+            raise SystemExit(f"Couldn't load required images: {e}")
         
         # Initialize sprite groups
         self.allsprites = pygame.sprite.LayeredUpdates()
@@ -74,7 +122,7 @@ class MemoryGame:
         # Create the map first
         self.create_map()
         
-        # Square properties
+        # Set up square positions
         self.squares = [
             pygame.Rect(TILESIZE, TILESIZE, self.tile_size, self.tile_size),
             pygame.Rect(WIDTH - TILESIZE * 3, TILESIZE, self.tile_size, self.tile_size),
@@ -82,70 +130,78 @@ class MemoryGame:
             pygame.Rect(WIDTH - TILESIZE * 3, HEIGHT - TILESIZE * 3, self.tile_size, self.tile_size)
         ]
         
+        # Animation control variables
         self.current_flash = None
         self.flash_start = time.time()
         self.flash_duration = 0.5
         self.sequence_index = 0
-        self.flash_alpha = 255  # For fade effect
+        self.flash_alpha = 255
 
     def draw(self):
+        """Draw the game state to the screen."""
         self.screen.fill(BLACK)
         
-        # Draw all sprites (includes walls and player)
+        # Draw all sprites
         self.allsprites.draw(self.screen)
         
-        # Draw the tiles
+        # Draw the candles
         for i, square in enumerate(self.squares):
-            # Draw normal or flashing tile
-            if self.current_flash == i:
-                # Draw flashing tile
+            if self.current_flash == i and i < len(self.flash_images):
                 self.screen.blit(self.flash_images[i], square)
-            else:
-                # Draw normal tile
+            elif i < len(self.tile_images):
                 self.screen.blit(self.tile_images[i], square)
         
         # Draw score
-        font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 36)
+        try:
+            font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 36)
+        except pygame.error:
+            font = pygame.font.Font(None, 36)  # Fallback to default font
+            
         score_text = font.render(f"Score: {self.score}/5", True, WHITE)
         self.screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, 10))
 
+        # Draw game state messages
         if self.game_state == "win":
             win_text = font.render("Congratulations! You Won!", True, WHITE)
             self.screen.blit(win_text, (WIDTH // 2 - win_text.get_width() // 2, HEIGHT // 2))
         elif self.game_state == "game_over":
             game_over_text = font.render("Game Over!", True, WHITE)
             self.screen.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 2))
-            
+
     def create_map(self):
-        """Create the game map from MEMORY_TILEMAP using Block class"""
+        """Create the game map using the MEMORY_TILEMAP configuration."""
         for i, row in enumerate(MEMORY_TILEMAP):
             for j, column in enumerate(row):
                 if column == "W":
-                    Block(self, j, i)  # Create wall using main game's Block class
+                    Block(self, j, i)
                 elif column == "P":
-                    # Create player and store reference
-                    self.player = Player(self, j, i)  # Use main game's Player class
+                    self.player = Player(self, j, i)
                     self.allsprites.add(self.player)
 
     def display_sequence(self):
-        """Display the sequence of colors by flashing them one at a time"""
+        """Generate and display the sequence of colors to memorize."""
         current_time = time.time()
         
-        # Generate new sequence if needed
-        if len(self.sequence) == 0:  # Changed condition to be more explicit
+        if not self.sequence:
             self.sequence = [random.randint(0, 3) for _ in range(self.score + 1)]
             self.sequence_index = 0
             self.current_flash = self.sequence[0]
             self.flash_start = current_time
             self.player_sequence = []
-
-        # If we're not currently flashing a color, move to the next one
-        elif self.current_flash is None:
-            if self.sequence_index < len(self.sequence):
-                self.current_flash = self.sequence[self.sequence_index]
-                self.flash_start = current_time
+        elif self.current_flash is None and self.sequence_index < len(self.sequence):
+            self.current_flash = self.sequence[self.sequence_index]
+            self.flash_start = current_time
 
     def handle_shooting(self, bullet):
+        """
+        Handle bullet collision with targets.
+        
+        Args:
+            bullet: The bullet sprite to check for collisions
+            
+        Returns:
+            bool: True if bullet hit a target, False otherwise
+        """
         for i, square in enumerate(self.squares):
             if square.colliderect(bullet.rect):
                 self.player_sequence.append(i)
@@ -157,10 +213,9 @@ class MemoryGame:
                     self.score += 1
                     if self.score >= 5:
                         self.game_state = "win"
-                        self.win_displayed = True  # Set flag when win condition met
+                        self.win_displayed = True
                         return True
                     
-                    # Only continue with new sequence if we haven't won
                     self.sequence = []
                     self.sequence_index = 0
                     self.current_flash = None
@@ -170,20 +225,20 @@ class MemoryGame:
         return False
 
     def update(self):
-        # Check for win condition first
+        """Update game state, including sprites, bullets, and sequence display."""
         if self.score >= 5:
             self.game_state = "win"
             return
             
         self.allsprites.update()
         
-        # Update bullets and check collisions
+        # Update bullets
         for bullet in list(self.bullets):
             self.handle_shooting(bullet)
             if not pygame.display.get_surface().get_rect().contains(bullet.rect):
                 bullet.kill()
         
-        # Update sequence display
+        # Handle sequence display
         if self.game_state == "show_sequence":
             current_time = time.time()
             if self.current_flash is not None:
@@ -199,54 +254,66 @@ class MemoryGame:
     def shoot(self, target_pos):
         """
         Create a bullet aimed at the target position.
+        
         Args:
-            target_pos: (x, y) tuple of the mouse click position
+            target_pos (tuple): (x, y) coordinates of the target position
         """
         player_center = self.player.rect.center
-        # Calculate direction vector
         dx = target_pos[0] - player_center[0]
         dy = target_pos[1] - player_center[1]
-        # Normalize direction
         length = (dx**2 + dy**2)**0.5
         if length > 0:
             dx = dx/length
             dy = dy/length
         direction = [dx, dy]
         
-        # Create bullet with proper parameters
         bullet = Bullet(player_center[0], player_center[1], direction)
         self.bullets.add(bullet)
         self.allsprites.add(bullet)
 
 def run_memory_game(screen, clock):
-    game = MemoryGame(screen, clock)
-    running = True
+    """
+    Run the memory game loop.
     
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                return "quit"
-            elif event.type == pygame.MOUSEBUTTONDOWN and game.game_state == "player_turn":
-                if event.button == 1:  # Left click
-                    game.shoot(pygame.mouse.get_pos())
+    Args:
+        screen: Pygame display surface
+        clock: Pygame clock object
         
-        game.update()
-        game.draw()
+    Returns:
+        str: Game result ("completed", "died", "quit")
+    """
+    try:
+        game = MemoryGame(screen, clock)
+        running = True
         
-        # Check win condition first
-        if game.game_state == "win":
-            pygame.display.flip()
-            time.sleep(2)  # Show win message for 2 seconds
-            return "completed"
-        elif game.game_state == "game_over":
-            pygame.display.flip()
-            time.sleep(2)
-            return "died" if game.score == 0 else "completed"
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return "quit"
+                elif event.type == pygame.MOUSEBUTTONDOWN and game.game_state == "player_turn":
+                    if event.button == 1:
+                        game.shoot(pygame.mouse.get_pos())
             
-        pygame.display.flip()
-        clock.tick(FPS)
-    
-    return "quit"
+            game.update()
+            game.draw()
+            
+            if game.game_state == "win":
+                pygame.display.flip()
+                time.sleep(2)
+                return "completed"
+            elif game.game_state == "game_over":
+                pygame.display.flip()
+                time.sleep(2)
+                return "died" if game.score == 0 else "completed"
+                
+            pygame.display.flip()
+            clock.tick(FPS)
+        
+        return "quit"
+        
+    except Exception as e:
+        print(f"Error in memory game: {e}")
+        return "quit"
 
 if __name__ == "__main__":
     pygame.init()
@@ -254,6 +321,10 @@ if __name__ == "__main__":
     pygame.display.set_caption("Memory Shooting Game")
     clock = pygame.time.Clock()
     
-    result = run_memory_game(screen, clock)
-    
-    pygame.quit()
+    try:
+        result = run_memory_game(screen, clock)
+        print(f"Game finished with result: {result}")
+    except Exception as e:
+        print(f"Error running game: {e}")
+    finally:
+        pygame.quit()
