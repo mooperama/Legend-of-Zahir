@@ -3,79 +3,56 @@ from sprites import *
 from config_settings import *
 from enemies import *
 from player import *
-from MINIGAME2 import run_pemdas_game
+from MINIGAME1 import run_memory_game
+from MINIGAME2 import run_timezone_game
+from MINIGAME3 import run_continent_game
 from MINIGAME4 import main as run_language_matching_game
 from MINIGAME5 import main as run_boss_battle
 from soundmanager import sound_manager
 from tutorial import *
 from save_system import SaveSystem, SaveLoadMenu
+from dialogue import DialogueSystem
 import os
 import sys
 import time
 
-class GameState(Enum):
-    MAIN_GAME = "main_game"
-    DIALOGUE = "dialogue"
-    MINIGAME = "minigame"
-    CUTSCENE = "cutscene"
-    TRANSITION = "transition"
-
+"""
+i luv jessica ng (i cant commit)
+"""
 class Game:
-    """Main game class that handles the game loop, initialization, and core game logic."""
-
     def __init__(self):
-        """Initialize the game, set up the display, clock, and load assets."""
         pygame.init()
         pygame.mixer.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("Legend of Zahir")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, 32)
-        
-        # Game state initialization
         self.running = True
-        self.playing = False
-        self.state = GameState.MAIN_GAME
-        self.start_time = 0
-        self.elapsed_time = 0
-
-        # Load managers and systems
-        self.visual_novel = VisualNovelManager(self.screen)
-        sound_manager.play_music()
-
-        # Load sprite sheets
-        self.character_spritesheet = Spritesheet('knight_strip.png')
-        self.enemy_spritesheet = Spritesheet('skeleton_strip.png')
-        self.terrain_spritesheet = Spritesheet('dungeon2.jpg')
-
-        # Game progression tracking
-        self.game_sequence = [
-            {'type': 'dialogue', 'id': 'game_intro'},
-            {'type': 'main', 'id': 'initial_combat'},
-            {'type': 'dialogue', 'id': 'pemdas_intro'},
-            {'type': 'minigame', 'id': 'pemdas'},
-            {'type': 'dialogue', 'id': 'pemdas_complete'},
-            {'type': 'main', 'id': 'combat_section_2'},
-            {'type': 'dialogue', 'id': 'language_intro'},
-            {'type': 'minigame', 'id': 'language'},
-            {'type': 'dialogue', 'id': 'language_complete'},
-            {'type': 'dialogue', 'id': 'boss_intro'},
-            {'type': 'minigame', 'id': 'boss'},
-            {'type': 'dialogue', 'id': 'game_complete'}
-        ]
-        self.current_sequence_index = 0
+        self.dialogue_system = DialogueSystem(self.screen, self.clock)
+        self.player_name = ""  # Add this line to store player name
         
-        # Initialize story dialogues
-        self._init_story_dialogues()
-
-    def new(self):
-        """Set up a new game, create sprite groups, and initialize game objects."""
-        self.all_sprites = pygame.sprite.LayeredUpdates()
+        # Initialize tutorial system first
+        self.tutorial_system = TutorialSystem(self)
+        self.in_tutorial = True
+        
+        # Initialize game components
+        sound_manager.play_music()
+        self.start_time = time.time()
+        self.elapsed_time = 0
+        
+        # Load sprite sheets
+        self.character_spritesheet = Spritesheet('LEGEND OF ZAHIR/knight_strip.png')
+        self.enemy_spritesheet = Spritesheet('LEGEND OF ZAHIR/skeleton_strip.png')
+        self.terrain_spritesheet = Spritesheet('LEGEND OF ZAHIR/dungeon2.jpg')
+        
+        # Initialize game state immediately
+        self.allsprites = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
         self.enemies = pygame.sprite.LayeredUpdates()
         self.attacks = pygame.sprite.LayeredUpdates()
         self.bullets = pygame.sprite.LayeredUpdates()
-
+        
+        # Create initial game world
         self.createTilemap()
         self.create_enemies()
         self.playing = True
@@ -96,8 +73,11 @@ class Game:
 
     def game_loop(self):
         """
-        Modified main game loop that shows gameplay during tutorial
+        Main game loop with integrated dialogue and tutorial systems.
         """
+        # Show intro dialogue before starting
+        self.dialogue_system.show_dialogue('intro')
+        
         # Tutorial loop with gameplay
         while self.running and self.in_tutorial:
             # Handle events
@@ -116,6 +96,7 @@ class Game:
                 # Check if tutorial is completed
                 if self.tutorial_system.tutorial_completed:
                     self.in_tutorial = False
+                    self.dialogue_system.show_dialogue('after_tutorial')
                     break
             
             # Update game state during tutorial
@@ -135,7 +116,7 @@ class Game:
             pygame.display.update()
             self.clock.tick(FPS)
         
-        # Continue with main game loop
+        # Main game sequence loop
         while self.running and self.current_sequence_index < self.total_sequences:
             current_mode = self.game_sequence[self.current_sequence_index]
             
@@ -149,29 +130,46 @@ class Game:
                 break
             
             if result == "completed":
-                # Show appropriate transition message based on next game
-                if self.current_sequence_index + 1 < self.total_sequences:
-                    next_mode = self.game_sequence[self.current_sequence_index + 1]
-                    if next_mode == 'candle memory':
-                        self.show_level_complete_dialogue("Main game complete! Press Enter for Candle Challenge")
-                    elif next_mode == 'timezone':
-                        self.show_level_complete_dialogue("Main game complete! Press Enter for Timezone Challenge")
-                    elif next_mode == 'language':
-                        self.show_level_complete_dialogue("Main game complete! Press Enter for Language Challenge")
-                    elif next_mode == 'continent':
-                        self.show_level_complete_dialogue("Main game complete! Press Enter for The Continent Challenge")
-                    elif next_mode == 'boss':
-                        self.show_level_complete_dialogue("Main game complete! Press Enter for Final Boss Battle")
-                    elif next_mode == 'main':
-                        self.show_level_complete_dialogue("Minigame complete! Press Enter to return to main game")
+                # Handle dialogue sequences based on completion
+                if current_mode == 'main':
+                    # Show appropriate dialogue based on sequence
+                    if self.current_sequence_index == 0:  # After first main sequence
+                        self.dialogue_system.show_dialogue('after_tutorial')
+                        self.show_level_complete_dialogue("Press Enter for Candle Memory Challenge")
+                    elif self.current_sequence_index == 2:  # After memory game
+                        self.dialogue_system.show_dialogue('after_memory')
+                        self.show_level_complete_dialogue("Press Enter for Timezone Challenge")
+                    elif self.current_sequence_index == 4:  # After timezone game
+                        self.dialogue_system.show_dialogue('after_timezone')
+                        self.show_level_complete_dialogue("Press Enter for Language Challenge")
+                    elif self.current_sequence_index == 6:  # After language game
+                        self.dialogue_system.show_dialogue('after_language')
+                        self.show_level_complete_dialogue("Press Enter for The Continent Challenge")
+                    elif self.current_sequence_index == 8:  # Before boss battle
+                        self.dialogue_system.show_dialogue('after_continent')
+                        self.dialogue_system.show_dialogue('before_boss')
+                        self.show_level_complete_dialogue("Press Enter for Final Boss Battle")
+                elif current_mode == 'candle memory':
+                    self.show_level_complete_dialogue("Candle Memory completed! Press Enter to continue")
+                elif current_mode == 'timezone':
+                    self.show_level_complete_dialogue("Timezone Challenge completed! Press Enter to continue")
+                elif current_mode == 'language':
+                    self.show_level_complete_dialogue("Language Challenge completed! Press Enter to continue")
+                elif current_mode == 'continent':
+                    self.show_level_complete_dialogue("Continent Challenge completed! Press Enter to continue")
+                elif current_mode == 'boss':
+                    self.dialogue_system.show_dialogue('victory')
                 
                 self.current_sequence_index += 1
+                
             elif result == "died":
                 if not self.restart_level_prompt():
                     self.running = False
                     break
-
+        
+        # Game completion check
         if self.current_sequence_index >= self.total_sequences:
+            self.dialogue_system.show_dialogue('victory')
             self.show_congratulations()
         
         self.show_final_results()
@@ -346,184 +344,297 @@ class Game:
                 self.playing = False
                 
     def draw(self):
-        """Draw game elements based on current state."""
-        self.screen.fill(BACKGROUND_COLOR)
-        
-        if self.state == GameState.MAIN_GAME:
-            self.all_sprites.draw(self.screen)
+            """
+            Draw all game objects and UI elements to the screen.
+            """
+            self.screen.fill(BACKGROUND_COLOR)
+            self.allsprites.draw(self.screen)
             self.player.draw_health_bar(self.screen)
             self.player.draw_exp_bar(self.screen)
             self.player.draw_stats(self.screen)
             self.draw_timer()
-        
-        if self.state == GameState.DIALOGUE:
-            self.visual_novel.draw()
-        
-        pygame.display.update()
+            
+            # Draw player name
+            name_text = self.font.render(self.player_name, True, BLACK)
+            self.screen.blit(name_text, (10, 10))
 
-    def createTilemap(self):
-            """Create the game world based on the TILEMAP defined in config_settings."""
-            for i, row in enumerate(TILEMAP):
-                for j, column in enumerate(row):
-                    if column == "W":
-                        Block(self, j, i)
-                    if column == "P":
-                        self.player = Player(self, j, i)
-                    if column == "E":
-                        Enemy(self, j, i)
+            # Draw tutorial if active
+            if self.tutorial_system.active:
+                self.tutorial_system.draw(self.screen)
+                
+            pygame.display.update()
+
+    def draw_timer(self):
+        """
+        Draw the game timer on the screen.
+        """
+        timer_text = self.font.render(f"Time: {int(self.elapsed_time)}s", True, WHITE)
+        self.screen.blit(timer_text, (WIDTH - 150, 10))  # Draw timer in top-right corner
+
+    def main(self):
+        """
+        Main game loop that runs while the game is playing.
+        """
+        while self.playing:
+            self.events()  # Handle events
+            self.update()  # Update game objects
+            self.draw()  # Draw the game
+            self.clock.tick(FPS)  # Control the frame rate
+
+            if self.player.health <= 0:
+                return "died"  # Player died
+
+        if len(self.enemies) == 0:
+            return "completed"  # Level completed
+
 
     def create_enemies(self):
-        """Create enemies at random positions in the game world."""
         for _ in range(3):
             enemy = Enemy.create_random(self)
             self.enemies.add(enemy)
-            self.all_sprites.add(enemy)
+            self.allsprites.add(enemy)  # Changed from self.add(enemy)
 
-    def handle_minigame_transition(self, minigame_id: str) -> None:
+    def game_over(self):
         """
-        Handle transition to and from minigames.
-        
+        Display the game over screen and handle restart or quit options.
+        """
+        text = self.font.render('GAME OVER', True, WHITE)
+        text_rect = text.get_rect(center=(WIDTH/2, HEIGHT/2 - 50))
+
+        time_text = self.font.render(f'Time: {int(self.elapsed_time)}s', True, WHITE)
+        time_rect = time_text.get_rect(center=(WIDTH/2, HEIGHT/2))
+
+        restart_button = pygame.Rect(WIDTH/2 - 70, HEIGHT/2 + 50, 140, 40)
+        restart_text = self.font.render('Restart', True, BLACK)
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    return
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if restart_button.collidepoint(event.pos):
+                        self.reset_game()
+                        return
+
+            self.screen.fill(BLACK)
+            self.screen.blit(text, text_rect)
+            self.screen.blit(time_text, time_rect)
+            pygame.draw.rect(self.screen, WHITE, restart_button)
+            self.screen.blit(restart_text, (restart_button.x + 30, restart_button.y + 10))
+            pygame.display.update()
+            self.clock.tick(FPS)
+
+    def run_minigame(self, minigame):
+        """
+        Run the selected minigame.
+
         Args:
-            minigame_id: Identifier for the minigame to transition to
+            minigame (str): The name of the minigame to run.
+
+        Returns:
+            str: The result of the minigame ("completed" or "died").
         """
-        # Fade out effect
-        fade_surface = pygame.Surface((WIDTH, HEIGHT))
-        fade_surface.fill(BLACK)
-        for alpha in range(0, 255, 5):
-            fade_surface.set_alpha(alpha)
-            self.screen.blit(fade_surface, (0, 0))
-            pygame.display.update()
-            pygame.time.delay(5)
-
-        # Run appropriate minigame
-        result = None
-        if minigame_id == "pemdas":
-            self.visual_novel.start_scene("pemdas_intro")
-            while self.visual_novel.is_scene_active():
-                self.events()
-                self.visual_novel.update()
-                self.visual_novel.draw()
-                pygame.display.update()
-                self.clock.tick(FPS)
-            result = run_pemdas_game(self.screen, self.clock)
-            
-        elif minigame_id == "language":
-            self.visual_novel.start_scene("language_intro")
-            while self.visual_novel.is_scene_active():
-                self.events()
-                self.visual_novel.update()
-                self.visual_novel.draw()
-                pygame.display.update()
-                self.clock.tick(FPS)
+        if minigame == 'candle memory':
+            result = run_memory_game(self.screen, self.clock)
+        elif minigame == 'timezone':
+            result = run_timezone_game(self.screen, self.clock)
+        elif minigame == 'language':
             result = run_language_matching_game()
-            
-        elif minigame_id == "boss":
-            self.visual_novel.start_scene("boss_intro")
-            while self.visual_novel.is_scene_active():
-                self.events()
-                self.visual_novel.update()
-                self.visual_novel.draw()
-                pygame.display.update()
-                self.clock.tick(FPS)
+        elif minigame == 'continent':
+            result = run_continent_game()
+        elif minigame == 'boss':
             result = run_boss_battle()
-
-        # Handle minigame completion
-        if result == "completed":
-            completion_scene = f"{minigame_id}_complete"
-            if completion_scene in self.story_dialogues:
-                self.visual_novel.start_scene(completion_scene)
-
-        # Fade back in
-        for alpha in range(255, 0, -5):
-            fade_surface.set_alpha(alpha)
-            self.screen.blit(fade_surface, (0, 0))
-            pygame.display.update()
-            pygame.time.delay(5)
-
+        
+        self.minigames_completed += 1
+        self.current_level += 1
         return result
 
-    def game_loop(self):
-        """Main game loop with improved sequence handling and transitions."""
-        # Start with intro dialogue
-        self.visual_novel.start_scene("game_intro")
-        
+    def show_congratulations(self):
+        """
+        Display the victory screen and handle play again or quit options.
+        """
+        text = self.font.render('Congratulations! You won!', True, WHITE)
+        text_rect = text.get_rect(center=(WIDTH/2, HEIGHT/2 - 125))
+
+        time_text = self.font.render(f'Time: {int(self.elapsed_time)}s', True, WHITE)
+        time_rect = time_text.get_rect(center=(WIDTH/2, HEIGHT/2 - 75))
+
+        play_again_button = pygame.Rect(WIDTH/2 - 70, HEIGHT/2 + 25, 140, 40)
+        play_again_text = self.font.render('Play Again', True, BLACK)
+
+        quit_button = pygame.Rect(WIDTH/2 + 85, HEIGHT/2 + 25, 140, 40)
+        quit_text = self.font.render('Quit', True, BLACK)
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    return False
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if play_again_button.collidepoint(event.pos):
+                        self.reset_game()
+                        return True
+                    elif quit_button.collidepoint(event.pos):
+                        self.running = False
+                        return False
+
+            self.screen.fill(BLACK)
+            self.screen.blit(text, text_rect)
+            self.screen.blit(time_text, time_rect)
+            pygame.draw.rect(self.screen, WHITE, play_again_button)
+            self.screen.blit(play_again_text, (play_again_button.x + 20, play_again_button.y + 10))
+            pygame.draw.rect(self.screen, WHITE, quit_button)
+            self.screen.blit(quit_text, (quit_button.x + 45, quit_button.y + 10))
+            pygame.display.update()
+            self.clock.tick(FPS)
+
+    def show_level_complete_dialogue(self, message):
+        """
+        Display a dialogue box with a message when a level is completed.
+
+        Args:
+            message (str): The message to display in the dialogue box.
+        """
+        dialogue_box = pygame.Surface((500, 100))
+        dialogue_box.fill(WHITE)
+        dialogue_box_rect = dialogue_box.get_rect(center=(WIDTH/2, HEIGHT/2))
+
+        text = self.font.render(message, True, BLACK)
+        text_rect = text.get_rect(center=(250, 50))
+        dialogue_box.blit(text, text_rect)
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    return
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                    return
+
+            self.screen.blit(dialogue_box, dialogue_box_rect)
+            pygame.display.update()
+            self.clock.tick(FPS)
+
+    def run_main_game(self):
+        """
+        Run the main game until completion or player death.
+        """
         while self.running:
-            if self.current_sequence_index >= len(self.game_sequence):
-                self.show_game_completion()
+            self.new()  # Set up a new game state
+            result = self.main()  # Run the main game loop
+            if result == "completed":
+                # Remove the selection and directly go to the first minigame
+                self.show_level_complete_dialogue("Press Enter to start PEMDAS Challenge")
+                self.in_main_game = False
                 break
+            elif result == "died":
+                if not self.restart_level_prompt():
+                    self.running = False
+                    break
 
-            current_sequence = self.game_sequence[self.current_sequence_index]
-            
-            if current_sequence["type"] == "dialogue":
-                # Handle dialogue sequences
-                while self.visual_novel.is_scene_active():
-                    self.events()
-                    self.visual_novel.update()
-                    self.draw()
-                    self.clock.tick(FPS)
-                self.current_sequence_index += 1
-                
-            elif current_sequence["type"] == "main":
-                # Handle main gameplay
-                self.new()
-                while self.playing:
-                    self.events()
-                    self.update()
-                    self.draw()
-                    self.clock.tick(FPS)
-                    
-                    if len(self.enemies) == 0:
-                        self.current_sequence_index += 1
-                        break
-                        
-            elif current_sequence["type"] == "minigame":
-                # Handle minigame transitions
-                result = self.handle_minigame_transition(current_sequence["id"])
-                if result == "completed":
-                    self.current_sequence_index += 1
-                elif result == "failed":
-                    self.handle_minigame_failure()
-
-    def handle_minigame_failure(self):
-        """Handle player failure in minigames."""
-        retry = self.show_retry_prompt()
-        if not retry:
-            self.running = False
-
-    def show_retry_prompt(self) -> bool:
+    
+    def run_main_game_sequence(self):
         """
-        Display a prompt asking if the player wants to retry the challenge.
+        Run a main game sequence
+        """
+        self.new()  # Set up new game state
+        return self.main()  # Run main game and return result
+
+    def run_minigame_sequence(self, minigame_type):
+        """
+        Run a specific minigame
+        """
+        if minigame_type == 'candle memory':
+            return run_memory_game(self.screen, self.clock)
+        elif minigame_type == 'timezone':
+            return run_timezone_game(self.screen, self.clock)
+        elif minigame_type == 'language':
+            return run_language_matching_game()
+        elif minigame_type == 'continent':
+            return run_continent_game(self.screen, self.clock)
+        elif minigame_type == 'boss':
+            return run_boss_battle()
+        return "quit"
+
+    def show_progress(self):
+        """
+        Show current progress in game sequence
+        """
+        sequence_names = {
+            'main': 'Main Game',
+            'candle memory': 'Candle Challenge',
+            'timezone': 'TIMEZONE Challenge',
+            'language': 'Language Match',
+            'continent': 'Continent Challenge',
+            'boss': 'Boss Battle'
+        }
         
+        current = self.game_sequence[self.current_sequence_index]
+        progress_text = f"Current: {sequence_names[current]} ({self.current_sequence_index + 1}/{self.total_sequences})"
+        text_surface = self.font.render(progress_text, True, WHITE)
+        self.screen.blit(text_surface, (10, 10))
+
+    def run_current_minigame(self):
+        """
+        Run the current minigame and return the result.
+        """
+        # Force the order of minigames
+        if self.current_minigame_index == 0:
+            return run_memory_game(self.screen, self.clock)
+        elif self.current_minigame_index == 1:
+            return run_timezone_game(self.screen, self.clock)
+        elif self.current_minigame_index == 2:
+            return run_language_matching_game()
+        elif self.current_minigame_index == 3:
+            return run_continent_game()
+        elif self.current_minigame_index == 4:
+            return run_boss_battle()
+        
+        return "quit"
+
+    def restart_level_prompt(self):
+        """
+        Display a prompt asking if the player wants to restart the level after dying.
+
         Returns:
-            bool: True if player wants to retry, False otherwise
+            bool: True if the player wants to restart, False otherwise.
         """
-        prompt_surface = pygame.Surface((400, 200))
-        prompt_surface.fill(WHITE)
-        prompt_rect = prompt_surface.get_rect(center=(WIDTH//2, HEIGHT//2))
-        
-        font = pygame.font.Font(None, 36)
-        text = font.render("Try again?", True, BLACK)
-        yes_text = font.render("Yes", True, BLACK)
-        no_text = font.render("No", True, BLACK)
-        
-        yes_button = pygame.Rect(prompt_rect.left + 50, prompt_rect.bottom - 70, 100, 40)
-        no_button = pygame.Rect(prompt_rect.right - 150, prompt_rect.bottom - 70, 100, 40)
-        
+        prompt_box = pygame.Surface((400, 150))
+        prompt_box.fill(WHITE)
+        prompt_box_rect = prompt_box.get_rect(center=(WIDTH/2, HEIGHT/2))
+
+        text = self.font.render("You died! Restart level?", True, BLACK)
+        text_rect = text.get_rect(center=(200, 50))
+        prompt_box.blit(text, text_rect)
+
+        yes_button = pygame.Rect(50, 100, 100, 40)
+        no_button = pygame.Rect(250, 100, 100, 40)
+
+        pygame.draw.rect(prompt_box, GREEN, yes_button)
+        pygame.draw.rect(prompt_box, RED, no_button)
+
+        yes_text = self.font.render("Yes", True, BLACK)
+        no_text = self.font.render("No", True, BLACK)
+
+        prompt_box.blit(yes_text, (85, 110))
+        prompt_box.blit(no_text, (285, 110))
+
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return False
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if yes_button.collidepoint(event.pos):
+                    mouse_pos = pygame.mouse.get_pos()
+                    adjusted_pos = (mouse_pos[0] - prompt_box_rect.x, mouse_pos[1] - prompt_box_rect.y)
+                    if yes_button.collidepoint(adjusted_pos):
                         return True
-                    if no_button.collidepoint(event.pos):
+                    elif no_button.collidepoint(adjusted_pos):
                         return False
 
             self.screen.blit(prompt_box, prompt_box_rect)
             pygame.display.update()
             self.clock.tick(FPS)
-        
-        self.show_final_results()
 
     def show_final_results(self):
         """
@@ -697,22 +808,23 @@ class Game:
             return False
             
     def reset_game(self):
-        """Reset the game state for a new playthrough."""
+        """
+        Modified reset method to properly handle save system
+        """
+        self.minigames_completed = 0
+        self.current_level = 0
+        self.elapsed_time = 0
+        self.in_main_game = True
+        self.current_minigame_index = 0
         self.current_sequence_index = 0
         self.in_tutorial = True
         if hasattr(self, 'tutorial_system'):
             self.tutorial_system.reset()
         # Any other state variables that need resetting
 
-    # Game initialization and main loop
-    def main():
-        """Initialize and run the game."""
-        game = Game()
-        game.intro_screen()
-        while game.running:
-            game.game_loop()
-        pygame.quit()
-        sys.exit()
-
-    if __name__ == "__main__":
-        main()
+# Game initialization and main loop
+g = Game()  # Create a new Game instance
+g.intro_screen()  # Show the intro screen
+g.game_loop()  # Start the main game loop
+pygame.quit()  # Quit pygame
+sys.exit()  # Exit the program
