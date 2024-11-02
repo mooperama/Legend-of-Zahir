@@ -98,8 +98,11 @@ class ContinentGame:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
                         waiting = False
-                        return "completed"
-        return "completed"
+                        if self.score >= len(self.continents):  # All continents placed correctly
+                            return "completed"
+                        else:
+                            return "failed"
+        return "completed" if self.score >= len(self.continents) else "failed"
 
     def draw_labels(self):
         # Draw continent areas in debug mode
