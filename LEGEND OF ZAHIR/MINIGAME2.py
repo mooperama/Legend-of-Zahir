@@ -12,6 +12,7 @@ GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 LIGHT_GREEN = (200, 255, 200)
 LIGHT_RED = (255, 200, 200)
+BLUE = (0, 0, 255)
 
 # Font configurations
 FONT_PATH = 'LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf'
@@ -19,7 +20,7 @@ REGULAR_SIZE = 15
 MEDIUM_SIZE = 25
 LARGE_SIZE = 40
 
-# Simplified timezone definitions (UTC offsets in hours)
+# Timezone definitions (UTC offsets in hours)
 TIMEZONES = {
     'New York': -5,
     'London': 0,
@@ -30,6 +31,7 @@ TIMEZONES = {
     'Los Angeles': -8,
     'Singapore': 8
 }
+
 
 class Button:
     def __init__(self, x, y, width, height, text):
@@ -49,6 +51,7 @@ class Button:
             self.color = GRAY
 
         pygame.draw.rect(surface, self.color, self.rect)
+        pygame.draw.rect(surface, BLACK, self.rect, 2)
         text_surface = font.render(self.text, True, BLACK)
         text_rect = text_surface.get_rect(center=self.rect.center)
         surface.blit(text_surface, text_rect)
@@ -56,6 +59,7 @@ class Button:
     def handle_event(self, event):
         if event.type == pygame.MOUSEMOTION:
             self.is_hovered = self.rect.collidepoint(event.pos)
+            return False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if self.is_hovered:
                 return True
@@ -66,7 +70,6 @@ class TimezoneGame:
         self.screen = screen
         self.clock = clock
         
-        # Initialize fonts with Nokia style
         self.regular_font = pygame.font.Font(FONT_PATH, REGULAR_SIZE)
         self.medium_font = pygame.font.Font(FONT_PATH, MEDIUM_SIZE)
         self.large_font = pygame.font.Font(FONT_PATH, LARGE_SIZE)
@@ -75,6 +78,8 @@ class TimezoneGame:
         self.total_questions = 0
         self.correct_answers = 0
         self.lives = 4
+        self.buttons = []
+        
         self.generate_question()
         self.create_buttons()
         self.selected_answer = None
@@ -83,32 +88,13 @@ class TimezoneGame:
         self.create_continue_button()
 
     def create_continue_button(self):
-        button_width = 160
-        button_height = 45
-        x = (WIDTH - button_width) // 2
-        y = HEIGHT - 100
-        self.continue_button = Button(x, y, button_width, button_height, "Continue")
-
-    def generate_question(self):
-        self.source_tz_name = random.choice(list(TIMEZONES.keys()))
-        self.target_tz_name = random.choice([tz for tz in TIMEZONES.keys() if tz != self.source_tz_name])
-        
-        source_offset = TIMEZONES[self.source_tz_name]
-        target_offset = TIMEZONES[self.target_tz_name]
-        
-        self.source_hour = random.randint(0, 23)
-        self.source_minute = random.choice([0, 15, 30, 45])
-        
-        hour_diff = target_offset - source_offset
-        target_hour = (self.source_hour + hour_diff) % 24
-        
-        self.correct_answer = f"{target_hour:02d}:{self.source_minute:02d}"
-        
-        wrong_hours = [(target_hour + offset) % 24 for offset in [-2, -1, 1, 2]]
-        wrong_times = [f"{h:02d}:{self.source_minute:02d}" for h in wrong_hours]
-        
-        self.choices = wrong_times[:3] + [self.correct_answer]
-        random.shuffle(self.choices)
+        self.continue_button = Button(
+            (WIDTH - 160) // 2,
+            HEIGHT - 100,
+            160,
+            45,
+            "Continue"
+        )
 
     def create_buttons(self):
         self.buttons = []
@@ -124,26 +110,66 @@ class TimezoneGame:
             button.is_correct = (choice == self.correct_answer)
             self.buttons.append(button)
 
+    def generate_question(self):
+        self.source_tz_name = random.choice(list(TIMEZONES.keys()))
+        self.target_tz_name = random.choice([tz for tz in TIMEZONES.keys() if tz != self.source_tz_name])
+        
+        source_offset = TIMEZONES[self.source_tz_name]
+        target_offset = TIMEZONES[self.target_tz_name]
+        
+        self.source_hour = random.randint(0, 23)
+        self.source_minute = random.choice([0, 15, 30, 45])
+        
+        hour_diff = target_offset - source_offset
+        target_hour = int((self.source_hour + hour_diff) % 24)
+        
+        self.correct_answer = f"{target_hour:02d}:{self.source_minute:02d}"
+        
+        wrong_hours = [(target_hour + offset) % 24 for offset in [-2, -1, 1, 2]]
+        wrong_times = [f"{int(h):02d}:{self.source_minute:02d}" for h in wrong_hours]
+        
+        self.choices = wrong_times[:3] + [self.correct_answer]
+        random.shuffle(self.choices)
+
+    def get_calculation_hint(self):
+        source_offset = TIMEZONES[self.source_tz_name]
+        target_offset = TIMEZONES[self.target_tz_name]
+        diff = target_offset - source_offset
+        
+        if diff > 0:
+            return f"Hint: Add {diff} hours to {self.source_hour:02d}:00"
+        elif diff < 0:
+            return f"Hint: Subtract {abs(diff)} hours from {self.source_hour:02d}:00"
+        else:
+            return "Hint: Time is the same in both zones"
+
     def draw_question_screen(self):
-        # Draw lives
+        # Draw lives and correct answers
         lives_text = f"Lives: {'❤' * self.lives}"
         lives_surface = self.regular_font.render(lives_text, True, RED)
-        self.screen.blit(lives_surface, (WIDTH - 150, 20))
+        self.screen.blit(lives_surface, (20, 20))
 
-        # Draw correct answers counter
         correct_text = f"Correct Answers: {self.correct_answers}/3"
         correct_surface = self.regular_font.render(correct_text, True, GREEN)
-        self.screen.blit(correct_surface, (20, 60))
+        self.screen.blit(correct_surface, (20, 50))
 
+        # Draw question
         question_text = f"Convert time from {self.source_tz_name} to {self.target_tz_name}"
         text_surface = self.medium_font.render(question_text, True, BLACK)
         text_rect = text_surface.get_rect(center=(WIDTH//2, HEIGHT//6))
         self.screen.blit(text_surface, text_rect)
 
+        # Draw time
         time_text = f"{self.source_hour:02d}:{self.source_minute:02d}"
         time_surface = self.large_font.render(time_text, True, BLACK)
         time_rect = time_surface.get_rect(center=(WIDTH//2, HEIGHT//3))
         self.screen.blit(time_surface, time_rect)
+
+        # Draw calculation hint
+        hint_text = self.get_calculation_hint()
+        hint_surface = self.regular_font.render(hint_text, True, BLUE)
+        hint_rect = hint_surface.get_rect(center=(WIDTH//2, HEIGHT//3 + 50))
+        self.screen.blit(hint_surface, hint_rect)
 
         for button in self.buttons:
             button.draw(self.screen, self.regular_font)
@@ -162,14 +188,10 @@ class TimezoneGame:
 
         for button in self.buttons:
             button.draw(self.screen, self.regular_font)
-
         self.continue_button.draw(self.screen, self.regular_font)
 
     def draw(self):
         self.screen.fill(WHITE)
-
-        score_text = self.regular_font.render(f"Score: {self.score}/{self.total_questions}", True, BLACK)
-        self.screen.blit(score_text, (20, 20))
 
         if self.game_over:
             game_over_text = self.large_font.render("Game Over!", True, BLACK)
@@ -207,11 +229,11 @@ class TimezoneGame:
             if self.game_over:
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                     if self.lives <= 0:
-                        return "failed"  # Changed from "died" to "failed"
+                        return "failed"
                     elif self.correct_answers >= 3:
                         return "completed"
                     else:
-                        return "failed"  # Changed from "died" to "failed"
+                        return "failed"
             elif self.show_result:
                 if self.continue_button.handle_event(event):
                     if self.correct_answers >= 3 or self.lives <= 0:
@@ -221,25 +243,27 @@ class TimezoneGame:
                         self.create_buttons()
                         self.show_result = False
             else:
-                for i, button in enumerate(self.buttons):
+                for button in self.buttons:
                     if button.handle_event(event):
-                        self.selected_answer = self.choices[i]
+                        self.selected_answer = button.text
                         button.was_selected = True
                         self.show_result = True
                         self.total_questions += 1
                         if self.selected_answer == self.correct_answer:
                             self.score += 1
                             self.correct_answers += 1
+                            if self.correct_answers >= 3:
+                                self.game_over = True
                         else:
                             self.lives -= 1
-
+                            if self.lives <= 0:
+                                self.game_over = True
         return None
 
 def run_timezone_game(screen=None, clock=None):
     """
     Main function that can be called from the main game.
-    Returns:
-        str: "completed", "failed", or "quit" based on game outcome
+    Returns "completed", "failed", or "quit"
     """
     if screen is None or clock is None:
         pygame.init()
@@ -249,17 +273,17 @@ def run_timezone_game(screen=None, clock=None):
 
     game = TimezoneGame(screen, clock)
     
-    while True:  # Changed from running variable to infinite loop with returns
+    while True:
         result = game.handle_events()
-        if result in ["completed", "failed", "quit"]:
+        if result:
             return result
             
         game.draw()
         clock.tick(FPS)
 
-        if screen is None:  # Only quit if we created our own screen
-            pygame.quit()
-
-# For standalone testing
 if __name__ == "__main__":
-    run_timezone_game()
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    clock = pygame.time.Clock()
+    result = run_timezone_game(screen, clock)
+    pygame.quit()
