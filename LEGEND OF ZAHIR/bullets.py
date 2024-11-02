@@ -14,17 +14,6 @@ class Bullet(pygame.sprite.Sprite):
         self.width = BULLETSIZE
         self.height = BULLETSIZE
         
-        # Load and set up sprite
-        self.sprite_sheet = self.projectile_spritesheet
-        # Get list of frames from sprite sheet
-        self.animation_list = [
-            self.sprite_sheet.get_sprite(0, 0, 479, 479),
-        ]
-        
-        # Animation variables
-        self.animation_loop = 0
-        self.image = self.animation_list[self.animation_loop]
-        
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
