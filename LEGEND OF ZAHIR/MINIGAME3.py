@@ -23,15 +23,19 @@ class ContinentGame:
         self.map_img = pygame.transform.scale(self.map_img, (600, 400))
         self.map_rect = self.map_img.get_rect(center=(self.width//2, self.height//2))
 
-        # Define continent areas (x, y, width, height)
+        # Adjust the continent areas to be relative to the map position
+        map_x = self.map_rect.x
+        map_y = self.map_rect.y
+        
+        # Define continent areas relative to the map position
         self.continent_areas = {
-            'North America': pygame.Rect(200, 150, 120, 100),
-            'South America': pygame.Rect(250, 280, 80, 100),
-            'Europe': pygame.Rect(380, 150, 60, 60),
-            'Africa': pygame.Rect(380, 240, 80, 100),
-            'Asia': pygame.Rect(460, 150, 120, 100),
-            'Australia': pygame.Rect(600, 350, 60, 60),
-            'Antarctica': pygame.Rect(320, 480, 160, 30)
+            'North America': pygame.Rect(map_x + 50, map_y + 50, 200, 120),
+            'South America': pygame.Rect(map_x + 150, map_y + 200, 100, 150),
+            'Europe': pygame.Rect(map_x + 280, map_y + 65, 110, 100),
+            'Africa': pygame.Rect(map_x + 260, map_y + 170, 100, 140),
+            'Asia': pygame.Rect(map_x + 395, map_y + 60, 200, 180),
+            'Australia': pygame.Rect(map_x + 460, map_y + 250, 110, 80),  
+            'Antarctica': pygame.Rect(map_x + 130, map_y + 350, 350, 80)
         }
 
         # Continents data
@@ -127,13 +131,13 @@ class ContinentGame:
     def check_position(self, continent_idx):
         continent = self.continents[continent_idx]
         name = continent['name']
-        pos = continent['pos']
+        mouse_pos = pygame.mouse.get_pos()
         
-        point_rect = pygame.Rect(pos[0] - 5, pos[1] - 5, 10, 10)
-        
-        if self.continent_areas[name].colliderect(point_rect):
+        # Check if the mouse position is within the continent's area
+        if self.continent_areas[name].collidepoint(mouse_pos):
             self.completed[continent_idx] = True
             self.score += 1
+            # Set the continent label to the center of its area
             area = self.continent_areas[name]
             self.continents[continent_idx]['pos'] = (area.centerx, area.centery)
             if self.score == len(self.continents):
@@ -215,7 +219,7 @@ def run_continent_game(screen, clock):
     game = ContinentGame(screen, clock)
     return game.run()
 
-if __name__ == '__main__':
+if _name_ == '_main_':
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
