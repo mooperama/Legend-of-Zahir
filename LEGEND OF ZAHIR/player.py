@@ -63,6 +63,7 @@ class Player(pygame.sprite.Sprite):
         self.max_health = 100
         self.attack_power = 10
         self.exp = 0
+        self.knowledge_points = 0  # Add this line
         self.level = 1
 
         # Add light halo properties
