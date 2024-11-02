@@ -219,7 +219,7 @@ def run_continent_game(screen, clock):
     game = ContinentGame(screen, clock)
     return game.run()
 
-if _name_ == '_main_':
+if __name__ == '_main_':
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
