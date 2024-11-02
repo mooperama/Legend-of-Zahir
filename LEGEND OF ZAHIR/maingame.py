@@ -41,7 +41,7 @@ class Game:
         self.elapsed_time = 0
         
         # Load sprite sheets
-        self.character_spritesheet = Spritesheet('LEGEND OF ZAHIR/knight_strip.png')
+        self.character_spritesheet = Spritesheet('LEGEND OF ZAHIR/main character strip.png')
         self.enemy_spritesheet = Spritesheet('LEGEND OF ZAHIR/skeleton_strip.png')
         self.terrain_spritesheet = Spritesheet('LEGEND OF ZAHIR/dungeon2.jpg')
         
