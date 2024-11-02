@@ -36,16 +36,14 @@ class Player(pygame.sprite.Sprite):
 
         # Create animation dictionaries
         self.animations = {
-            'down': [self.game.character_spritesheet.get_sprite(128, 0, 15, 15),
-                     self.game.character_spritesheet.get_sprite(0, 0, 15, 15),
-                     self.game.character_spritesheet.get_sprite(15, 0, 15, 15)],
-            'up': [self.game.character_spritesheet.get_sprite(145, 0, 15, 15),
-                   self.game.character_spritesheet.get_sprite(65, 0, 15, 15),
-                   self.game.character_spritesheet.get_sprite(80, 0, 15, 15)],
-            'left': [self.game.character_spritesheet.get_sprite(95, 0, 15, 15),
-                     self.game.character_spritesheet.get_sprite(112, 0, 15, 15)],
-            'right': [self.game.character_spritesheet.get_sprite(32, 0, 15, 15),
-                      self.game.character_spritesheet.get_sprite(48, 0, 15, 15)]
+            'down': [self.game.character_spritesheet.get_sprite(3, 3, 15, 26),
+                     self.game.character_spritesheet.get_sprite(24, 3, 15, 26)],
+            'up': [self.game.character_spritesheet.get_sprite(87, 3, 15, 26),
+                   self.game.character_spritesheet.get_sprite(108, 3, 15, 26)],
+            'left': [self.game.character_spritesheet.get_sprite(131, 3, 11, 29),
+                     self.game.character_spritesheet.get_sprite(151, 3, 11, 30)],
+            'right': [self.game.character_spritesheet.get_sprite(46, 3, 11, 29),
+                      self.game.character_spritesheet.get_sprite(68, 3, 11, 30)]
         }
         
         # Scale all animation frames
