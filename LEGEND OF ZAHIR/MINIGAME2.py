@@ -207,11 +207,11 @@ class TimezoneGame:
             if self.game_over:
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                     if self.lives <= 0:
-                        return "died"
+                        return "failed"  # Changed from "died" to "failed"
                     elif self.correct_answers >= 3:
                         return "completed"
                     else:
-                        return "died"
+                        return "failed"  # Changed from "died" to "failed"
             elif self.show_result:
                 if self.continue_button.handle_event(event):
                     if self.correct_answers >= 3 or self.lives <= 0:
@@ -238,7 +238,8 @@ class TimezoneGame:
 def run_timezone_game(screen=None, clock=None):
     """
     Main function that can be called from the main game.
-    If screen and clock are provided, uses those instead of creating new ones.
+    Returns:
+        str: "completed", "failed", or "quit" based on game outcome
     """
     if screen is None or clock is None:
         pygame.init()
@@ -248,17 +249,16 @@ def run_timezone_game(screen=None, clock=None):
 
     game = TimezoneGame(screen, clock)
     
-    running = True
-    while running:
+    while True:  # Changed from running variable to infinite loop with returns
         result = game.handle_events()
-        if result:
+        if result in ["completed", "failed", "quit"]:
             return result
             
         game.draw()
         clock.tick(FPS)
 
-    if screen is None:  # Only quit if we created our own screen
-        pygame.quit()
+        if screen is None:  # Only quit if we created our own screen
+            pygame.quit()
 
 # For standalone testing
 if __name__ == "__main__":
