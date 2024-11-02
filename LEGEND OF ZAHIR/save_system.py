@@ -217,7 +217,7 @@ class SaveLoadMenu:
             if i == self.selected_index:
                 highlight_rect = pygame.Rect(
                     menu_x - 10,
-                    y_pos - 5,
+                    y_pos - 17,
                     menu_width + 20,
                     40
                 )
