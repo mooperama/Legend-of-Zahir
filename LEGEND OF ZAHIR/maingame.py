@@ -84,11 +84,22 @@ class Game:
         self.createTilemap()
         self.create_enemies()
         self.playing = True
+<<<<<<< HEAD
         self.start_time = time.time()
 
     def handle_sequence(self):
         """Handle the current sequence in the game progression."""
         current_sequence = self.game_sequence[self.current_sequence_index]
+=======
+        
+        # Game sequence setup
+        self.game_sequence = ['main', 'candle memory', 'main', 'timezone', 'main', 'language','main','continent','main', 'boss']
+        self.current_sequence_index = 0
+        self.total_sequences = len(self.game_sequence)
+           
+        # Initialize save system
+        self.save_system = SaveSystem()
+>>>>>>> parent of 081c1cd (maingame)
         
         if current_sequence['type'] == 'dialogue':
             if not self.visual_novel.is_scene_active():
@@ -135,6 +146,7 @@ class Game:
         elif self.state == GameState.DIALOGUE:
             self.visual_novel.update()
 
+<<<<<<< HEAD
     def events(self):
         """Handle game events based on current state."""
         for event in pygame.event.get():
@@ -152,6 +164,148 @@ class Game:
                     if event.button == 1:
                         self.player.shoot(pygame.mouse.get_pos())
                         sound_manager.play_sound('bullet')
+=======
+            self.screen.fill(BLACK)
+            
+            # Draw prompt
+            self.screen.blit(prompt, prompt_rect)
+            
+            # Draw the input box
+            txt_surface = self.font.render(text, True, color)
+            width = max(200, txt_surface.get_width()+10)
+            input_box.w = width
+            input_box.centerx = WIDTH/2
+            pygame.draw.rect(self.screen, color, input_box, 2)
+            self.screen.blit(txt_surface, (input_box.x+5, input_box.y+5))
+            
+            # Draw enter instruction
+            self.screen.blit(enter_text, enter_rect)
+            
+            pygame.display.flip()
+            self.clock.tick(FPS)
+
+        return text if text else "Player"  # Return "Player" if no name entered
+
+    def intro_screen(self):
+        """
+        Modified intro screen to transition to name entry
+        """
+        title = self.font.render('Legend of Zahir', True, WHITE)
+        title_rect = title.get_rect(center=(WIDTH/2, HEIGHT/3))
+
+        play_button = pygame.Rect(WIDTH/2 - 50, HEIGHT/2, 100, 50)
+        play_text = self.font.render('Play', True, BLACK)
+
+        intro_running = True
+        while intro_running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    return
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if play_button.collidepoint(event.pos):
+                        intro_running = False
+                        self.player_name = self.name_entry_screen()  # Get player name
+                        return
+
+            self.screen.fill(BLACK)
+            self.screen.blit(title, title_rect)
+            pygame.draw.rect(self.screen, WHITE, play_button)
+            self.screen.blit(play_text, (play_button.x + 30, play_button.y + 15))
+            pygame.display.update()
+            self.clock.tick(FPS)
+
+    def createTilemap(self):
+        """
+        Create the game world based on the TILEMAP defined in config_settings.
+        """
+        for i, row in enumerate(TILEMAP):
+            for j, column in enumerate(row):
+                if column == "W":
+                    Block(self, j, i)  # Create a wall block
+                if column == "P":
+                    self.player = Player(self, j, i)  # Create the player
+                if column == "E":
+                    Enemy(self, j, i)  # Create an enemy
+
+    def new(self):
+        """
+        Set up a new game, create sprite groups, and initialize game objects.
+        """
+        # Initialize sprite groups
+        self.allsprites = pygame.sprite.LayeredUpdates()
+        self.blocks = pygame.sprite.LayeredUpdates()
+        self.enemies = pygame.sprite.LayeredUpdates()
+        self.attacks = pygame.sprite.LayeredUpdates()
+        self.bullets = pygame.sprite.LayeredUpdates()
+
+        self.createTilemap()  # Create the game world
+        self.create_enemies()  # Spawn initial enemies
+        self.playing = True  # Set the game state to playing
+        self.start_time = time.time()  # Record the start time
+
+    def events(self):
+        """
+        Handle game events, including quitting and mouse clicks.
+        """
+
+        events = pygame.event.get()
+        
+        # Handle tutorial input first
+        if hasattr(self, 'tutorial_system') and self.tutorial_system.active:
+            self.tutorial_system.handle_input(events)
+            
+        for event in events:
+            if event.type == pygame.QUIT:
+                self.playing = False
+                self.running = False
+                
+            # Handle key press events
+            elif event.type == pygame.KEYDOWN:
+                self.keys_pressed.add(event.key)
+                
+                # ESC key opens save/load menu
+                if event.key == pygame.K_ESCAPE:
+                    self.show_save_load_menu()
+                    
+                # Q for quick save
+                elif event.key == pygame.K_q:
+                    self.quick_save()
+                    
+                # R for quick load (loads most recent save)
+                elif event.key == pygame.K_r:
+                    self.quick_load()
+                    
+            # Handle key release events
+            elif event.type == pygame.KEYUP:
+                self.keys_pressed.discard(event.key)
+                
+            # Handle shooting
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1 and not self.tutorial_system.active:
+                    self.player.shoot(pygame.mouse.get_pos())
+                    sound_manager.play_sound('bullet')
+
+
+    def update(self):
+        """
+        Update game objects and check for game over or victory conditions.
+        """
+        self.allsprites.update()  # Update all sprite objects
+        self.elapsed_time = time.time() - self.start_time  # Update elapsed time
+
+        if self.player.health <= 0:  # If player's health is depleted
+            self.playing = False  # End the game
+
+        # Check for bullet collisions with enemies
+        hits = pygame.sprite.groupcollide(self.bullets, self.enemies, True, True)
+        for hit in hits:
+            # Handle enemy hit (could add score, play sound, etc.)
+            pass
+
+        if len(self.enemies) == 0:  # If all enemies are defeated
+            self.playing = False  # End the current level
+>>>>>>> parent of 081c1cd (maingame)
 
     def draw(self):
         """Draw game elements based on current state."""
@@ -367,6 +521,7 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return
+<<<<<<< HEAD
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RETURN:
                         return
@@ -377,6 +532,125 @@ class Game:
             
             pygame.display.update()
             self.clock.tick(FPS)
+=======
+
+            self.screen.fill(BLACK)
+            self.screen.blit(text, text_rect)
+            self.screen.blit(time_text, time_rect)
+            pygame.display.update()
+            self.clock.tick(FPS)
+
+
+    def quick_save(self):
+        """Perform a quick save with auto-generated name"""
+        if self.save_system.save_game(self):
+            self.show_message("Game saved successfully!", duration=1.5)
+        else:
+            self.show_message("Failed to save game!", duration=1.5)
+
+    def quick_load(self):
+        """Load the most recent save file"""
+        saves = self.save_system.list_saves()
+        if saves:
+            # Sort saves by date and get most recent
+            saves.sort(key=lambda x: x['date'], reverse=True)
+            if self.save_system.load_game(saves[0]['name'], self):
+                self.show_message("Game loaded successfully!", duration=1.5)
+            else:
+                self.show_message("Failed to load game!", duration=1.5)
+        else:
+            self.show_message("No save files found!", duration=1.5)
+
+    def show_message(self, message, duration=2.0):
+        """
+        Show a temporary message on screen
+        
+        Args:
+            message (str): Message to display
+            duration (float): How long to show message in seconds
+        """
+        # Create semi-transparent overlay
+        overlay = pygame.Surface((WIDTH, HEIGHT))
+        overlay.fill((0, 0, 0))
+        overlay.set_alpha(128)
+        
+        # Render message
+        font = pygame.font.Font(None, 36)
+        text = font.render(message, True, WHITE)
+        text_rect = text.get_rect(center=(WIDTH/2, HEIGHT/2))
+        
+        # Calculate end time
+        end_time = time.time() + duration
+        
+        # Show message
+        while time.time() < end_time:
+            # Draw current game state
+            self.draw()
+            
+            # Draw message overlay
+            self.screen.blit(overlay, (0, 0))
+            self.screen.blit(text, text_rect)
+            
+            pygame.display.flip()
+            self.clock.tick(FPS)
+            
+            # Check for early exit
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return
+                if event.type == pygame.KEYDOWN:
+                    return
+
+    def show_save_load_menu(self):
+        """Show the save/load menu and handle user interaction"""
+        menu = SaveLoadMenu(self)
+        menu_active = True
+        
+        while menu_active and self.running:
+            # Handle events
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    return
+                
+                result = menu.handle_input(event)
+                if result == 'back':
+                    menu_active = False
+                elif result == 'save':
+                    if self.save_system.save_game(self):
+                        self.show_message("Game saved successfully!")
+                    else:
+                        self.show_message("Failed to save game!")
+                elif result == 'load':
+                    saves = self.save_system.list_saves()
+                    if saves and menu.selected_index < len(saves):
+                        if self.save_system.load_game(saves[menu.selected_index]['name'], self):
+                            self.show_message("Game loaded successfully!")
+                            menu_active = False
+                        else:
+                            self.show_message("Failed to load game!")
+            
+            # Draw
+            self.draw()  # Draw game state in background
+            menu.draw()  # Draw menu overlay
+            pygame.display.flip()
+            self.clock.tick(FPS)
+
+    def reset_game(self):
+        """
+        Modified reset method to properly handle save system
+        """
+        self.minigames_completed = 0
+        self.current_level = 0
+        self.elapsed_time = 0
+        self.in_main_game = True
+        self.current_minigame_index = 0
+        self.current_sequence_index = 0
+        self.in_tutorial = True
+        if hasattr(self, 'tutorial_system'):
+            self.tutorial_system.reset()
+        # Any other state variables that need resetting
+>>>>>>> parent of 081c1cd (maingame)
 
     def reset_game(self):
         """Reset the game state for a new playthrough."""
