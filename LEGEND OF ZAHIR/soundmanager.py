@@ -121,7 +121,7 @@ class SoundManager:
 sound_manager = SoundManager()
 
 # Load all game sounds
-sound_manager.load_sound('bullet', 'shoot.mp3')
+sound_manager.load_sound('bullet', 'fireball.mp3')
 
 
 # Load background music
