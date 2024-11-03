@@ -207,19 +207,16 @@ class Enemy(pygame.sprite.Sprite):
     @classmethod
     def create_random(cls, game):
         """
-        Create an enemy at a random valid position within the game map.
+        Create an enemy at a random valid position within the game's walls.
         
         Args:
             game (Game): Reference to the main game instance
-            
+                
         Returns:
             Enemy: New enemy instance at a valid random position
-            
+                
         Raises:
             ValueError: If no valid spawn positions are available
-            
-        The method ensures enemies only spawn in empty spaces (".") and
-        maintains a minimum distance from the player's current position.
         """
         map_height = len(TILEMAP)
         map_width = len(TILEMAP[0])
@@ -230,11 +227,42 @@ class Enemy(pygame.sprite.Sprite):
         player_tile_y = game.player.rect.y // TILESIZE
         
         valid_positions = []
+        
+        # Find the boundaries of the inner area by locating the walls
+        left_bound = 0
+        right_bound = map_width - 1
+        top_bound = 0
+        bottom_bound = map_height - 1
+        
+        # Find first wall from left in first row
+        for x in range(map_width):
+            if TILEMAP[1][x] == "W":
+                left_bound = x + 1
+                break
+                
+        # Find first wall from right in first row
+        for x in range(map_width - 1, -1, -1):
+            if TILEMAP[1][x] == "W":
+                right_bound = x - 1
+                break
+                
+        # Find first wall from top in first column
         for y in range(map_height):
-            for x in range(map_width):
-                # Check if position is empty and within map bounds
-                if (0 <= x < map_width and 0 <= y < map_height and 
-                    TILEMAP[y][x] == "."):
+            if TILEMAP[y][1] == "W":
+                top_bound = y + 1
+                break
+                
+        # Find first wall from bottom in first column
+        for y in range(map_height - 1, -1, -1):
+            if TILEMAP[y][1] == "W":
+                bottom_bound = y - 1
+                break
+        
+        # Check only positions within the walls
+        for y in range(top_bound, bottom_bound + 1):
+            for x in range(left_bound, right_bound + 1):
+                # Check if position is empty
+                if TILEMAP[y][x] == ".":
                     # Calculate distance from player
                     dx = abs(x - player_tile_x)
                     dy = abs(y - player_tile_y)
