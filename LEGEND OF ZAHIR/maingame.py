@@ -12,6 +12,7 @@ from soundmanager import sound_manager
 from tutorial import *
 from save_system import SaveSystem, SaveLoadMenu, QuickSaveLoad
 from dialogue import DialogueSystem
+from visual_assets import VisualNovelAssets
 from leaderboard import *
 import os
 import sys
@@ -45,6 +46,7 @@ class Game:
         # Load sprite sheets
         self.character_spritesheet = Spritesheet('LEGEND OF ZAHIR/main character strip.png')
         self.enemy_spritesheet = Spritesheet('LEGEND OF ZAHIR/skeleton_strip.png')
+        self.terrain_spritesheet = Spritesheet('LEGEND OF ZAHIR/dungeon2.jpg')
         
         # Initialize game state
         self.allsprites = pygame.sprite.LayeredUpdates()
@@ -469,7 +471,8 @@ class Game:
                 # Only create enemies if not in tutorial
                 if column == "E" and not self.in_tutorial:
                     Enemy(self, j, i)
-                    
+
+
     def new(self):
         """Set up new game state while preserving necessary data."""
         # Store the current name
@@ -640,7 +643,6 @@ class Game:
             enemy = Enemy.create_random(self)
             self.enemies.add(enemy)
             self.allsprites.add(enemy)
-
 
     def game_over(self):
         """
