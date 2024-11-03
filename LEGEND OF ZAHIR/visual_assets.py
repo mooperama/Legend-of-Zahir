@@ -12,16 +12,15 @@ class CharacterPosition(Enum):
 
 class SpriteType(Enum):
     """Available sprite types."""
-    VN1 = "1 of 3 time man"
-    VN2 = "2 of 3 language man"
-    VN3 = "blue_happy"
-    VN4 = "blue_normal"
-    VN5 = "boss 1_3 sprite"
+    VN1 = "VN1"
+    VN2 = "VN2"
+    VN3 = "VN3"
+    VN4 = "VN4"
+    VN5 = "VN5"
     VN6 = "boss 2_3 sprite"
     VN7 = "boss 3_3 sprite"
     VN8 = "pink_happy"
     VN9 = "pink_normal"
-    VN10 = "sword"
 
 class Character:
     """Represents a character in the visual novel scenes."""
@@ -105,7 +104,6 @@ class VisualNovelAssets:
             "Boss1": Character("Boss1", base_path, SpriteType.VN5),
             "Boss2": Character("Boss2", base_path, SpriteType.VN6),
             "Boss3": Character("Boss3", base_path, SpriteType.VN7),
-            "Sword": Character("Sword", base_path, SpriteType.SWORD)
         }
     
     def _load_backgrounds(self) -> Dict[str, Optional[pygame.Surface]]:
