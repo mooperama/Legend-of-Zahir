@@ -195,7 +195,7 @@ class DialogueSystem:
         
         # Setup characters based on sequence
         if sequence_key == 'intro':
-            self.visual_assets.move_character('LanguageMan', CharacterPosition.CENTER)
+            self.visual_assets.move_character('VN1', CharacterPosition.CENTER)
         
         elif sequence_key == 'after_tutorial':
             self.visual_assets.move_character('BlueCharacter', CharacterPosition.CENTER)

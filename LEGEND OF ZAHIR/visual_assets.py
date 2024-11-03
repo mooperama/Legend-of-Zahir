@@ -45,16 +45,18 @@ class Character:
             
     def _load_sprite(self, path: str) -> Optional[pygame.Surface]:
         """Load a sprite with error handling and placeholder generation."""
+        PIXEL_ART_SIZE = (256, 256)  # Increased sprite size here
+        
         try:
             sprite = pygame.image.load(path).convert_alpha()
-            return pygame.transform.scale(sprite, (64, 64))  # Adjusted size for pixel art
+            return pygame.transform.scale(sprite, PIXEL_ART_SIZE)  # Scale all sprites to the larger size
         except (pygame.error, FileNotFoundError):
             print(f"Warning: Could not load sprite {path}")
-            sprite = pygame.Surface((64, 64), pygame.SRCALPHA)
+            sprite = pygame.Surface(PIXEL_ART_SIZE, pygame.SRCALPHA)
             sprite.fill((100, 100, 100, 200))
-            font = pygame.font.Font(None, 12)
+            font = pygame.font.Font(None, PIXEL_ART_SIZE[0] // 5)
             text = font.render(f"Missing: {os.path.basename(path)}", True, (255, 255, 255))
-            text_rect = text.get_rect(center=(32, 32))
+            text_rect = text.get_rect(center=(PIXEL_ART_SIZE[0]/2, PIXEL_ART_SIZE[1]/2))
             sprite.blit(text, text_rect)
             return sprite
 
@@ -74,9 +76,9 @@ class VisualNovelAssets:
         
         # Initialize position coordinates
         self.positions = {
-            CharacterPosition.LEFT: (self.width * 0.25, self.height * 0.5),
-            CharacterPosition.CENTER: (self.width * 0.5, self.height * 0.5),
-            CharacterPosition.RIGHT: (self.width * 0.75, self.height * 0.5),
+            CharacterPosition.LEFT: (self.width * 0.25, self.height * 0.35),
+            CharacterPosition.CENTER: (self.width * 0.5 , self.height * 0.35),
+            CharacterPosition.RIGHT: (self.width * 0.75, self.height * 0.35),
             CharacterPosition.OFF_SCREEN: (-64, self.height * 0.5)
         }
         
@@ -95,7 +97,7 @@ class VisualNovelAssets:
         """Initialize all game characters."""
         base_path = "LEGEND OF ZAHIR/visual_novel_assets"
         return {
-            "TimeMan": Character("TimeMan", base_path, SpriteType.VN1),
+            "VN1": Character("TimeMan", base_path, SpriteType.VN1),
             "LanguageMan": Character("LanguageMan", base_path, SpriteType.VN2),
             "BlueCharacter": Character("BlueCharacter", base_path, SpriteType.VN3),
             "BlueCharacterHappy": Character("BlueCharacterHappy", base_path, SpriteType.VN4),
