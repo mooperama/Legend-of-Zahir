@@ -1,6 +1,6 @@
 import pygame
 import os
-import pickle
+import json
 from datetime import datetime
 import time
 
@@ -15,8 +15,8 @@ YELLOW = (255, 255, 0)
 class GameState:
     """Class to hold all saveable game state data."""
     def __init__(self, game):
-        # Basic game state - Add version tracking
-        self.save_version = "1.0"  # Add version tracking to handle backwards compatibility
+        # Basic game state
+        self.save_version = "1.0"
         self.player_name = game.player_name
         self.current_sequence_index = game.current_sequence_index
         self.elapsed_time = game.elapsed_time
@@ -26,7 +26,7 @@ class GameState:
         self.pause_time = game.pause_time
         self.is_paused = game.is_paused
         
-        # Player stats - Add error handling
+        # Player stats
         if hasattr(game, 'player'):
             try:
                 self.player_stats = {
@@ -47,6 +47,32 @@ class GameState:
         
         # Save timestamp
         self.save_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    def to_dict(self):
+        """Convert GameState to dictionary for JSON serialization."""
+        return {
+            'save_version': self.save_version,
+            'player_name': self.player_name,
+            'current_sequence_index': self.current_sequence_index,
+            'elapsed_time': self.elapsed_time,
+            'in_tutorial': self.in_tutorial,
+            'tutorial_completed': self.tutorial_completed,
+            'start_time': self.start_time,
+            'pause_time': self.pause_time,
+            'is_paused': self.is_paused,
+            'player_stats': self.player_stats,
+            'running': self.running,
+            'playing': self.playing,
+            'save_date': self.save_date
+        }
+    
+    @classmethod
+    def from_dict(cls, data):
+        """Create GameState instance from dictionary."""
+        state = cls.__new__(cls)
+        for key, value in data.items():
+            setattr(state, key, value)
+        return state
 
 class SaveSystem:
     """Handles saving and loading game states."""
@@ -61,7 +87,7 @@ class SaveSystem:
     
     def get_save_path(self, save_name):
         """Get the full path for a save file."""
-        return os.path.join(self.save_directory, f"{save_name}.sav")
+        return os.path.join(self.save_directory, f"{save_name}.json")
     
     def save_game(self, game, save_name=None):
         """Save the current game state."""
@@ -73,10 +99,10 @@ class SaveSystem:
             if save_name is None:
                 save_name = f"{game.player_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             
-            # Save to file
+            # Save to JSON file
             save_path = self.get_save_path(save_name)
-            with open(save_path, 'wb') as f:
-                pickle.dump(game_state, f)
+            with open(save_path, 'w', encoding='utf-8') as f:
+                json.dump(game_state.to_dict(), f, indent=4)
             
             return True, "Game saved successfully!"
             
@@ -85,37 +111,37 @@ class SaveSystem:
             return False, f"Could not save game: {str(e)}"
 
     def load_game(self, save_name, game):
-        """Load a saved game state with improved error handling and backwards compatibility."""
+        """Load a saved game state."""
         try:
             save_path = self.get_save_path(save_name)
             
             if not os.path.exists(save_path):
                 return False, "Save file not found", None
             
-            with open(save_path, 'rb') as f:
+            with open(save_path, 'r', encoding='utf-8') as f:
                 try:
-                    game_state = pickle.load(f)
+                    data = json.load(f)
+                    game_state = GameState.from_dict(data)
                     
-                    # Check if it's an old save format
+                    # Check version compatibility
                     if not hasattr(game_state, 'save_version'):
-                        # Convert old save format to new format
                         game_state = self._convert_old_save_format(game_state)
                     
-                    # Create timer data before applying state
+                    # Create timer data
                     timer_data = {
-                        'elapsed_time': getattr(game_state, 'elapsed_time', 0),
-                        'start_time': getattr(game_state, 'start_time', time.time()),
-                        'pause_time': getattr(game_state, 'pause_time', 0)
+                        'elapsed_time': game_state.elapsed_time,
+                        'start_time': game_state.start_time,
+                        'pause_time': game_state.pause_time
                     }
                     
-                    # Apply the game state with error handling
+                    # Apply the game state
                     self._apply_game_state(game_state, game)
                     
                     return True, "Game loaded successfully!", timer_data
                     
-                except (AttributeError, pickle.UnpicklingError) as e:
-                    print(f"Error unpickling save file: {e}")
-                    return False, "Save file is corrupted or incompatible", None
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding save file: {e}")
+                    return False, "Save file is corrupted", None
                 
         except Exception as e:
             print(f"Error loading game: {e}")
@@ -126,23 +152,21 @@ class SaveSystem:
         saves = []
         try:
             for filename in os.listdir(self.save_directory):
-                if filename.endswith('.sav'):
+                if filename.endswith('.json'):
                     save_path = os.path.join(self.save_directory, filename)
                     try:
-                        with open(save_path, 'rb') as f:
-                            game_state = pickle.load(f)
-                            # Handle old save formats that might not have all attributes
+                        with open(save_path, 'r', encoding='utf-8') as f:
+                            data = json.load(f)
                             saves.append({
-                                'name': filename[:-4],  # Remove .sav extension
-                                'date': getattr(game_state, 'save_date', 'Unknown Date'),
-                                'player': getattr(game_state, 'player_name', 'Unknown Player'),
-                                'sequence': getattr(game_state, 'current_sequence_index', 0)
+                                'name': filename[:-5],  # Remove .json extension
+                                'date': data.get('save_date', 'Unknown Date'),
+                                'player': data.get('player_name', 'Unknown Player'),
+                                'sequence': data.get('current_sequence_index', 0)
                             })
                     except Exception as e:
                         print(f"Error reading save {filename}: {e}")
-                        # Add the save with default values if it can't be read
                         saves.append({
-                            'name': filename[:-4],
+                            'name': filename[:-5],
                             'date': 'Error Reading Save',
                             'player': 'Unknown',
                             'sequence': 0
@@ -165,7 +189,7 @@ class SaveSystem:
 
     def _convert_old_save_format(self, old_state):
         """Convert old save format to new format."""
-        new_state = GameState.__new__(GameState)  # Create new state without calling __init__
+        new_state = GameState.__new__(GameState)
         new_state.save_version = "1.0"
         
         # Copy all existing attributes
@@ -184,40 +208,42 @@ class SaveSystem:
         return new_state
 
     def _apply_game_state(self, game_state, game):
-        """Apply loaded game state to current game instance with error handling."""
+        """Apply loaded game state to current game instance."""
         try:
-            # Apply basic game state with safe attribute setting
-            game.player_name = getattr(game_state, 'player_name', game.player_name)
-            game.current_sequence_index = getattr(game_state, 'current_sequence_index', 0)
-            game.elapsed_time = getattr(game_state, 'elapsed_time', 0)
-            game.in_tutorial = getattr(game_state, 'in_tutorial', True)
+            # Apply basic game state
+            game.player_name = game_state.player_name
+            game.current_sequence_index = game_state.current_sequence_index
+            game.elapsed_time = game_state.elapsed_time
+            game.in_tutorial = game_state.in_tutorial
             
             if hasattr(game, 'tutorial_system'):
-                game.tutorial_system.tutorial_completed = getattr(game_state, 'tutorial_completed', False)
+                game.tutorial_system.tutorial_completed = game_state.tutorial_completed
                 
-            game.game_start_time = getattr(game_state, 'start_time', time.time())
-            game.pause_time = getattr(game_state, 'pause_time', 0)
-            game.is_paused = getattr(game_state, 'is_paused', False)
+            game.game_start_time = game_state.start_time
+            game.pause_time = game_state.pause_time
+            game.is_paused = game_state.is_paused
             
             # Apply player stats if they exist
             if game_state.player_stats and hasattr(game, 'player'):
                 stats = game_state.player_stats
-                game.player.health = stats.get('health', game.player.health)
-                game.player.max_health = stats.get('max_health', game.player.max_health)
-                game.player.experience = stats.get('experience', game.player.experience)
-                game.player.level = stats.get('level', game.player.level)
-                if 'position' in stats:
-                    game.player.rect.x = stats['position'][0]
-                    game.player.rect.y = stats['position'][1]
+                for key, value in stats.items():
+                    if key != 'position':
+                        setattr(game.player, key, value)
+                if 'position' in stats and hasattr(game.player, 'rect'):
+                    game.player.rect.x, game.player.rect.y = stats['position']
+            
+            # Update player name in the player object if it exists
+            if hasattr(game, 'player'):
+                game.player.name = game_state.player_name
             
             # Apply game progress state
-            game.running = getattr(game_state, 'running', True)
-            game.playing = getattr(game_state, 'playing', True)
+            game.running = game_state.running
+            game.playing = game_state.playing
             
         except Exception as e:
             print(f"Error applying game state: {e}")
             raise
-
+        
 class SaveLoadMenu:
     """UI for saving and loading games."""
     def __init__(self, game):

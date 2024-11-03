@@ -18,9 +18,7 @@ import os
 import sys
 import time
 
-"""
-i luv jessica ng (i cant commit)
-"""
+
 class Game:
     def __init__(self):
         pygame.init()
@@ -39,11 +37,11 @@ class Game:
         
         # Initialize game components
         sound_manager.play_music()
-        self.game_start_time = time.time()  # Overall game start time - never changes
+        self.game_start_time = time.time()
         self.elapsed_time = 0
-        self.pause_time = 0  # Track total paused time
-        self.is_paused = False  # Track pause state
-        self.pause_start = 0  # Track when pauses begin
+        self.pause_time = 0
+        self.is_paused = False
+        self.pause_start = 0
         
         # Load sprite sheets
         self.character_spritesheet = Spritesheet('LEGEND OF ZAHIR/main character strip.png')
@@ -57,11 +55,6 @@ class Game:
         self.attacks = pygame.sprite.LayeredUpdates()
         self.bullets = pygame.sprite.LayeredUpdates()
         
-        # Create initial game world
-        self.createTilemap()
-        self.create_enemies()
-        self.playing = True
-        
         # Game sequence setup
         self.game_sequence = ['main', 'candle memory', 'main', 'timezone', 'main', 'language', 'main', 'continent', 'main', 'boss']
         self.current_sequence_index = 0
@@ -69,13 +62,19 @@ class Game:
         
         # Initialize save system
         self.save_system = SaveSystem()
+        self.save_load_menu = None  # Initialize as None, create when needed
         self.quick_save_load = QuickSaveLoad(self)
         
         self.paused = False
-        self.keys_pressed = set()  # Track currently pressed keys
+        self.keys_pressed = set()
         
         # Initialize leaderboard
         self.leaderboard_system = LeaderboardSystem()
+        
+        # Create initial game world
+        self.createTilemap()
+        self.create_enemies()
+        self.playing = True
 
     def game_loop(self):
         """
@@ -461,32 +460,47 @@ class Game:
         self.running = False
 
     def createTilemap(self):
-        """
-        Create the game world based on the TILEMAP defined in config_settings.
-        """
+        """Create the game world and ensure player name is set."""
+        # Clear existing sprites
+        self.allsprites.empty()
+        self.blocks.empty()
+        self.enemies.empty()
+        self.attacks.empty()
+        self.bullets.empty()
+        
         for i, row in enumerate(TILEMAP):
             for j, column in enumerate(row):
                 if column == "W":
-                    Block(self, j, i)  # Create a wall block
+                    Block(self, j, i)
                 if column == "P":
-                    self.player = Player(self, j, i)  # Create the player
+                    self.player = Player(self, j, i)
+                    self.player.name = self.player_name  # Set player name
                 if column == "E":
-                    Enemy(self, j, i)  # Create an enemy
+                    Enemy(self, j, i)
 
     def new(self):
-        """
-        Set up a new game, create sprite groups, and initialize game objects.
-        """
+        """Set up new game state while preserving necessary data."""
+        # Store the current name
+        current_name = self.player_name
+        
         # Initialize sprite groups
         self.allsprites = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
         self.enemies = pygame.sprite.LayeredUpdates()
         self.attacks = pygame.sprite.LayeredUpdates()
         self.bullets = pygame.sprite.LayeredUpdates()
-
-        self.createTilemap()  # Create the game world
-        self.create_enemies()  # Spawn initial enemies
-        self.playing = True  # Set the game state to playing
+        
+        # Create game world
+        self.createTilemap()
+        
+        # Ensure player name is maintained
+        self.player_name = current_name
+        if hasattr(self, 'player'):
+            self.player.name = current_name
+        
+        # Create enemies
+        self.create_enemies()
+        self.playing = True
 
 # Replace the existing events method with this:
     def events(self):
@@ -540,25 +554,28 @@ class Game:
                 self.playing = False
                     
     def draw(self):
-            """
-            Draw all game objects and UI elements to the screen.
-            """
-            self.screen.fill(BACKGROUND_COLOR)
-            self.allsprites.draw(self.screen)
-            self.player.draw_health_bar(self.screen)
-            self.player.draw_exp_bar(self.screen)
-            self.player.draw_stats(self.screen)
-            self.draw_timer()
-            
-            # Draw player name
-            name_text = self.font.render(self.player_name, True, BLACK)
-            self.screen.blit(name_text, (10, 10))
-
-            # Draw tutorial if active
-            if self.tutorial_system.active:
-                self.tutorial_system.draw(self.screen)
-                
-            pygame.display.update()
+        """Draw game state with proper name display."""
+        self.screen.fill(BACKGROUND_COLOR)
+        self.allsprites.draw(self.screen)
+        
+        # Update player name before drawing
+        if hasattr(self, 'player'):
+            self.player.name = self.player_name
+        
+        self.player.draw_health_bar(self.screen)
+        self.player.draw_exp_bar(self.screen)
+        self.player.draw_stats(self.screen)
+        self.draw_timer()
+        
+        # Draw player name
+        name_text = self.font.render(self.player_name, True, WHITE)
+        self.screen.blit(name_text, (10, 10))
+        
+        # Draw tutorial if active
+        if self.tutorial_system.active:
+            self.tutorial_system.draw(self.screen)
+        
+        pygame.display.update()
 
     def draw_timer(self):
         """
@@ -981,43 +998,45 @@ class Game:
 
     # Replace the existing show_save_load_menu method with this:
     def show_save_load_menu(self):
-        """Show the save/load menu."""
+        """Show the save/load menu with improved state handling."""
         try:
-            self.pause_timer()  # Pause timer during menu
-            save_load_menu = SaveLoadMenu(self)
-            menu_active = True
-            paused = True
+            self.pause_timer()
+            if self.save_load_menu is None:
+                self.save_load_menu = SaveLoadMenu(self)
             
-            while menu_active and self.running and paused:
+            menu_active = True
+            while menu_active and self.running:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         self.running = False
                         self.resume_timer()
                         return
-                    elif event.type == pygame.KEYDOWN:
+                    
+                    if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_ESCAPE:
                             menu_active = False
-                            paused = False
                             break
                         
-                        # Handle menu input
-                        result = save_load_menu.handle_input(event)
+                        result = self.save_load_menu.handle_input(event)
                         if result == 'back':
                             menu_active = False
-                            paused = False
                         elif result == 'save':
-                            save_load_menu.handle_save_action()
+                            self.save_load_menu.handle_save_action()
+                            # Refresh menu display after saving
+                            self.save_load_menu.draw()
                         elif result == 'load':
-                            if save_load_menu.handle_load_action():
+                            if self.save_load_menu.handle_load_action():
+                                # Reset game state with loaded data
+                                self.new()
                                 menu_active = False
-                                paused = False
-                                
-                if paused:
-                    save_load_menu.draw()
-                    pygame.time.Clock().tick(30)
+                
+                if menu_active:
+                    self.save_load_menu.draw()
+                    pygame.display.flip()
+                    self.clock.tick(30)
             
             self.resume_timer()
-                        
+            
         except Exception as e:
             print(f"Error in save/load menu: {e}")
             self.show_message("An error occurred in the menu", duration=2.0)

@@ -1,0 +1,24 @@
+{
+    "save_version": "1.0",
+    "player_name": "Player",
+    "current_sequence_index": 0,
+    "elapsed_time": 26.60792636871338,
+    "in_tutorial": false,
+    "tutorial_completed": true,
+    "start_time": 1730641610.029572,
+    "pause_time": 0,
+    "is_paused": true,
+    "player_stats": {
+        "health": 83,
+        "max_health": 100,
+        "experience": 0,
+        "level": 1,
+        "position": [
+            432,
+            336
+        ]
+    },
+    "running": true,
+    "playing": true,
+    "save_date": "2024-11-03 21:47:20"
+}
