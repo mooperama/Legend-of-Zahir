@@ -242,34 +242,197 @@ class Game:
 
         return text if text else "Player"  # Return "Player" if no name entered
 
-    def intro_screen(self):
-        """
-        Modified intro screen to transition to name entry
-        """
+    def show_production_screen(self):
+        """Display the production company screen with fade effects."""
+        # Setup fade effect
+        fade_surface = pygame.Surface((WIDTH, HEIGHT))
+        fade_surface.fill(BLACK)
+        
+        # Create the text
+        font_large = pygame.font.Font(None, 64)  # Larger font for production text
+        production_text = font_large.render("Produced by", True, WHITE)
+        team_text = font_large.render("Learning Team 7", True, WHITE)
+        
+        production_rect = production_text.get_rect(center=(WIDTH/2, HEIGHT/2 - 40))
+        team_rect = team_text.get_rect(center=(WIDTH/2, HEIGHT/2 + 40))
+        
+        # Fade in
+        for alpha in range(0, 255, 5):
+            self.screen.fill(BLACK)
+            
+            # Draw text
+            self.screen.blit(production_text, production_rect)
+            self.screen.blit(team_text, team_rect)
+            
+            # Apply fade
+            fade_surface.set_alpha(255 - alpha)
+            self.screen.blit(fade_surface, (0, 0))
+            
+            pygame.display.flip()
+            pygame.time.delay(20)
+        
+        # Hold the screen
+        pygame.time.delay(2000)  # Show for 2 seconds
+        
+        # Fade out
+        for alpha in range(0, 255, 5):
+            self.screen.fill(BLACK)
+            
+            # Draw text
+            self.screen.blit(production_text, production_rect)
+            self.screen.blit(team_text, team_rect)
+            
+            # Apply fade
+            fade_surface.set_alpha(alpha)
+            self.screen.blit(fade_surface, (0, 0))
+            
+            pygame.display.flip()
+            pygame.time.delay(20)
+
+    def start_game_sequence(self):
+        """Handle the complete game startup sequence."""
+        self.show_production_screen()  # Show production company screen first
+        self.loading_screen()  # Then show loading screen
+        self.main_menu()  # Then show main menu
+    
+
+    def loading_screen(self):
+        """Display a loading screen with a progress bar."""
+        self.screen.fill(BLACK)
+        
+        # Create loading text
+        loading_text = self.font.render("Loading...", True, WHITE)
+        loading_rect = loading_text.get_rect(center=(WIDTH/2, HEIGHT/2 - 50))
+        
+        # Create progress bar background
+        bar_width = 400
+        bar_height = 40
+        bar_bg_rect = pygame.Rect(WIDTH/2 - bar_width/2, HEIGHT/2, bar_width, bar_height)
+        
+        # Simulate loading with progress bar
+        for progress in range(101):
+            # Calculate progress bar fill width
+            fill_width = (progress / 100) * bar_width
+            fill_rect = pygame.Rect(WIDTH/2 - bar_width/2, HEIGHT/2, fill_width, bar_height)
+            
+            # Draw loading screen
+            self.screen.fill(BLACK)
+            self.screen.blit(loading_text, loading_rect)
+            pygame.draw.rect(self.screen, GRAY, bar_bg_rect, 2)  # Border
+            pygame.draw.rect(self.screen, WHITE, fill_rect)
+            
+            # Add percentage text
+            percent_text = self.font.render(f"{progress}%", True, WHITE)
+            percent_rect = percent_text.get_rect(center=(WIDTH/2, HEIGHT/2 + bar_height + 20))
+            self.screen.blit(percent_text, percent_rect)
+            
+            pygame.display.flip()
+            pygame.time.delay(10)  # Control loading speed
+
+    def main_menu(self):
+        """Display the main menu with multiple options."""
+        # Menu options and their positions
         title = self.font.render('Legend of Zahir', True, WHITE)
-        title_rect = title.get_rect(center=(WIDTH/2, HEIGHT/3))
-
-        play_button = pygame.Rect(WIDTH/2 - 50, HEIGHT/2, 100, 50)
-        play_text = self.font.render('Play', True, BLACK)
-
-        intro_running = True
-        while intro_running:
+        title_rect = title.get_rect(center=(WIDTH/2, HEIGHT/4))
+        
+        # Create menu buttons
+        button_width = 200
+        button_height = 50
+        button_spacing = 20
+        start_y = HEIGHT/2 - 50
+        
+        buttons = {
+            'new_game': {
+                'rect': pygame.Rect(WIDTH/2 - button_width/2, start_y, button_width, button_height),
+                'text': 'New Game',
+                'action': self.start_new_game
+            },
+            'leaderboard': {
+                'rect': pygame.Rect(WIDTH/2 - button_width/2, start_y + button_height + button_spacing, 
+                                button_width, button_height),
+                'text': 'Leaderboard',
+                'action': self.show_leaderboard_screen
+            },
+            'quit': {
+                'rect': pygame.Rect(WIDTH/2 - button_width/2, start_y + (button_height + button_spacing) * 2, 
+                                button_width, button_height),
+                'text': 'Quit',
+                'action': self.quit_game
+            }
+        }
+        
+        # Main menu loop
+        selected_button = None
+        menu_running = True
+        while menu_running and self.running:
+            mouse_pos = pygame.mouse.get_pos()
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
                     return
+                
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if play_button.collidepoint(event.pos):
-                        intro_running = False
-                        self.player_name = self.name_entry_screen()  # Get player name
-                        return
-
+                    for button in buttons.values():
+                        if button['rect'].collidepoint(mouse_pos):
+                            button['action']()
+                            if button['text'] == 'New Game':
+                                menu_running = False
+                            elif button['text'] == 'Quit':
+                                self.running = False
+                                return
+            
+            # Update selected button based on mouse position
+            selected_button = None
+            for button in buttons.values():
+                if button['rect'].collidepoint(mouse_pos):
+                    selected_button = button
+            
+            # Draw menu
             self.screen.fill(BLACK)
             self.screen.blit(title, title_rect)
-            pygame.draw.rect(self.screen, WHITE, play_button)
-            self.screen.blit(play_text, (play_button.x + 30, play_button.y + 15))
-            pygame.display.update()
+            
+            # Draw buttons
+            for button in buttons.values():
+                color = WHITE if button == selected_button else GRAY
+                pygame.draw.rect(self.screen, color, button['rect'], 2)
+                
+                text = self.font.render(button['text'], True, color)
+                text_rect = text.get_rect(center=button['rect'].center)
+                self.screen.blit(text, text_rect)
+            
+            pygame.display.flip()
             self.clock.tick(FPS)
+
+    def start_new_game(self):
+        """Handle starting a new game."""
+        self.loading_screen()  # Show loading screen
+        self.player_name = self.name_entry_screen()  # Get player name
+        return
+
+    def show_leaderboard_screen(self):
+        """Display the leaderboard screen."""
+        viewing = True
+        while viewing and self.running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    return
+                if event.type == pygame.KEYDOWN:
+                    if event.key in (pygame.K_ESCAPE, pygame.K_RETURN):
+                        viewing = False
+            
+            self.screen.fill(BLACK)
+            
+            # Draw leaderboard
+            draw_leaderboard(self.screen, self.font, self.leaderboard_system)
+            
+            pygame.display.flip()
+            self.clock.tick(FPS)
+
+    def quit_game(self):
+        """Handle quitting the game."""
+        self.running = False
 
     def createTilemap(self):
         """
@@ -925,8 +1088,9 @@ class Game:
         # self.pause_start
 
 # Game initialization and main loop
-g = Game()  # Create a new Game instance
-g.intro_screen()  # Show the intro screen
-g.game_loop()  # Start the main game loop
-pygame.quit()  # Quit pygame
-sys.exit()  # Exit the program
+if __name__ == "__main__":
+    g = Game()  # Create a new Game instance
+    g.start_game_sequence()  # Start the complete game sequence
+    g.game_loop()  # Start the main game loop if a new game was started
+    pygame.quit()  # Quit pygame
+    sys.exit()  # Exit the program
