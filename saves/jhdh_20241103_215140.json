@@ -1,0 +1,24 @@
+{
+    "save_version": "1.0",
+    "player_name": "jhdh",
+    "current_sequence_index": 4,
+    "elapsed_time": 93.84414505958557,
+    "in_tutorial": false,
+    "tutorial_completed": true,
+    "start_time": 1730641801.4573588,
+    "pause_time": 0,
+    "is_paused": true,
+    "player_stats": {
+        "health": 71,
+        "max_health": 100,
+        "experience": 0,
+        "level": 1,
+        "position": [
+            432,
+            336
+        ]
+    },
+    "running": true,
+    "playing": true,
+    "save_date": "2024-11-03 21:51:40"
+}
