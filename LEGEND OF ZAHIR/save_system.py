@@ -2,6 +2,7 @@ import pygame
 import os
 import pickle
 from datetime import datetime
+import time
 
 # UI Constants
 GRAY = (128, 128, 128)
@@ -14,31 +15,35 @@ YELLOW = (255, 255, 0)
 class GameState:
     """Class to hold all saveable game state data."""
     def __init__(self, game):
-        # Basic game state
+        # Basic game state - Add version tracking
+        self.save_version = "1.0"  # Add version tracking to handle backwards compatibility
         self.player_name = game.player_name
         self.current_sequence_index = game.current_sequence_index
         self.elapsed_time = game.elapsed_time
         self.in_tutorial = game.in_tutorial
-        self.tutorial_completed = game.tutorial_system.tutorial_completed
+        self.tutorial_completed = game.tutorial_system.tutorial_completed if hasattr(game.tutorial_system, 'tutorial_completed') else False
         self.start_time = game.game_start_time
         self.pause_time = game.pause_time
         self.is_paused = game.is_paused
         
-        # Player stats
+        # Player stats - Add error handling
         if hasattr(game, 'player'):
-            self.player_stats = {
-                'health': game.player.health,
-                'max_health': game.player.max_health,
-                'experience': game.player.experience,
-                'level': game.player.level,
-                'position': (game.player.rect.x, game.player.rect.y)
-            }
+            try:
+                self.player_stats = {
+                    'health': getattr(game.player, 'health', 100),
+                    'max_health': getattr(game.player, 'max_health', 100),
+                    'experience': getattr(game.player, 'experience', 0),
+                    'level': getattr(game.player, 'level', 1),
+                    'position': (game.player.rect.x, game.player.rect.y) if hasattr(game.player, 'rect') else (0, 0)
+                }
+            except AttributeError:
+                self.player_stats = None
         else:
             self.player_stats = None
         
         # Game progress state
-        self.running = game.running
-        self.playing = game.playing
+        self.running = getattr(game, 'running', True)
+        self.playing = getattr(game, 'playing', True)
         
         # Save timestamp
         self.save_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -48,21 +53,18 @@ class SaveSystem:
     def __init__(self):
         self.save_directory = "saves"
         self.ensure_save_directory()
-        
+    
     def ensure_save_directory(self):
         """Create saves directory if it doesn't exist."""
         if not os.path.exists(self.save_directory):
             os.makedirs(self.save_directory)
-            
+    
     def get_save_path(self, save_name):
         """Get the full path for a save file."""
         return os.path.join(self.save_directory, f"{save_name}.sav")
     
     def save_game(self, game, save_name=None):
-        """
-        Save the current game state.
-        Returns: (bool, str) - Success status and message
-        """
+        """Save the current game state."""
         try:
             # Create game state
             game_state = GameState(game)
@@ -77,15 +79,13 @@ class SaveSystem:
                 pickle.dump(game_state, f)
             
             return True, "Game saved successfully!"
+            
         except Exception as e:
             print(f"Error saving game: {e}")
             return False, f"Could not save game: {str(e)}"
-    
+
     def load_game(self, save_name, game):
-        """
-        Load a saved game state.
-        Returns: (bool, str, dict) - Success status, message, and loaded data
-        """
+        """Load a saved game state with improved error handling and backwards compatibility."""
         try:
             save_path = self.get_save_path(save_name)
             
@@ -93,49 +93,34 @@ class SaveSystem:
                 return False, "Save file not found", None
             
             with open(save_path, 'rb') as f:
-                game_state = pickle.load(f)
-            
-            # Create timer data before applying state
-            timer_data = {
-                'elapsed_time': game_state.elapsed_time,
-                'start_time': game_state.start_time,
-                'pause_time': game_state.pause_time
-            }
-            
-            # Apply the game state
-            self._apply_game_state(game_state, game)
-            
-            return True, "Game loaded successfully!", timer_data
-            
+                try:
+                    game_state = pickle.load(f)
+                    
+                    # Check if it's an old save format
+                    if not hasattr(game_state, 'save_version'):
+                        # Convert old save format to new format
+                        game_state = self._convert_old_save_format(game_state)
+                    
+                    # Create timer data before applying state
+                    timer_data = {
+                        'elapsed_time': getattr(game_state, 'elapsed_time', 0),
+                        'start_time': getattr(game_state, 'start_time', time.time()),
+                        'pause_time': getattr(game_state, 'pause_time', 0)
+                    }
+                    
+                    # Apply the game state with error handling
+                    self._apply_game_state(game_state, game)
+                    
+                    return True, "Game loaded successfully!", timer_data
+                    
+                except (AttributeError, pickle.UnpicklingError) as e:
+                    print(f"Error unpickling save file: {e}")
+                    return False, "Save file is corrupted or incompatible", None
+                
         except Exception as e:
             print(f"Error loading game: {e}")
-            return False, "Could not load save file", None
-    
-    def _apply_game_state(self, game_state, game):
-        """Apply loaded game state to current game instance."""
-        # Apply basic game state
-        game.player_name = game_state.player_name
-        game.current_sequence_index = game_state.current_sequence_index
-        game.elapsed_time = game_state.elapsed_time
-        game.in_tutorial = game_state.in_tutorial
-        game.tutorial_system.tutorial_completed = game_state.tutorial_completed
-        game.game_start_time = game_state.start_time
-        game.pause_time = game_state.pause_time
-        game.is_paused = game_state.is_paused
-        
-        # Apply player stats if they exist
-        if game_state.player_stats and hasattr(game, 'player'):
-            game.player.health = game_state.player_stats['health']
-            game.player.max_health = game_state.player_stats['max_health']
-            game.player.experience = game_state.player_stats['experience']
-            game.player.level = game_state.player_stats['level']
-            game.player.rect.x = game_state.player_stats['position'][0]
-            game.player.rect.y = game_state.player_stats['position'][1]
-        
-        # Apply game progress state
-        game.running = game_state.running
-        game.playing = game_state.playing
-    
+            return False, f"Could not load save file: {str(e)}", None
+
     def list_saves(self):
         """Get list of available save files."""
         saves = []
@@ -146,14 +131,22 @@ class SaveSystem:
                     try:
                         with open(save_path, 'rb') as f:
                             game_state = pickle.load(f)
+                            # Handle old save formats that might not have all attributes
+                            saves.append({
+                                'name': filename[:-4],  # Remove .sav extension
+                                'date': getattr(game_state, 'save_date', 'Unknown Date'),
+                                'player': getattr(game_state, 'player_name', 'Unknown Player'),
+                                'sequence': getattr(game_state, 'current_sequence_index', 0)
+                            })
+                    except Exception as e:
+                        print(f"Error reading save {filename}: {e}")
+                        # Add the save with default values if it can't be read
                         saves.append({
                             'name': filename[:-4],
-                            'date': game_state.save_date,
-                            'player': game_state.player_name,
-                            'sequence': game_state.current_sequence_index
+                            'date': 'Error Reading Save',
+                            'player': 'Unknown',
+                            'sequence': 0
                         })
-                    except:
-                        continue
         except Exception as e:
             print(f"Error listing saves: {e}")
         return sorted(saves, key=lambda x: x['date'], reverse=True)
@@ -169,6 +162,61 @@ class SaveSystem:
         except Exception as e:
             print(f"Error deleting save: {e}")
             return False, f"Error deleting save: {str(e)}"
+
+    def _convert_old_save_format(self, old_state):
+        """Convert old save format to new format."""
+        new_state = GameState.__new__(GameState)  # Create new state without calling __init__
+        new_state.save_version = "1.0"
+        
+        # Copy all existing attributes
+        for attr in dir(old_state):
+            if not attr.startswith('__'):
+                setattr(new_state, attr, getattr(old_state, attr))
+        
+        # Set default values for new attributes
+        if not hasattr(new_state, 'tutorial_completed'):
+            new_state.tutorial_completed = False
+        if not hasattr(new_state, 'pause_time'):
+            new_state.pause_time = 0
+        if not hasattr(new_state, 'is_paused'):
+            new_state.is_paused = False
+            
+        return new_state
+
+    def _apply_game_state(self, game_state, game):
+        """Apply loaded game state to current game instance with error handling."""
+        try:
+            # Apply basic game state with safe attribute setting
+            game.player_name = getattr(game_state, 'player_name', game.player_name)
+            game.current_sequence_index = getattr(game_state, 'current_sequence_index', 0)
+            game.elapsed_time = getattr(game_state, 'elapsed_time', 0)
+            game.in_tutorial = getattr(game_state, 'in_tutorial', True)
+            
+            if hasattr(game, 'tutorial_system'):
+                game.tutorial_system.tutorial_completed = getattr(game_state, 'tutorial_completed', False)
+                
+            game.game_start_time = getattr(game_state, 'start_time', time.time())
+            game.pause_time = getattr(game_state, 'pause_time', 0)
+            game.is_paused = getattr(game_state, 'is_paused', False)
+            
+            # Apply player stats if they exist
+            if game_state.player_stats and hasattr(game, 'player'):
+                stats = game_state.player_stats
+                game.player.health = stats.get('health', game.player.health)
+                game.player.max_health = stats.get('max_health', game.player.max_health)
+                game.player.experience = stats.get('experience', game.player.experience)
+                game.player.level = stats.get('level', game.player.level)
+                if 'position' in stats:
+                    game.player.rect.x = stats['position'][0]
+                    game.player.rect.y = stats['position'][1]
+            
+            # Apply game progress state
+            game.running = getattr(game_state, 'running', True)
+            game.playing = getattr(game_state, 'playing', True)
+            
+        except Exception as e:
+            print(f"Error applying game state: {e}")
+            raise
 
 class SaveLoadMenu:
     """UI for saving and loading games."""
