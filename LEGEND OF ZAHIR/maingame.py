@@ -344,11 +344,6 @@ class Game:
         title = title_font.render('Legend of Zahir', True, WHITE)
         title_rect = title.get_rect(center=(WIDTH/2, HEIGHT/4))
         
-        # Create semi-transparent overlay for better text visibility
-        overlay = pygame.Surface((WIDTH, HEIGHT))
-        overlay.fill((0, 0, 0))
-        overlay.set_alpha(128)  # 50% transparency
-        
         # Create menu buttons
         button_width = 200
         button_height = 50
@@ -408,9 +403,6 @@ class Game:
                 self.screen.blit(background, (0, 0))
             else:
                 self.screen.fill(BLACK)
-            
-            # Draw semi-transparent overlay
-            self.screen.blit(overlay, (0, 0))
             
             # Draw buttons
             for button in buttons.values():
