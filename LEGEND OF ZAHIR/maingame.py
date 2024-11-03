@@ -12,7 +12,6 @@ from soundmanager import sound_manager
 from tutorial import *
 from save_system import SaveSystem, SaveLoadMenu, QuickSaveLoad
 from dialogue import DialogueSystem
-from visual_assets import VisualNovelAssets
 from leaderboard import *
 import os
 import sys
