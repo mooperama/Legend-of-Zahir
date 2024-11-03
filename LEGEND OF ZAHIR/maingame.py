@@ -412,13 +412,6 @@ class Game:
             # Draw semi-transparent overlay
             self.screen.blit(overlay, (0, 0))
             
-            # Draw title with shadow effect
-            shadow_offset = 2
-            title_shadow = title_font.render('Legend of Zahir', True, BLACK)
-            title_shadow_rect = title_shadow.get_rect(center=(WIDTH/2 + shadow_offset, HEIGHT/4 + shadow_offset))
-            self.screen.blit(title_shadow, title_shadow_rect)
-            self.screen.blit(title, title_rect)
-            
             # Draw buttons
             for button in buttons.values():
                 # Draw button background when selected
