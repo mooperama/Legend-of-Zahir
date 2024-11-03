@@ -468,31 +468,6 @@ class Game:
             pygame.display.update()
             self.clock.tick(FPS)
 
-    def run_minigame(self, minigame):
-        """
-        Run the selected minigame.
-
-        Args:
-            minigame (str): The name of the minigame to run.
-
-        Returns:
-            str: The result of the minigame ("completed" or "died").
-        """
-        if minigame == 'candle memory':
-            result = run_memory_game(self.screen, self.clock)
-        elif minigame == 'timezone':
-            result = run_timezone_game(self.screen, self.clock)
-        elif minigame == 'language':
-            result = run_language_matching_game()
-        elif minigame == 'continent':
-            result = run_continent_game()
-        elif minigame == 'boss':
-            result = run_boss_battle()
-        
-        self.minigames_completed += 1
-        self.current_level += 1
-        return result
-
     def show_congratulations(self):
         """
         Display the victory screen and handle play again or quit options.
@@ -559,22 +534,6 @@ class Game:
             pygame.display.update()
             self.clock.tick(FPS)
 
-    def run_main_game(self):
-        """
-        Run the main game until completion or player death.
-        """
-        while self.running:
-            self.new()  # Set up a new game state
-            result = self.main()  # Run the main game loop
-            if result == "completed":
-                # Remove the selection and directly go to the first minigame
-                self.show_level_complete_dialogue("Press Enter to start PEMDAS Challenge")
-                self.in_main_game = False
-                break
-            elif result == "died":
-                if not self.restart_level_prompt():
-                    self.running = False
-                    break
 
     def run_minigame_sequence(self, minigame_type):
         """
@@ -649,24 +608,6 @@ class Game:
         progress_text = f"Current: {sequence_names[current]} ({self.current_sequence_index + 1}/{self.total_sequences})"
         text_surface = self.font.render(progress_text, True, WHITE)
         self.screen.blit(text_surface, (10, 10))
-
-    def run_current_minigame(self):
-        """
-        Run the current minigame and return the result.
-        """
-        # Force the order of minigames
-        if self.current_minigame_index == 0:
-            return run_memory_game(self.screen, self.clock)
-        elif self.current_minigame_index == 1:
-            return run_timezone_game(self.screen, self.clock)
-        elif self.current_minigame_index == 2:
-            return run_language_matching_game()
-        elif self.current_minigame_index == 3:
-            return run_continent_game()
-        elif self.current_minigame_index == 4:
-            return run_boss_battle()
-        
-        return "quit"
 
     def restart_level_prompt(self):
         """
