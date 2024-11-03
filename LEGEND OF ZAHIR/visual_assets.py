@@ -12,16 +12,16 @@ class CharacterPosition(Enum):
 
 class SpriteType(Enum):
     """Available sprite types."""
-    TIME_MAN = "1 of 3 time man"
-    LANGUAGE_MAN = "2 of 3 language man"
-    BLUE_HAPPY = "blue_happy"
-    BLUE_NORMAL = "blue_normal"
-    BOSS_1 = "boss 1_3 sprite"
-    BOSS_2 = "boss 2_3 sprite"
-    BOSS_3 = "boss 3_3 sprite"
-    PINK_HAPPY = "pink_happy"
-    PINK_NORMAL = "pink_normal"
-    SWORD = "sword"
+    VN1 = "1 of 3 time man"
+    VN2 = "2 of 3 language man"
+    VN3 = "blue_happy"
+    VN4 = "blue_normal"
+    VN5 = "boss 1_3 sprite"
+    VN6 = "boss 2_3 sprite"
+    VN7 = "boss 3_3 sprite"
+    VN8 = "pink_happy"
+    VN9 = "pink_normal"
+    VN10 = "sword"
 
 class Character:
     """Represents a character in the visual novel scenes."""
@@ -96,15 +96,15 @@ class VisualNovelAssets:
         """Initialize all game characters."""
         base_path = "LEGEND OF ZAHIR/visual_novel_assets"
         return {
-            "TimeMan": Character("TimeMan", base_path, SpriteType.TIME_MAN),
-            "LanguageMan": Character("LanguageMan", base_path, SpriteType.LANGUAGE_MAN),
-            "BlueCharacter": Character("BlueCharacter", base_path, SpriteType.BLUE_NORMAL),
-            "BlueCharacterHappy": Character("BlueCharacterHappy", base_path, SpriteType.BLUE_HAPPY),
-            "PinkCharacter": Character("PinkCharacter", base_path, SpriteType.PINK_NORMAL),
-            "PinkCharacterHappy": Character("PinkCharacterHappy", base_path, SpriteType.PINK_HAPPY),
-            "Boss1": Character("Boss1", base_path, SpriteType.BOSS_1),
-            "Boss2": Character("Boss2", base_path, SpriteType.BOSS_2),
-            "Boss3": Character("Boss3", base_path, SpriteType.BOSS_3),
+            "TimeMan": Character("TimeMan", base_path, SpriteType.VN1),
+            "LanguageMan": Character("LanguageMan", base_path, SpriteType.VN2),
+            "BlueCharacter": Character("BlueCharacter", base_path, SpriteType.VN3),
+            "BlueCharacterHappy": Character("BlueCharacterHappy", base_path, SpriteType.VN4),
+            "PinkCharacter": Character("PinkCharacter", base_path, SpriteType.VN8),
+            "PinkCharacterHappy": Character("PinkCharacterHappy", base_path, SpriteType.VN9),
+            "Boss1": Character("Boss1", base_path, SpriteType.VN5),
+            "Boss2": Character("Boss2", base_path, SpriteType.VN6),
+            "Boss3": Character("Boss3", base_path, SpriteType.VN7),
             "Sword": Character("Sword", base_path, SpriteType.SWORD)
         }
     
