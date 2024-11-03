@@ -77,9 +77,7 @@ class Game:
         self.playing = True
 
     def game_loop(self):
-        """
-        Main game loop with integrated dialogue and tutorial systems.
-        """
+        """Main game loop with integrated dialogue and tutorial systems."""
         # Show intro dialogue before starting
         self.dialogue_system.show_dialogue('intro')
         
@@ -92,7 +90,7 @@ class Game:
                     self.running = False
                     return
                 
-                # Handle both tutorial and game events
+                # Handle tutorial system input
                 self.tutorial_system.handle_input(events)
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.player.shoot(pygame.mouse.get_pos())
@@ -101,6 +99,9 @@ class Game:
                 # Check if tutorial is completed
                 if self.tutorial_system.tutorial_completed:
                     self.in_tutorial = False
+                    # Create enemies when tutorial completes
+                    self.createTilemap()  # Recreate map with enemies
+                    self.create_enemies()  # Add random enemies
                     self.dialogue_system.show_dialogue('after_tutorial')
                     break
             
@@ -475,9 +476,10 @@ class Game:
                 if column == "P":
                     self.player = Player(self, j, i)
                     self.player.name = self.player_name  # Set player name
-                if column == "E":
+                # Only create enemies if not in tutorial
+                if column == "E" and not self.in_tutorial:
                     Enemy(self, j, i)
-
+                    
     def new(self):
         """Set up new game state while preserving necessary data."""
         # Store the current name
@@ -639,10 +641,16 @@ class Game:
 
 
     def create_enemies(self):
+        """Create enemies only if not in tutorial."""
+        # Skip enemy creation during tutorial
+        if self.in_tutorial:
+            return
+            
         for _ in range(3):
             enemy = Enemy.create_random(self)
             self.enemies.add(enemy)
-            self.allsprites.add(enemy)  # Changed from self.add(enemy)
+            self.allsprites.add(enemy)
+
 
     def game_over(self):
         """

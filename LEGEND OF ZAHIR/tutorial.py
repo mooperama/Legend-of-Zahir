@@ -39,10 +39,10 @@ class TutorialSystem:
             {
                 "message": "Dialogue and Interaction:",
                 "substeps": [
-                    "Press E to interact with NPCs",
-                    "Press E to open/close doors"
+                    "Press SPACE to interact with NPCs",
+                    "Press SPACE again to continue the dialogues with the NPCs"
                 ],
-                "completion_key": pygame.K_e
+                "completion_key": pygame.K_SPACE
             },
             {
                 "message": "Your journey will include challenges:",
