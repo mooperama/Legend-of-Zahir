@@ -5,14 +5,17 @@ import random
 WIDTH = 960
 HEIGHT = 540
 FPS = 60
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-GRAY = (128, 128, 128)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
-LIGHT_GREEN = (200, 255, 200)
-LIGHT_RED = (255, 200, 200)
-BLUE = (0, 0, 255)
+
+# Updated colors to match dark theme
+WHITE = (200, 190, 220)  # Lighter purple/white
+BLACK = (48, 25, 52)     # Dark purple
+GRAY = (120, 100, 140)   # Medium purple
+GREEN = (144, 238, 144)  # Soft green
+RED = (255, 100, 100)    # Soft red
+LIGHT_GREEN = (180, 255, 180)  # Lighter soft green
+LIGHT_RED = (255, 180, 180)    # Lighter soft red
+BLUE = (150, 150, 255)   # Soft blue
+BORDER_COLOR = (150, 130, 170)  # Medium light purple
 
 # Font configurations
 FONT_PATH = 'LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf'
@@ -32,7 +35,6 @@ TIMEZONES = {
     'Singapore': 8
 }
 
-
 class Button:
     def __init__(self, x, y, width, height, text):
         self.rect = pygame.Rect(x, y, width, height)
@@ -50,8 +52,9 @@ class Button:
         else:
             self.color = GRAY
 
+        # Draw button with border
         pygame.draw.rect(surface, self.color, self.rect)
-        pygame.draw.rect(surface, BLACK, self.rect, 2)
+        pygame.draw.rect(surface, BORDER_COLOR, self.rect, 2)
         text_surface = font.render(self.text, True, BLACK)
         text_rect = text_surface.get_rect(center=self.rect.center)
         surface.blit(text_surface, text_rect)
@@ -73,6 +76,11 @@ class TimezoneGame:
         # Load and scale background image
         self.bg_img = pygame.image.load('LEGEND OF ZAHIR/assets/backgrounds/Time background.jpg')
         self.bg_img = pygame.transform.scale(self.bg_img, (WIDTH, HEIGHT))
+        
+        # Add semi-transparent overlay
+        self.overlay = pygame.Surface((WIDTH, HEIGHT))
+        self.overlay.fill(BLACK)
+        self.overlay.set_alpha(150)  # More transparent to show background better
         
         self.regular_font = pygame.font.Font(FONT_PATH, REGULAR_SIZE)
         self.medium_font = pygame.font.Font(FONT_PATH, MEDIUM_SIZE)
@@ -159,13 +167,13 @@ class TimezoneGame:
 
         # Draw question
         question_text = f"Convert time from {self.source_tz_name} to {self.target_tz_name}"
-        text_surface = self.medium_font.render(question_text, True, BLACK)
+        text_surface = self.medium_font.render(question_text, True, WHITE)
         text_rect = text_surface.get_rect(center=(WIDTH//2, HEIGHT//6))
         self.screen.blit(text_surface, text_rect)
 
         # Draw time
         time_text = f"{self.source_hour:02d}:{self.source_minute:02d}"
-        time_surface = self.large_font.render(time_text, True, BLACK)
+        time_surface = self.large_font.render(time_text, True, WHITE)
         time_rect = time_surface.get_rect(center=(WIDTH//2, HEIGHT//3))
         self.screen.blit(time_surface, time_rect)
 
@@ -186,7 +194,7 @@ class TimezoneGame:
         self.screen.blit(result_surface, result_rect)
 
         explanation_text = f"The correct time in {self.target_tz_name} is {self.correct_answer}"
-        explanation_surface = self.regular_font.render(explanation_text, True, BLACK)
+        explanation_surface = self.regular_font.render(explanation_text, True, WHITE)
         explanation_rect = explanation_surface.get_rect(center=(WIDTH//2, HEIGHT//3))
         self.screen.blit(explanation_surface, explanation_rect)
 
@@ -197,11 +205,12 @@ class TimezoneGame:
     def draw(self):
         # Draw background and overlay
         self.screen.blit(self.bg_img, (0, 0))
+        self.screen.blit(self.overlay, (0, 0))
 
         if self.game_over:
-            game_over_text = self.large_font.render("Game Over!", True, BLACK)
+            game_over_text = self.large_font.render("Game Over!", True, WHITE)
             final_score_text = self.medium_font.render(
-                f"Correct Answers: {self.correct_answers}/3", True, BLACK
+                f"Correct Answers: {self.correct_answers}/3", True, WHITE
             )
             if self.lives <= 0:
                 status_text = self.regular_font.render("Out of lives!", True, RED)
@@ -266,10 +275,6 @@ class TimezoneGame:
         return None
 
 def run_timezone_game(screen=None, clock=None):
-    """
-    Main function that can be called from the main game.
-    Returns "completed", "failed", or "quit"
-    """
     if screen is None or clock is None:
         pygame.init()
         screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -286,7 +291,7 @@ def run_timezone_game(screen=None, clock=None):
         game.draw()
         clock.tick(FPS)
 
-if __name__ == "_main_":
+if __name__ == "__main__":
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
