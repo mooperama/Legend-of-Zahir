@@ -46,7 +46,6 @@ class Game:
         # Load sprite sheets
         self.character_spritesheet = Spritesheet('LEGEND OF ZAHIR/main character strip.png')
         self.enemy_spritesheet = Spritesheet('LEGEND OF ZAHIR/skeleton_strip.png')
-        self.terrain_spritesheet = Spritesheet('LEGEND OF ZAHIR/dungeon2.jpg')
         
         # Initialize game state
         self.allsprites = pygame.sprite.LayeredUpdates()

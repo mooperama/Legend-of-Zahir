@@ -1,15 +1,14 @@
 import pygame
 from config_settings import *
 import os
-import random
 
 class Spritesheet:
-    def __init__(self,file):
+    def __init__(self, file):
         self.sheet = pygame.image.load(file).convert()
     
     def get_sprite(self, x, y, width, height):
-        sprite = pygame.Surface ([width, height])
-        sprite.blit(self.sheet, (0,0), (x,y,width,height))
+        sprite = pygame.Surface([width, height])
+        sprite.blit(self.sheet, (0,0), (x, y, width, height))
         sprite.set_colorkey(BLACK)
         return sprite
 
@@ -24,7 +23,6 @@ def flip(sprites):
     list: List of horizontally flipped sprite frames.
     """
     return [pygame.transform.flip(sprite, True, False) for sprite in sprites]
-
 
 class Block(pygame.sprite.Sprite):
     """
@@ -41,8 +39,8 @@ class Block(pygame.sprite.Sprite):
         y (int): The y-coordinate of the block in tile units.
         """
         self.game = game
-        self._layer = BLOCK_LAYER  # Set the rendering layer for the block
-        self.groups = self.game.allsprites, self.game.blocks  # Add to relevant sprite groups
+        self._layer = BLOCK_LAYER
+        self.groups = self.game.allsprites, self.game.blocks
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         # Convert tile coordinates to pixel coordinates
@@ -51,13 +49,16 @@ class Block(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        # Get the sprite from the spritesheet
-        original_sprite = self.game.terrain_spritesheet.get_sprite(160, 80, 16, 16)
+        # Load and scale the wall image
+        try:
+            self.image = pygame.image.load('LEGEND OF ZAHIR/assets/graphics/tilesets/brick wall tile.png').convert_alpha()
+            self.image = pygame.transform.scale(self.image, (TILESIZE, TILESIZE))
+        except pygame.error:
+            # Fallback if image loading fails
+            self.image = pygame.Surface([TILESIZE, TILESIZE])
+            self.image.fill((100, 100, 100))  # Grey color as fallback
 
-        # Scale the sprite to match TILESIZE
-        self.image = pygame.transform.scale(original_sprite, (TILESIZE, TILESIZE))
-
-        # Set up the block's rectangle for positioning and collision detection
+        # Set up collision rectangle
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
