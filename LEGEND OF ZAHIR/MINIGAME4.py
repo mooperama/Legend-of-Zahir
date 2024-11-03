@@ -18,6 +18,13 @@ CARD_MARGIN = 15
 FONT = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 15)
 TIMER_FONT = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 40)
 
+# Updated colors to match dark theme
+DARK_PURPLE = (48, 25, 52)  # Dark background color
+LIGHT_PURPLE = (120, 100, 140)  # Lighter purple for unrevealed cards
+REVEALED_PURPLE = (80, 60, 100)  # Medium purple for revealed cards
+TEXT_COLOR = (200, 190, 220)  # Light purple/white for text
+BORDER_COLOR = (150, 130, 170)  # Medium light purple for borders
+
 # Language pairs
 ALL_LANGUAGES = [
     ("English", "Hello"),
@@ -33,47 +40,25 @@ ALL_LANGUAGES = [
 ]
 
 class Card:
-    """
-    Represents a card in the memory game.
-    """
-
     def __init__(self, x, y, text):
-        """
-        Initialize a new card.
-
-        Args:
-            x (int): The x-coordinate of the card.
-            y (int): The y-coordinate of the card.
-            text (str): The text to display on the card.
-        """
         self.rect = pygame.Rect(x, y, CARD_WIDTH, CARD_HEIGHT)
         self.text = text
         self.revealed = False
 
     def draw(self, screen):
-        """
-        Draw the card on the screen.
-
-        Args:
-            screen (pygame.Surface): The surface to draw the card on.
-        """
         if self.revealed:
-            pygame.draw.rect(screen, BLUE, self.rect)
-            text_surface = FONT.render(self.text, True, WHITE)
+            pygame.draw.rect(screen, REVEALED_PURPLE, self.rect)
+            text_surface = FONT.render(self.text, True, TEXT_COLOR)
         else:
-            pygame.draw.rect(screen, GRAY, self.rect)
-            text_surface = FONT.render("?", True, BLACK)
+            pygame.draw.rect(screen, LIGHT_PURPLE, self.rect)
+            text_surface = FONT.render("?", True, TEXT_COLOR)
         
+        # Add border
+        pygame.draw.rect(screen, BORDER_COLOR, self.rect, 2)
         text_rect = text_surface.get_rect(center=self.rect.center)
         screen.blit(text_surface, text_rect)
 
 def create_cards():
-    """
-    Create and return a list of Card objects and game languages.
-
-    Returns:
-        tuple: A tuple containing a list of Card objects and a list of game languages.
-    """
     game_languages = random.sample(ALL_LANGUAGES, 6)
     cards = []
 
@@ -95,12 +80,15 @@ def create_cards():
     return cards, game_languages
 
 def run_language_matching_game():
-    """
-    Run the main game loop for the Language Matching Memory Game.
-
-    Returns:
-        str: The result of the game ('completed', 'died', or 'quit').
-    """
+    # Load and scale background image
+    bg_img = pygame.image.load('LEGEND OF ZAHIR/assets/backgrounds/Language background.jpg')
+    bg_img = pygame.transform.scale(bg_img, (WIDTH, HEIGHT))
+    
+    # Create semi-transparent overlay
+    overlay = pygame.Surface((WIDTH, HEIGHT))
+    overlay.fill(DARK_PURPLE)
+    overlay.set_alpha(150)  # More transparent to show background better
+    
     cards, game_languages = create_cards()
     selected_cards = []
     matched_pairs = set()
@@ -119,9 +107,9 @@ def run_language_matching_game():
                         card.revealed = True
                         selected_cards.append(card)
                         if len(selected_cards) == 2:
-                            pygame.time.set_timer(pygame.USEREVENT, 1000)  # Set timer for 1 second
+                            pygame.time.set_timer(pygame.USEREVENT, 1000)
             elif event.type == pygame.USEREVENT:
-                pygame.time.set_timer(pygame.USEREVENT, 0)  # Cancel the timer
+                pygame.time.set_timer(pygame.USEREVENT, 0)
                 if len(selected_cards) == 2:
                     if (selected_cards[0].text, selected_cards[1].text) in game_languages or \
                        (selected_cards[1].text, selected_cards[0].text) in game_languages:
@@ -131,14 +119,18 @@ def run_language_matching_game():
                             card.revealed = False
                     selected_cards.clear()
 
-        SCREEN.fill(WHITE)
+        # Draw background and overlay
+        SCREEN.blit(bg_img, (0, 0))
+        SCREEN.blit(overlay, (0, 0))
+
         for card in cards:
             card.draw(SCREEN)
 
-        # Timer logic
+        # Timer logic with updated colors
         elapsed_time = pygame.time.get_ticks() - start_time
-        remaining_time = max(0, (time_limit - elapsed_time) // 1000)  # Convert to seconds
-        timer_text = TIMER_FONT.render(f"Time: {remaining_time}s", True, RED if remaining_time <= 5 else BLACK)
+        remaining_time = max(0, (time_limit - elapsed_time) // 1000)
+        timer_color = (255, 100, 100) if remaining_time <= 5 else TEXT_COLOR  # Red for low time
+        timer_text = TIMER_FONT.render(f"Time: {remaining_time}s", True, timer_color)
         timer_rect = timer_text.get_rect(center=(WIDTH // 2, 50))
         SCREEN.blit(timer_text, timer_rect)
 
@@ -153,15 +145,9 @@ def run_language_matching_game():
     return "quit"
 
 def main():
-    """
-    Main function to run the Language Matching Game when the script is run directly.
-    
-    Returns:
-        str: The result of the game ('completed', 'died', or 'quit').
-    """
     return run_language_matching_game()
 
-if __name__ == "__main__":
+if __name__ == "_main_":
     result = main()
     print(f"Game result: {result}")
     pygame.quit()

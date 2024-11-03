@@ -70,6 +70,10 @@ class TimezoneGame:
         self.screen = screen
         self.clock = clock
         
+        # Load and scale background image
+        self.bg_img = pygame.image.load('LEGEND OF ZAHIR/assets/backgrounds/Time background.jpg')
+        self.bg_img = pygame.transform.scale(self.bg_img, (WIDTH, HEIGHT))
+        
         self.regular_font = pygame.font.Font(FONT_PATH, REGULAR_SIZE)
         self.medium_font = pygame.font.Font(FONT_PATH, MEDIUM_SIZE)
         self.large_font = pygame.font.Font(FONT_PATH, LARGE_SIZE)
@@ -191,7 +195,8 @@ class TimezoneGame:
         self.continue_button.draw(self.screen, self.regular_font)
 
     def draw(self):
-        self.screen.fill(WHITE)
+        # Draw background and overlay
+        self.screen.blit(self.bg_img, (0, 0))
 
         if self.game_over:
             game_over_text = self.large_font.render("Game Over!", True, BLACK)
@@ -281,7 +286,7 @@ def run_timezone_game(screen=None, clock=None):
         game.draw()
         clock.tick(FPS)
 
-if __name__ == "__main__":
+if __name__ == "_main_":
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
