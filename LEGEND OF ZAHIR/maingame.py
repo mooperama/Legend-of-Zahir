@@ -330,10 +330,24 @@ class Game:
             pygame.time.delay(10)  # Control loading speed
 
     def main_menu(self):
-        """Display the main menu with multiple options."""
-        # Menu options and their positions
-        title = self.font.render('Legend of Zahir', True, WHITE)
+        """Display the main menu with multiple options and background image."""
+        # Load and scale background image
+        try:
+            background = pygame.image.load('LEGEND OF ZAHIR/menu_background.png')
+            background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+        except:
+            print("Could not load menu background image")
+            background = None
+        
+        # Menu options and positions
+        title_font = pygame.font.Font(None, 72)  # Larger font for title
+        title = title_font.render('Legend of Zahir', True, WHITE)
         title_rect = title.get_rect(center=(WIDTH/2, HEIGHT/4))
+        
+        # Create semi-transparent overlay for better text visibility
+        overlay = pygame.Surface((WIDTH, HEIGHT))
+        overlay.fill((0, 0, 0))
+        overlay.set_alpha(128)  # 50% transparency
         
         # Create menu buttons
         button_width = 200
@@ -375,6 +389,7 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     for button in buttons.values():
                         if button['rect'].collidepoint(mouse_pos):
+                            sound_manager.play_sound('button_click')  # Add sound effect if available
                             button['action']()
                             if button['text'] == 'New Game':
                                 menu_running = False
@@ -389,14 +404,32 @@ class Game:
                     selected_button = button
             
             # Draw menu
-            self.screen.fill(BLACK)
+            if background:
+                self.screen.blit(background, (0, 0))
+            else:
+                self.screen.fill(BLACK)
+            
+            # Draw semi-transparent overlay
+            self.screen.blit(overlay, (0, 0))
+            
+            # Draw title with shadow effect
+            shadow_offset = 2
+            title_shadow = title_font.render('Legend of Zahir', True, BLACK)
+            title_shadow_rect = title_shadow.get_rect(center=(WIDTH/2 + shadow_offset, HEIGHT/4 + shadow_offset))
+            self.screen.blit(title_shadow, title_shadow_rect)
             self.screen.blit(title, title_rect)
             
             # Draw buttons
             for button in buttons.values():
+                # Draw button background when selected
+                if button == selected_button:
+                    pygame.draw.rect(self.screen, (50, 50, 50), button['rect'])
+                
+                # Draw button border
                 color = WHITE if button == selected_button else GRAY
                 pygame.draw.rect(self.screen, color, button['rect'], 2)
                 
+                # Draw button text
                 text = self.font.render(button['text'], True, color)
                 text_rect = text.get_rect(center=button['rect'].center)
                 self.screen.blit(text, text_rect)
