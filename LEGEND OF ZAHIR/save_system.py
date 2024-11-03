@@ -111,7 +111,7 @@ class SaveSystem:
             return False, f"Could not save game: {str(e)}"
 
     def load_game(self, save_name, game):
-        """Load a saved game state."""
+        """Load a saved game state with improved state restoration."""
         try:
             save_path = self.get_save_path(save_name)
             
@@ -136,6 +136,21 @@ class SaveSystem:
                     
                     # Apply the game state
                     self._apply_game_state(game_state, game)
+                    
+                    # Force a game state refresh
+                    game.new()
+                    
+                    # Reapply critical attributes after refresh
+                    game.player_name = game_state.player_name
+                    if hasattr(game, 'player'):
+                        game.player.name = game_state.player_name
+                        
+                    game.current_sequence_index = game_state.current_sequence_index
+                    game.elapsed_time = game_state.elapsed_time
+                    game.in_tutorial = game_state.in_tutorial
+                    game.game_start_time = game_state.start_time
+                    game.pause_time = game_state.pause_time
+                    game.is_paused = game_state.is_paused
                     
                     return True, "Game loaded successfully!", timer_data
                     
@@ -210,40 +225,50 @@ class SaveSystem:
     def _apply_game_state(self, game_state, game):
         """Apply loaded game state to current game instance."""
         try:
+            # First recreate the game world to ensure clean state
+            game.createTilemap()
+            
             # Apply basic game state
             game.player_name = game_state.player_name
             game.current_sequence_index = game_state.current_sequence_index
             game.elapsed_time = game_state.elapsed_time
             game.in_tutorial = game_state.in_tutorial
-            
-            if hasattr(game, 'tutorial_system'):
-                game.tutorial_system.tutorial_completed = game_state.tutorial_completed
-                
             game.game_start_time = game_state.start_time
             game.pause_time = game_state.pause_time
             game.is_paused = game_state.is_paused
             
-            # Apply player stats if they exist
+            # Apply tutorial state
+            if hasattr(game, 'tutorial_system'):
+                game.tutorial_system.tutorial_completed = game_state.tutorial_completed
+            
+            # Apply player stats and attributes
             if game_state.player_stats and hasattr(game, 'player'):
                 stats = game_state.player_stats
-                for key, value in stats.items():
-                    if key != 'position':
-                        setattr(game.player, key, value)
+                # Set core stats
+                game.player.health = stats.get('health', game.player.health)
+                game.player.max_health = stats.get('max_health', game.player.max_health)
+                game.player.experience = stats.get('experience', game.player.experience)
+                game.player.level = stats.get('level', game.player.level)
+                
+                # Set position if it exists
                 if 'position' in stats and hasattr(game.player, 'rect'):
                     game.player.rect.x, game.player.rect.y = stats['position']
-            
-            # Update player name in the player object if it exists
-            if hasattr(game, 'player'):
+                
+                # Ensure player name is set in both game and player object
                 game.player.name = game_state.player_name
             
             # Apply game progress state
             game.running = game_state.running
             game.playing = game_state.playing
             
+            # Ensure the save was properly loaded by raising error if critical data is missing
+            if not game.player_name or not hasattr(game, 'player'):
+                raise ValueError("Critical game state data is missing")
+            
         except Exception as e:
             print(f"Error applying game state: {e}")
             raise
-        
+
 class SaveLoadMenu:
     """UI for saving and loading games."""
     def __init__(self, game):
