@@ -10,54 +10,52 @@ class CharacterPosition(Enum):
     RIGHT = "right"
     OFF_SCREEN = "off_screen"
 
-class CharacterMood(Enum):
-    """Available character moods/expressions."""
-    NEUTRAL = "neutral"
-    HAPPY = "happy"
-    DETERMINED = "determined"
-    SURPRISED = "surprised"
-    ANGRY = "angry"
-    PLEASED = "pleased"
-    DEFEATED = "defeated"
+class SpriteType(Enum):
+    """Available sprite types."""
+    TIME_MAN = "1 of 3 time man"
+    LANGUAGE_MAN = "2 of 3 language man"
+    BLUE_HAPPY = "blue_happy"
+    BLUE_NORMAL = "blue_normal"
+    BOSS_1 = "boss 1_3 sprite"
+    BOSS_2 = "boss 2_3 sprite"
+    BOSS_3 = "boss 3_3 sprite"
+    PINK_HAPPY = "pink_happy"
+    PINK_NORMAL = "pink_normal"
+    SWORD = "sword"
 
 class Character:
     """Represents a character in the visual novel scenes."""
     
-    def __init__(self, name: str, base_path: str):
+    def __init__(self, name: str, base_path: str, sprite_type: SpriteType):
         """
-        Initialize a character with their sprites.
+        Initialize a character with their sprite.
         
         Args:
             name: Character's name
-            base_path: Base path to character's sprite directory
+            base_path: Base path to sprites directory
+            sprite_type: Type of sprite to use for this character
         """
         self.name = name
-        self.sprites: Dict[CharacterMood, Optional[pygame.Surface]] = {}
+        self.sprite_type = sprite_type
         self.current_position = CharacterPosition.OFF_SCREEN
         self.target_position = CharacterPosition.OFF_SCREEN
-        self.current_mood = CharacterMood.NEUTRAL
         self.alpha = 255
         
-        # Load all possible moods
-        for mood in CharacterMood:
-            sprite_path = os.path.join(base_path, f"{name.lower()}_{mood.value}.png")
-            self.sprites[mood] = self._load_sprite(sprite_path)
+        # Load sprite
+        self.sprite = self._load_sprite(os.path.join(base_path, f"{sprite_type.value}.png"))
             
     def _load_sprite(self, path: str) -> Optional[pygame.Surface]:
         """Load a sprite with error handling and placeholder generation."""
         try:
             sprite = pygame.image.load(path).convert_alpha()
-            # Scale sprite if needed
-            return pygame.transform.scale(sprite, (300, 600))  # Adjust size as needed
+            return pygame.transform.scale(sprite, (64, 64))  # Adjusted size for pixel art
         except (pygame.error, FileNotFoundError):
             print(f"Warning: Could not load sprite {path}")
-            # Create placeholder sprite
-            sprite = pygame.Surface((300, 600), pygame.SRCALPHA)
+            sprite = pygame.Surface((64, 64), pygame.SRCALPHA)
             sprite.fill((100, 100, 100, 200))
-            # Add text to identify the missing sprite
-            font = pygame.font.Font(None, 36)
+            font = pygame.font.Font(None, 12)
             text = font.render(f"Missing: {os.path.basename(path)}", True, (255, 255, 255))
-            text_rect = text.get_rect(center=(150, 300))
+            text_rect = text.get_rect(center=(32, 32))
             sprite.blit(text, text_rect)
             return sprite
 
@@ -77,10 +75,10 @@ class VisualNovelAssets:
         
         # Initialize position coordinates
         self.positions = {
-            CharacterPosition.LEFT: (self.width * 0.2, self.height * 0.5),
+            CharacterPosition.LEFT: (self.width * 0.25, self.height * 0.5),
             CharacterPosition.CENTER: (self.width * 0.5, self.height * 0.5),
-            CharacterPosition.RIGHT: (self.width * 0.8, self.height * 0.5),
-            CharacterPosition.OFF_SCREEN: (-300, self.height * 0.5)
+            CharacterPosition.RIGHT: (self.width * 0.75, self.height * 0.5),
+            CharacterPosition.OFF_SCREEN: (-64, self.height * 0.5)
         }
         
         # Load characters
@@ -98,42 +96,59 @@ class VisualNovelAssets:
         """Initialize all game characters."""
         base_path = "LEGEND OF ZAHIR/visual_novel_assets"
         return {
-            "Zahir": Character("Zahir", base_path),
-            "Spirit": Character("Spirit", base_path),
-            "Boss": Character("Boss", base_path),
-            "Narrator": Character("Narrator", base_path)
+            "TimeMan": Character("TimeMan", base_path, SpriteType.TIME_MAN),
+            "LanguageMan": Character("LanguageMan", base_path, SpriteType.LANGUAGE_MAN),
+            "BlueCharacter": Character("BlueCharacter", base_path, SpriteType.BLUE_NORMAL),
+            "BlueCharacterHappy": Character("BlueCharacterHappy", base_path, SpriteType.BLUE_HAPPY),
+            "PinkCharacter": Character("PinkCharacter", base_path, SpriteType.PINK_NORMAL),
+            "PinkCharacterHappy": Character("PinkCharacterHappy", base_path, SpriteType.PINK_HAPPY),
+            "Boss1": Character("Boss1", base_path, SpriteType.BOSS_1),
+            "Boss2": Character("Boss2", base_path, SpriteType.BOSS_2),
+            "Boss3": Character("Boss3", base_path, SpriteType.BOSS_3),
+            "Sword": Character("Sword", base_path, SpriteType.SWORD)
         }
     
     def _load_backgrounds(self) -> Dict[str, Optional[pygame.Surface]]:
         """Load all background images."""
-        backgrounds_path = "LEGEND OF ZAHIR/visual_novel_assets/backgrounds"
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        backgrounds_path = os.path.join(current_dir, "LEGEND OF ZAHIR", "visual_novel_assets", "backgrounds")
+        print(f"Looking for backgrounds in: {backgrounds_path}")
+        
         backgrounds = {}
         
-        # List of expected backgrounds
-        expected_bgs = ["intro", "dungeon", "trial", "boss_room", "victory"]
-        
-        for bg_name in expected_bgs:
-            path = os.path.join(backgrounds_path, f"{bg_name}.png")
-            try:
-                bg = pygame.image.load(path).convert()
-                backgrounds[bg_name] = pygame.transform.scale(bg, (self.width, self.height))
-            except (pygame.error, FileNotFoundError):
-                print(f"Warning: Could not load background {path}")
-                # Create placeholder background
-                bg = pygame.Surface((self.width, self.height))
-                bg.fill((50, 50, 50))
-                font = pygame.font.Font(None, 48)
-                text = font.render(f"Missing Background: {bg_name}", True, (255, 255, 255))
-                text_rect = text.get_rect(center=(self.width/2, self.height/2))
-                bg.blit(text, text_rect)
-                backgrounds[bg_name] = bg
-                
+        if not os.path.exists(backgrounds_path):
+            print(f"Error: Backgrounds directory not found at {backgrounds_path}")
+            # Create a default background
+            bg = pygame.Surface((self.width, self.height))
+            bg.fill((50, 50, 50))
+            backgrounds["default"] = bg
+            return backgrounds
+            
+        # List background directory contents
+        try:
+            bg_files = [f for f in os.listdir(backgrounds_path) if f.endswith('.png')]
+            print(f"Found background files: {bg_files}")
+            
+            for bg_file in bg_files:
+                bg_name = os.path.splitext(bg_file)[0]
+                path = os.path.join(backgrounds_path, bg_file)
+                try:
+                    bg = pygame.image.load(path).convert()
+                    print(f"Successfully loaded: {bg_name}")
+                    backgrounds[bg_name] = pygame.transform.scale(bg, (self.width, self.height))
+                except (pygame.error, FileNotFoundError) as e:
+                    print(f"Error loading {path}: {str(e)}")
+                    
+        except OSError as e:
+            print(f"Error reading backgrounds directory: {str(e)}")
+            
+        if not backgrounds:
+            # Create a default background if none were loaded
+            bg = pygame.Surface((self.width, self.height))
+            bg.fill((50, 50, 50))
+            backgrounds["default"] = bg
+            
         return backgrounds
-    
-    def set_character_mood(self, character_name: str, mood: CharacterMood):
-        """Set a character's mood/expression."""
-        if character_name in self.characters:
-            self.characters[character_name].current_mood = mood
     
     def move_character(self, character_name: str, position: CharacterPosition):
         """Move a character to a new position."""
@@ -152,7 +167,6 @@ class VisualNovelAssets:
         # Update character positions
         for character in self.characters.values():
             if character.target_position != character.current_position:
-                # Implement smooth movement here
                 character.current_position = character.target_position
         
         # Update transitions
@@ -170,11 +184,10 @@ class VisualNovelAssets:
         # Draw characters
         for character in self.characters.values():
             if character.current_position != CharacterPosition.OFF_SCREEN:
-                sprite = character.sprites[character.current_mood]
-                if sprite:
+                if character.sprite:
                     pos = self.positions[character.current_position]
-                    sprite_rect = sprite.get_rect(midbottom=pos)
-                    self.screen.blit(sprite, sprite_rect)
+                    sprite_rect = character.sprite.get_rect(center=pos)
+                    self.screen.blit(character.sprite, sprite_rect)
         
         # Draw transition overlay
         if self.is_transitioning:
@@ -201,9 +214,6 @@ def create_scene(screen: pygame.Surface, scene_data: Dict):
     for char_data in scene_data.get("characters", []):
         name = char_data["name"]
         position = CharacterPosition[char_data.get("position", "OFF_SCREEN")]
-        mood = CharacterMood[char_data.get("mood", "NEUTRAL")]
-        
         assets.move_character(name, position)
-        assets.set_character_mood(name, mood)
     
     return assets

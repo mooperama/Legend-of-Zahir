@@ -6,7 +6,7 @@ import os
 # Add the project root to Python path to enable imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from visual_assets import VisualNovelAssets, CharacterPosition, CharacterMood
+from visual_assets import VisualNovelAssets, CharacterPosition, SpriteType
 
 class DialogueSystem:
     def __init__(self, screen, clock):
@@ -18,11 +18,11 @@ class DialogueSystem:
         self.visual_assets = VisualNovelAssets(screen)
         
         # Adjusted dialogue box dimensions
-        self.box_width = 800  # Increased width
-        self.box_height = 200  # Increased height
-        self.padding = 30  # Increased padding
-        self.line_spacing = 40  # Increased line spacing
-        self.max_chars_per_line = 60  # Reduced characters per line for better readability
+        self.box_width = 800
+        self.box_height = 200
+        self.padding = 30
+        self.line_spacing = 40
+        self.max_chars_per_line = 60
         
         # Create dialogue box surface
         self.dialogue_box = pygame.Surface((self.box_width, self.box_height))
@@ -32,7 +32,7 @@ class DialogueSystem:
         self.border_color = (200, 200, 200)
         self.border_width = 3
         
-        self.dialogue_speed = 2  # Characters per frame
+        self.dialogue_speed = 2
         self.current_text = ""
         self.target_text = ""
         self.text_counter = 0
@@ -41,7 +41,7 @@ class DialogueSystem:
         self.current_line_index = 0
         self.current_sequence = []
         
-        # Story dialogue sequences
+        # Story dialogue sequences remain the same
         self.dialogue_sequences = {
             'intro': [
                 "In a world where knowledge is power, an ancient being known as Uhand guards powerful orbs of wisdom.",
@@ -85,12 +85,13 @@ class DialogueSystem:
                 "You, Zahir, are now the guardian of wisdom, tasked with preserving these teachings for ages to come."
             ]
         }
+
         # Test the text wrapping with the longest dialogue line
         longest_line = max([line for sequence in self.dialogue_sequences.values() for line in sequence], 
                           key=len)
         test_wrap = self.wrap_text(longest_line)
-        if len(test_wrap) > 3:  # If any text needs more than 3 lines
-            self.max_chars_per_line = len(longest_line) // 2  # Adjust chars per line
+        if len(test_wrap) > 3:
+            self.max_chars_per_line = len(longest_line) // 2
 
     def wrap_text(self, text: str) -> List[str]:
         """Wrap text to fit within the dialogue box with improved word wrapping."""
@@ -164,22 +165,6 @@ class DialogueSystem:
                                                      box_rect.bottom - self.padding))
             self.screen.blit(prompt, prompt_rect)
 
-    def start_dialogue(self, sequence_key: str):
-            """Start a specific dialogue sequence."""
-            if sequence_key in self.dialogue_sequences:
-                # Setup the scene first
-                self.setup_scene(sequence_key)
-                
-                self.current_sequence = self.dialogue_sequences[sequence_key]
-                self.current_line_index = 0
-                self.target_text = self.current_sequence[0]
-                self.wrapped_lines = self.wrap_text(self.target_text)
-                self.current_text = ""
-                self.text_counter = 0
-                self.dialogue_active = True
-                return True
-            return False
-
     def update_text(self):
         """Update the currently displaying text."""
         if self.text_counter < len(self.target_text):
@@ -210,32 +195,41 @@ class DialogueSystem:
         
         # Setup characters based on sequence
         if sequence_key == 'intro':
-            self.visual_assets.move_character('Narrator', CharacterPosition.CENTER)
-            self.visual_assets.set_character_mood('Narrator', CharacterMood.NEUTRAL)
+            self.visual_assets.move_character('LanguageMan', CharacterPosition.CENTER)
         
         elif sequence_key == 'after_tutorial':
-            self.visual_assets.move_character('Zahir', CharacterPosition.CENTER)
-            self.visual_assets.set_character_mood('Zahir', CharacterMood.DETERMINED)
+            self.visual_assets.move_character('BlueCharacter', CharacterPosition.CENTER)
         
         elif sequence_key == 'after_memory':
-            self.visual_assets.move_character('Spirit', CharacterPosition.LEFT)
-            self.visual_assets.move_character('Zahir', CharacterPosition.RIGHT)
-            self.visual_assets.set_character_mood('Spirit', CharacterMood.PLEASED)
-            self.visual_assets.set_character_mood('Zahir', CharacterMood.HAPPY)
+            self.visual_assets.move_character('PinkCharacter', CharacterPosition.LEFT)
+            self.visual_assets.move_character('BlueCharacter', CharacterPosition.RIGHT)
         
         elif sequence_key == 'before_boss':
-            self.visual_assets.move_character('Boss', CharacterPosition.LEFT)
-            self.visual_assets.move_character('Zahir', CharacterPosition.RIGHT)
-            self.visual_assets.set_character_mood('Boss', CharacterMood.ANGRY)
-            self.visual_assets.set_character_mood('Zahir', CharacterMood.DETERMINED)
+            self.visual_assets.move_character('Boss1', CharacterPosition.LEFT)
+            self.visual_assets.move_character('BlueCharacter', CharacterPosition.RIGHT)
         
         elif sequence_key == 'victory':
-            self.visual_assets.move_character('Zahir', CharacterPosition.CENTER)
-            self.visual_assets.set_character_mood('Zahir', CharacterMood.HAPPY)
+            self.visual_assets.move_character('BlueCharacterHappy', CharacterPosition.CENTER)
+
+    def start_dialogue(self, sequence_key: str):
+        """Start a specific dialogue sequence."""
+        if sequence_key in self.dialogue_sequences:
+            # Setup the scene first
+            self.setup_scene(sequence_key)
+            
+            self.current_sequence = self.dialogue_sequences[sequence_key]
+            self.current_line_index = 0
+            self.target_text = self.current_sequence[0]
+            self.wrapped_lines = self.wrap_text(self.target_text)
+            self.current_text = ""
+            self.text_counter = 0
+            self.dialogue_active = True
+            return True
+        return False
 
     def show_dialogue(self, sequence_key: str):
         """Show a complete dialogue sequence and wait for completion."""
-        if not self.start_dialogue(sequence_key):  # Changed from self.show_dialogue to self.start_dialogue
+        if not self.start_dialogue(sequence_key):
             return False
         
         running = True
