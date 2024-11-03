@@ -1,6 +1,7 @@
 import pygame
 import random
 import time
+import math
 from config_settings import *
 from player import *
 from sprites import *
@@ -8,43 +9,66 @@ from sprites import *
 class Bullet(pygame.sprite.Sprite):
     """
     A projectile that can be fired by the player.
-    
-    Attributes:
-        image: The bullet's visual representation
-        rect: The bullet's position and size
-        speed: Movement speed of the bullet
-        dx, dy: Direction components
-        x, y: Precise floating-point position
     """
     def __init__(self, x, y, direction):
-        """
-        Initialize a new bullet.
-        
-        Args:
-            x (float): Starting x position
-            y (float): Starting y position
-            direction (list): [dx, dy] normalized direction vector
-        """
         super().__init__()
-        self.image = pygame.Surface([BULLETSIZE, BULLETSIZE])
-        self.image.fill(WHITE)
+        
+        # Load bullet image
+        try:
+            self.original_image = pygame.image.load('LEGEND OF ZAHIR/fireball.png').convert_alpha()
+            scaled_size = (32, 32)
+            self.image = pygame.transform.scale(self.original_image, scaled_size)
+        except pygame.error as e:
+            print(f"Couldn't load bullet image: {e}")
+            self.image = pygame.Surface([BULLETSIZE, BULLETSIZE])
+            self.image.fill(RED)
+
         self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
+        # Center the bullet at the spawn position
+        self.rect.center = (x, y)
         
         self.speed = 10
         self.dx = direction[0] * self.speed
         self.dy = direction[1] * self.speed
         
-        self.x = float(x)
-        self.y = float(y)
+        # Store center position as floats for precise movement
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
+        
+        # Calculate angle for rotation
+        angle = math.degrees(math.atan2(-direction[1], direction[0]))
+        self.image = pygame.transform.rotate(self.image, angle)
         
     def update(self):
         """Update bullet position based on its direction and speed."""
         self.x += self.dx
         self.y += self.dy
-        self.rect.x = int(self.x)
-        self.rect.y = int(self.y)
+        self.rect.centerx = int(self.x)
+        self.rect.centery = int(self.y)
+
+def shoot(self, target_pos):
+    """
+    Create a bullet aimed at the target position.
+    
+    Args:
+        target_pos (tuple): (x, y) coordinates of the target position
+    """
+    # Get the center of the player
+    player_center = self.player.rect.center
+    
+    # Calculate direction
+    dx = target_pos[0] - player_center[0]
+    dy = target_pos[1] - player_center[1]
+    length = (dx**2 + dy**2)**0.5
+    if length > 0:
+        dx = dx/length
+        dy = dy/length
+    direction = [dx, dy]
+    
+    # Create bullet at player's center
+    bullet = Bullet(player_center[0], player_center[1], direction)
+    self.bullets.add(bullet)
+    self.allsprites.add(bullet)
 
 class MemoryGame:
     """
@@ -75,6 +99,12 @@ class MemoryGame:
         
         # Load and store candle images
         try:
+            # Load bullet image
+            self.original_image = pygame.image.load('LEGEND OF ZAHIR/fireball.png').convert_alpha()
+            # Scale the image to desired size (adjust size as needed)
+            scaled_size = (32, 32)  # or use BULLETSIZE for both dimensions
+            self.original_image = pygame.transform.scale(self.original_image, scaled_size)
+
             # Load unlit candle (black) - we'll use this same image for all unlit states
             black_candle = pygame.image.load('LEGEND OF ZAHIR/Minigame 1 Assets/Black candle.png').convert_alpha()
             
@@ -104,6 +134,8 @@ class MemoryGame:
             print(f"Couldn't load image: {e}")
             pygame.quit()
             raise SystemExit(f"Couldn't load required images: {e}")
+
+            
         
         # Initialize sprite groups
         self.allsprites = pygame.sprite.LayeredUpdates()
