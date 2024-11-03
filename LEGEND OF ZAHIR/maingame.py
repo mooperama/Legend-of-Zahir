@@ -606,15 +606,11 @@ class Game:
             self.pause_start = 0
 
     def get_elapsed_time(self):
-        """
-        Calculate actual elapsed time excluding pauses from the very start of the game.
-        
-        Returns:
-            float: Total elapsed time in seconds, excluding paused time
-        """
+        """Calculate actual elapsed time."""
         current_time = time.time()
         current_pause = current_time - self.pause_start if self.is_paused else 0
-        return current_time - self.game_start_time - self.pause_time - current_pause
+        elapsed = current_time - self.game_start_time - self.pause_time - current_pause
+        return max(0, elapsed)  # Ensure we never return negative time
 
     def main(self):
         """

@@ -218,10 +218,11 @@ class SaveSystem:
             
             if hasattr(game, 'tutorial_system'):
                 game.tutorial_system.tutorial_completed = game_state.tutorial_completed
-                
-            game.game_start_time = game_state.start_time
-            game.pause_time = game_state.pause_time
-            game.is_paused = game_state.is_paused
+            
+            # Set correct game start time based on elapsed time
+            game.game_start_time = time.time() - game_state.elapsed_time
+            game.pause_time = 0  # Reset pause time
+            game.is_paused = False
             
             # Apply player stats if they exist
             if game_state.player_stats and hasattr(game, 'player'):
@@ -232,7 +233,7 @@ class SaveSystem:
                 if 'position' in stats and hasattr(game.player, 'rect'):
                     game.player.rect.x, game.player.rect.y = stats['position']
             
-            # Update player name in the player object if it exists
+            # Ensure player name is set in both game and player object
             if hasattr(game, 'player'):
                 game.player.name = game_state.player_name
             
@@ -243,7 +244,7 @@ class SaveSystem:
         except Exception as e:
             print(f"Error applying game state: {e}")
             raise
-        
+
 class SaveLoadMenu:
     """UI for saving and loading games."""
     def __init__(self, game):
@@ -441,16 +442,25 @@ class SaveLoadMenu:
                 self.game.show_message("No save file selected", duration=1.5)
                 return False
 
+            # Get the selected save name
+            selected_save = saves[self.selected_index]
             success, message, timer_data = self.save_system.load_game(
-                saves[self.selected_index]['name'], 
+                selected_save['name'],
                 self.game
             )
             
             if success and timer_data is not None:
-                # Restore timer state
+                # Set the correct game start time based on elapsed time
                 self.game.elapsed_time = timer_data['elapsed_time']
-                self.game.game_start_time = timer_data['start_time']
-                self.game.pause_time = timer_data['pause_time']
+                self.game.game_start_time = time.time() - timer_data['elapsed_time']
+                self.game.pause_time = 0  # Reset pause time since we're starting fresh
+                self.game.is_paused = False
+                
+                # Ensure player name is set from the save
+                self.game.player_name = selected_save['player']
+                if hasattr(self.game, 'player'):
+                    self.game.player.name = selected_save['player']
+                
                 self.game.show_message("Game loaded successfully!", duration=1.5)
                 return True
                 
@@ -461,6 +471,7 @@ class SaveLoadMenu:
             print(f"Error loading game: {e}")
             self.game.show_message("Error loading game!", duration=1.5)
             return False
+        
 class QuickSaveLoad:
     """Handles quick save and load functionality."""
     def __init__(self, game):
@@ -490,10 +501,12 @@ class QuickSaveLoad:
                     self.game
                 )
                 if success and timer_data is not None:
-                    # Restore timer state
+                    # Set correct game start time based on elapsed time
                     self.game.elapsed_time = timer_data['elapsed_time']
-                    self.game.game_start_time = timer_data['start_time']
-                    self.game.pause_time = timer_data['pause_time']
+                    self.game.game_start_time = time.time() - timer_data['elapsed_time']
+                    self.game.pause_time = 0  # Reset pause time
+                    self.game.is_paused = False
+                    
                     self.game.show_message("Game loaded successfully!", duration=1.0)
                     return True
                 else:
