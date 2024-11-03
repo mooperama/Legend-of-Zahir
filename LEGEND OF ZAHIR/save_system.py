@@ -9,15 +9,20 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
 
 class GameState:
     """Class to hold all saveable game state data."""
     def __init__(self, game):
+        # Basic game state
         self.player_name = game.player_name
         self.current_sequence_index = game.current_sequence_index
         self.elapsed_time = game.elapsed_time
         self.in_tutorial = game.in_tutorial
         self.tutorial_completed = game.tutorial_system.tutorial_completed
+        self.start_time = game.game_start_time
+        self.pause_time = game.pause_time
+        self.is_paused = game.is_paused
         
         # Player stats
         if hasattr(game, 'player'):
@@ -30,6 +35,10 @@ class GameState:
             }
         else:
             self.player_stats = None
+        
+        # Game progress state
+        self.running = game.running
+        self.playing = game.playing
         
         # Save timestamp
         self.save_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -50,46 +59,71 @@ class SaveSystem:
         return os.path.join(self.save_directory, f"{save_name}.sav")
     
     def save_game(self, game, save_name=None):
-        """Save the current game state."""
+        """
+        Save the current game state.
+        Returns: (bool, str) - Success status and message
+        """
         try:
+            # Create game state
             game_state = GameState(game)
             
+            # Generate save name if none provided
             if save_name is None:
                 save_name = f"{game.player_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             
+            # Save to file
             save_path = self.get_save_path(save_name)
             with open(save_path, 'wb') as f:
                 pickle.dump(game_state, f)
-            return True
+            
+            return True, "Game saved successfully!"
         except Exception as e:
             print(f"Error saving game: {e}")
-            return False
+            return False, f"Could not save game: {str(e)}"
     
     def load_game(self, save_name, game):
-        """Load a saved game state."""
+        """
+        Load a saved game state.
+        Returns: (bool, str, dict) - Success status, message, and loaded data
+        """
         try:
             save_path = self.get_save_path(save_name)
             
             if not os.path.exists(save_path):
-                return False
+                return False, "Save file not found", None
             
             with open(save_path, 'rb') as f:
                 game_state = pickle.load(f)
             
+            # Create timer data before applying state
+            timer_data = {
+                'elapsed_time': game_state.elapsed_time,
+                'start_time': game_state.start_time,
+                'pause_time': game_state.pause_time
+            }
+            
+            # Apply the game state
             self._apply_game_state(game_state, game)
-            return True
+            
+            return True, "Game loaded successfully!", timer_data
+            
         except Exception as e:
             print(f"Error loading game: {e}")
-            return False
+            return False, "Could not load save file", None
     
     def _apply_game_state(self, game_state, game):
         """Apply loaded game state to current game instance."""
+        # Apply basic game state
         game.player_name = game_state.player_name
         game.current_sequence_index = game_state.current_sequence_index
         game.elapsed_time = game_state.elapsed_time
         game.in_tutorial = game_state.in_tutorial
         game.tutorial_system.tutorial_completed = game_state.tutorial_completed
+        game.game_start_time = game_state.start_time
+        game.pause_time = game_state.pause_time
+        game.is_paused = game_state.is_paused
         
+        # Apply player stats if they exist
         if game_state.player_stats and hasattr(game, 'player'):
             game.player.health = game_state.player_stats['health']
             game.player.max_health = game_state.player_stats['max_health']
@@ -97,6 +131,10 @@ class SaveSystem:
             game.player.level = game_state.player_stats['level']
             game.player.rect.x = game_state.player_stats['position'][0]
             game.player.rect.y = game_state.player_stats['position'][1]
+        
+        # Apply game progress state
+        game.running = game_state.running
+        game.playing = game_state.playing
     
     def list_saves(self):
         """Get list of available save files."""
@@ -111,13 +149,14 @@ class SaveSystem:
                         saves.append({
                             'name': filename[:-4],
                             'date': game_state.save_date,
-                            'player': game_state.player_name
+                            'player': game_state.player_name,
+                            'sequence': game_state.current_sequence_index
                         })
                     except:
                         continue
         except Exception as e:
             print(f"Error listing saves: {e}")
-        return saves
+        return sorted(saves, key=lambda x: x['date'], reverse=True)
 
     def delete_save(self, save_name):
         """Delete a save file."""
@@ -125,11 +164,11 @@ class SaveSystem:
             save_path = self.get_save_path(save_name)
             if os.path.exists(save_path):
                 os.remove(save_path)
-                return True
-            return False
+                return True, "Save file deleted successfully!"
+            return False, "Save file not found"
         except Exception as e:
             print(f"Error deleting save: {e}")
-            return False
+            return False, f"Error deleting save: {str(e)}"
 
 class SaveLoadMenu:
     """UI for saving and loading games."""
@@ -152,14 +191,11 @@ class SaveLoadMenu:
         
     def draw(self):
         """Draw the save/load menu."""
-        # Store the current game screen if not stored
         if self.original_screen is None:
             self.original_screen = self.game.screen.copy()
         
         # Reset the screen to the original game state
         self.game.screen.blit(self.original_screen, (0, 0))
-        
-        # Draw semi-transparent background
         self.game.screen.blit(self.background, (0, 0))
         
         # Title
@@ -178,8 +214,6 @@ class SaveLoadMenu:
             
         # Draw controls help
         self.draw_controls_help()
-        
-        # Update display
         pygame.display.flip()
     
     def draw_main_menu(self):
@@ -190,7 +224,8 @@ class SaveLoadMenu:
     def draw_save_menu(self):
         """Draw save game interface."""
         saves = self.save_system.list_saves()
-        options = ['New Save'] + [f"{save['name']} ({save['date']})" for save in saves] + ['Back']
+        options = ['New Save'] + [f"{save['name']} - Level {save['sequence']+1} ({save['date']})" 
+                                for save in saves] + ['Back']
         self.draw_menu_options(options, 150, 40)
     
     def draw_load_menu(self):
@@ -202,18 +237,18 @@ class SaveLoadMenu:
             self.game.screen.blit(text, rect)
             self.draw_menu_options(['Back'], 200, 50)
         else:
-            options = [f"{save['name']} ({save['date']})" for save in saves] + ['Back']
+            options = [f"{save['name']} - Level {save['sequence']+1} ({save['date']})" 
+                      for save in saves] + ['Back']
             self.draw_menu_options(options, 150, 40)
     
     def draw_menu_options(self, options, start_y, spacing):
         """Draw menu options with proper spacing and highlighting."""
-        menu_width = self.screen_width * 0.8  # 80% of screen width
-        menu_x = self.screen_width * 0.1  # 10% margin on each side
+        menu_width = self.screen_width * 0.8
+        menu_x = self.screen_width * 0.1
         
         for i, option in enumerate(options):
             y_pos = start_y + i * spacing
             
-            # Draw selection highlight
             if i == self.selected_index:
                 highlight_rect = pygame.Rect(
                     menu_x - 10,
@@ -223,21 +258,20 @@ class SaveLoadMenu:
                 )
                 pygame.draw.rect(self.game.screen, (50, 50, 50), highlight_rect)
             
-            # Draw option text
             color = WHITE if i == self.selected_index else GRAY
             text = self.font.render(option, True, color)
             rect = text.get_rect(center=(self.screen_width/2, y_pos))
             self.game.screen.blit(text, rect)
     
     def draw_controls_help(self):
-        """Draw control instructions at the bottom of the screen."""
+        """Draw control instructions."""
         help_text = "↑/↓: Navigate   Enter: Select   Esc: Back"
         text = self.font.render(help_text, True, GRAY)
         rect = text.get_rect(center=(self.screen_width/2, self.screen_height - 30))
         self.game.screen.blit(text, rect)
     
     def handle_input(self, event):
-        """Handle menu input with improved state management."""
+        """Handle menu input."""
         if event.type != pygame.KEYDOWN:
             return None
             
@@ -283,7 +317,7 @@ class SaveLoadMenu:
         return 0
     
     def handle_selection(self):
-        """Handle menu selection with improved state transitions."""
+        """Handle menu selection."""
         if self.mode == 'main':
             if self.selected_index == 0:
                 self.mode = 'save'
@@ -313,3 +347,143 @@ class SaveLoadMenu:
                 self.selected_index = 0
         
         return None
+    
+    def handle_save_action(self):
+        """Handle save game action."""
+        try:
+            success, message = self.save_system.save_game(self.game)
+            self.game.show_message(message, duration=1.5)
+            return success
+        except Exception as e:
+            print(f"Error saving game: {e}")
+            self.game.show_message("Error saving game!", duration=1.5)
+            return False
+
+    def handle_load_action(self):
+        """Handle load game action."""
+        try:
+            saves = self.save_system.list_saves()
+            if not saves or self.selected_index >= len(saves):
+                self.game.show_message("No save file selected", duration=1.5)
+                return False
+
+            success, message, timer_data = self.save_system.load_game(
+                saves[self.selected_index]['name'], 
+                self.game
+            )
+            
+            if success and timer_data is not None:
+                # Restore timer state
+                self.game.elapsed_time = timer_data['elapsed_time']
+                self.game.game_start_time = timer_data['start_time']
+                self.game.pause_time = timer_data['pause_time']
+                self.game.show_message("Game loaded successfully!", duration=1.5)
+                return True
+                
+            self.game.show_message(message, duration=1.5)
+            return False
+            
+        except Exception as e:
+            print(f"Error loading game: {e}")
+            self.game.show_message("Error loading game!", duration=1.5)
+            return False
+class QuickSaveLoad:
+    """Handles quick save and load functionality."""
+    def __init__(self, game):
+        self.game = game
+        self.save_system = game.save_system
+        self.quick_save_name = None
+
+    def quick_save(self):
+        """Perform a quick save."""
+        try:
+            # Generate quick save name
+            self.quick_save_name = f"quicksave_{self.game.player_name}"
+            success, message = self.save_system.save_game(self.game, self.quick_save_name)
+            self.game.show_message(message, duration=1.0)
+            return success
+        except Exception as e:
+            print(f"Error in quick save: {e}")
+            self.game.show_message("Quick save failed!", duration=1.0)
+            return False
+
+    def quick_load(self):
+        """Load the most recent quick save."""
+        try:
+            if self.quick_save_name:
+                success, message, timer_data = self.save_system.load_game(
+                    self.quick_save_name,
+                    self.game
+                )
+                if success and timer_data is not None:
+                    # Restore timer state
+                    self.game.elapsed_time = timer_data['elapsed_time']
+                    self.game.game_start_time = timer_data['start_time']
+                    self.game.pause_time = timer_data['pause_time']
+                    self.game.show_message("Game loaded successfully!", duration=1.0)
+                    return True
+                else:
+                    self.game.show_message("No quick save found!", duration=1.0)
+            else:
+                self.game.show_message("No quick save available!", duration=1.0)
+            return False
+        except Exception as e:
+            print(f"Error in quick load: {e}")
+            self.game.show_message("Quick load failed!", duration=1.0)
+            return False
+
+# Example usage in Game class (these methods should be in your Game class):
+def show_save_load_menu(self):
+    """Show the save/load menu."""
+    try:
+        self.pause_timer()  # Pause timer during menu
+        save_load_menu = SaveLoadMenu(self)
+        menu_active = True
+        paused = True
+        
+        while menu_active and self.running and paused:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    self.resume_timer()
+                    return
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        menu_active = False
+                        paused = False
+                        break
+                    
+                    # Handle menu input
+                    result = save_load_menu.handle_input(event)
+                    if result == 'back':
+                        menu_active = False
+                        paused = False
+                    elif result == 'save':
+                        save_load_menu.handle_save_action()
+                    elif result == 'load':
+                        if save_load_menu.handle_load_action():
+                            menu_active = False
+                            paused = False
+                            
+            if paused:
+                save_load_menu.draw()
+                pygame.time.Clock().tick(30)
+        
+        self.resume_timer()
+                    
+    except Exception as e:
+        print(f"Error in save/load menu: {e}")
+        self.show_message("An error occurred in the menu", duration=2.0)
+        self.resume_timer()
+
+def handle_save_load_shortcuts(self, event):
+    """Handle save/load keyboard shortcuts."""
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_q and not self.paused:  # Quick Save
+            self.quick_save_load.quick_save()
+        elif event.key == pygame.K_r and not self.paused:  # Quick Load
+            self.quick_save_load.quick_load()
+        elif event.key == pygame.K_ESCAPE and not self.paused:  # Save/Load Menu
+            self.paused = True
+            self.show_save_load_menu()
+            self.paused = False

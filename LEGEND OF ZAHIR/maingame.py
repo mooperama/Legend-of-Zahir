@@ -10,7 +10,7 @@ from MINIGAME4 import main as run_language_matching_game
 from MINIGAME5 import main as run_boss_battle
 from soundmanager import sound_manager
 from tutorial import *
-from save_system import SaveSystem, SaveLoadMenu
+from save_system import SaveSystem, SaveLoadMenu, QuickSaveLoad
 from dialogue import DialogueSystem
 from visual_assets import VisualNovelAssets
 from leaderboard import *
@@ -69,6 +69,7 @@ class Game:
         
         # Initialize save system
         self.save_system = SaveSystem()
+        self.quick_save_load = QuickSaveLoad(self)
         
         self.paused = False
         self.keys_pressed = set()  # Track currently pressed keys
