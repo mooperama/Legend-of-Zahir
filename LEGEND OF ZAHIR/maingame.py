@@ -792,16 +792,12 @@ class Game:
 
     # Replace the existing show_save_load_menu method with this:
     def show_save_load_menu(self):
-        """Show the save/load menu while pausing the timer."""
+        """Show the save/load menu."""
         try:
             self.pause_timer()  # Pause timer during menu
-            menu = SaveLoadMenu(self)
+            save_load_menu = SaveLoadMenu(self)
             menu_active = True
             paused = True
-            
-            # Store current screen
-            background = pygame.Surface((WIDTH, HEIGHT))
-            background.blit(self.screen, (0, 0))
             
             while menu_active and self.running and paused:
                 for event in pygame.event.get():
@@ -816,30 +812,40 @@ class Game:
                             break
                         
                         # Handle menu input
-                        result = menu.handle_input(event)
+                        result = save_load_menu.handle_input(event)
                         if result == 'back':
                             menu_active = False
                             paused = False
                         elif result == 'save':
-                            self.handle_save_action(menu)
+                            save_load_menu.handle_save_action()
                         elif result == 'load':
-                            if self.handle_load_action(menu):
+                            if save_load_menu.handle_load_action():
                                 menu_active = False
                                 paused = False
-                
+                                
                 if paused:
-                    self.screen.blit(background, (0, 0))
-                    menu.draw()
-                    pygame.display.flip()
-                    self.clock.tick(30)
+                    save_load_menu.draw()
+                    pygame.time.Clock().tick(30)
             
-            self.resume_timer()  # Resume timer after menu closes
-                    
+            self.resume_timer()
+                        
         except Exception as e:
             print(f"Error in save/load menu: {e}")
             self.show_message("An error occurred in the menu", duration=2.0)
             self.resume_timer()
 
+    def handle_save_load_shortcuts(self, event):
+        """Handle save/load keyboard shortcuts."""
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_q and not self.paused:  # Quick Save
+                self.quick_save_load.quick_save()
+            elif event.key == pygame.K_r and not self.paused:  # Quick Load
+                self.quick_save_load.quick_load()
+            elif event.key == pygame.K_ESCAPE and not self.paused:  # Save/Load Menu
+                self.paused = True
+                self.show_save_load_menu()
+                self.paused = False
+                
     def handle_save_action(self, menu):
         """Handle save game action with timer state."""
         try:
