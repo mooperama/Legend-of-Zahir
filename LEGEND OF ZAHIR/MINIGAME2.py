@@ -157,7 +157,7 @@ class TimezoneGame:
 
     def draw_question_screen(self):
         # Draw lives and correct answers
-        lives_text = f"Lives: {'❤' * self.lives}"
+        lives_text = f"Lives: {'<3' * self.lives}"
         lives_surface = self.regular_font.render(lives_text, True, RED)
         self.screen.blit(lives_surface, (20, 20))
 
