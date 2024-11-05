@@ -25,7 +25,7 @@ class Game:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("Legend of Zahir")
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.Font(None, 32)
+        self.font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 24)
         self.running = True
         self.dialogue_system = DialogueSystem(self.screen, self.clock)
         self.player_name = ""
@@ -95,7 +95,7 @@ class Game:
         pause_overlay.set_alpha(128)
         
         # Create menu text
-        menu_font = pygame.font.Font(None, 48)
+        menu_font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 36)
         pause_text = menu_font.render("PAUSED", True, WHITE)
         resume_text = self.font.render("Press ESC to Resume", True, WHITE)
         quit_text = self.font.render("Press Q to Quit", True, WHITE)
@@ -235,7 +235,7 @@ class Game:
         Display a screen for the player to enter their name.
         Returns the entered name.
         """
-        input_box = pygame.Rect(WIDTH/2 - 100, HEIGHT/2, 200, 32)
+        input_box = pygame.Rect(WIDTH/2 - 150, HEIGHT/2, 200, 36)
         color_inactive = pygame.Color('lightskyblue3')
         color_active = pygame.Color('dodgerblue2')
         color = color_inactive
@@ -298,7 +298,7 @@ class Game:
         fade_surface.fill(BLACK)
         
         # Create the text
-        font_large = pygame.font.Font(None, 64)  # Larger font for production text
+        font_large = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 48)  # Larger font for production text
         production_text = font_large.render("Produced by", True, WHITE)
         team_text = font_large.render("Learning Team 7", True, WHITE)
         
@@ -379,25 +379,30 @@ class Game:
             pygame.time.delay(10)  # Control loading speed
 
     def main_menu(self):
-        """Display the main menu with multiple options and background image."""
-        # Load and scale background image
+        """Display the main menu with proper font sizes and game logo."""
         try:
             background = pygame.image.load('LEGEND OF ZAHIR/menu_background.png')
             background = pygame.transform.scale(background, (WIDTH, HEIGHT))
         except:
             print("Could not load menu background image")
             background = None
+
+        # Create fonts of different sizes for the title and menu items
+        button_font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 20)
+
+        # Colors
+        BUTTON_BG = (67, 56, 202)  # Base color
+        BUTTON_HOVER = (99, 102, 241)  # Hover color
+        BUTTON_BORDER = (129, 140, 248)  # Border color
+        BUTTON_SHADOW = (30, 27, 75)  # Shadow color
+
         
-        # Menu options and positions
-        title_font = pygame.font.Font(None, 72)  # Larger font for title
-        title = title_font.render('Legend of Zahir', True, WHITE)
-        title_rect = title.get_rect(center=(WIDTH/2, HEIGHT/4))
-        
-        # Create menu buttons
-        button_width = 200
-        button_height = 50
+        # Button settings
+        button_width = 200  # Reduced width to match font size
+        button_height = 40  # Reduced height to match font size
         button_spacing = 20
-        start_y = HEIGHT/2 - 50
+        start_y = HEIGHT/2 + 50
+        shadow_offset = 3  # Slightly reduced shadow for smaller buttons
         
         buttons = {
             'new_game': {
@@ -419,8 +424,55 @@ class Game:
             }
         }
         
+        def draw_button(surface, rect, text, is_selected, is_pressed=False):
+            """Draw a single button with proper sizing and styling."""
+            # Shadow/3D effect
+            shadow_rect = rect.copy()
+            shadow_rect.y += shadow_offset
+            pygame.draw.rect(surface, BUTTON_SHADOW, shadow_rect, border_radius=8)
+            
+            # Main button
+            button_rect = rect.copy()
+            if is_pressed:
+                button_rect.y += shadow_offset
+                color = BUTTON_HOVER
+            else:
+                color = BUTTON_HOVER if is_selected else BUTTON_BG
+            
+            pygame.draw.rect(surface, color, button_rect, border_radius=8)
+            
+            # Gradient effect
+            gradient_rect = button_rect.copy()
+            gradient_rect.height = button_rect.height // 2
+            pygame.draw.rect(surface, (*[min(c + 20, 255) for c in color], 50), 
+                            gradient_rect, border_radius=8)
+            
+            # Border
+            pygame.draw.rect(surface, BUTTON_BORDER, button_rect, 2, border_radius=8)
+            
+            # Inner glow when selected
+            if is_selected:
+                glow_rect = button_rect.inflate(-4, -4)
+                pygame.draw.rect(surface, (*BUTTON_BORDER, 100), glow_rect, 2, border_radius=6)
+            
+            # Text
+            text_surface = button_font.render(text, True, WHITE)
+            text_rect = text_surface.get_rect(center=button_rect.center)
+            if is_pressed:
+                text_rect.y += shadow_offset
+            
+            # Text shadow
+            text_shadow = button_font.render(text, True, BUTTON_SHADOW)
+            shadow_text_rect = text_rect.copy()
+            shadow_text_rect.y += 2
+            surface.blit(text_shadow, shadow_text_rect)
+            
+            # Main text
+            surface.blit(text_surface, text_rect)
+        
         # Main menu loop
         selected_button = None
+        pressed_button = None
         menu_running = True
         while menu_running and self.running:
             mouse_pos = pygame.mouse.get_pos()
@@ -431,42 +483,40 @@ class Game:
                     return
                 
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    for button in buttons.values():
+                    for button_key, button in buttons.items():
                         if button['rect'].collidepoint(mouse_pos):
-                            sound_manager.play_sound('button_click')  # Add sound effect if available
-                            button['action']()
-                            if button['text'] == 'New Game':
+                            pressed_button = button_key
+                            sound_manager.play_sound('button_click')
+                
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if pressed_button:
+                        if buttons[pressed_button]['rect'].collidepoint(mouse_pos):
+                            buttons[pressed_button]['action']()
+                            if pressed_button == 'new_game':
                                 menu_running = False
-                            elif button['text'] == 'Quit':
+                            elif pressed_button == 'quit':
                                 self.running = False
                                 return
+                        pressed_button = None
             
-            # Update selected button based on mouse position
+            # Update selected button
             selected_button = None
-            for button in buttons.values():
+            for button_key, button in buttons.items():
                 if button['rect'].collidepoint(mouse_pos):
-                    selected_button = button
+                    selected_button = button_key
             
             # Draw menu
             if background:
                 self.screen.blit(background, (0, 0))
             else:
-                self.screen.fill(BLACK)
-            
+                self.screen.fill((30, 27, 75))
+        
             # Draw buttons
-            for button in buttons.values():
-                # Draw button background when selected
-                if button == selected_button:
-                    pygame.draw.rect(self.screen, (50, 50, 50), button['rect'])
-                
-                # Draw button border
-                color = WHITE if button == selected_button else GRAY
-                pygame.draw.rect(self.screen, color, button['rect'], 2)
-                
-                # Draw button text
-                text = self.font.render(button['text'], True, color)
-                text_rect = text.get_rect(center=button['rect'].center)
-                self.screen.blit(text, text_rect)
+            for button_key, button in buttons.items():
+                is_selected = button_key == selected_button
+                is_pressed = button_key == pressed_button
+                draw_button(self.screen, button['rect'], button['text'], 
+                        is_selected, is_pressed)
             
             pygame.display.flip()
             self.clock.tick(FPS)
@@ -606,8 +656,9 @@ class Game:
         self.player.draw_stats(self.screen)
         self.draw_timer()
         
-        # Draw player name
-        name_text = self.font.render(self.player_name, True, WHITE)
+        # Smaller font for player name
+        name_font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 20)
+        name_text = name_font.render(self.player_name, True, WHITE)
         self.screen.blit(name_text, (10, 10))
         
         # Draw tutorial if active
@@ -783,13 +834,14 @@ class Game:
         Args:
             message (str): The message to display in the dialogue box.
         """
-        dialogue_box = pygame.Surface((500, 100))
+        dialogue_box = pygame.Surface((600, 120))
         dialogue_box.fill(WHITE)
         dialogue_box_rect = dialogue_box.get_rect(center=(WIDTH/2, HEIGHT/2))
 
-        text = self.font.render(message, True, BLACK)
-        text_rect = text.get_rect(center=(250, 50))
-        dialogue_box.blit(text, text_rect)
+        # Use slightly smaller font for potentially long messages
+        dialogue_font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 20)
+        text = dialogue_font.render(message, True, BLACK)
+        text_rect = text.get_rect(center=(300, 60))  # Centered in the dialogue box
 
         while True:
             for event in pygame.event.get():
@@ -903,6 +955,8 @@ class Game:
         prompt_box.fill(WHITE)
         prompt_box_rect = prompt_box.get_rect(center=(WIDTH/2, HEIGHT/2))
 
+        # Smaller font for buttons
+        button_font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 20)
         text = self.font.render("You died! Restart level?", True, BLACK)
         text_rect = text.get_rect(center=(200, 50))
         prompt_box.blit(text, text_rect)
@@ -913,8 +967,8 @@ class Game:
         pygame.draw.rect(prompt_box, GREEN, yes_button)
         pygame.draw.rect(prompt_box, RED, no_button)
 
-        yes_text = self.font.render("Yes", True, BLACK)
-        no_text = self.font.render("No", True, BLACK)
+        yes_text = button_font.render("Yes", True, BLACK)
+        no_text = button_font.render("No", True, BLACK)
 
         prompt_box.blit(yes_text, (85, 110))
         prompt_box.blit(no_text, (285, 110))
@@ -1017,7 +1071,7 @@ class Game:
         overlay.set_alpha(128)
         
         # Render message
-        font = pygame.font.Font(None, 36)
+        font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 28)
         text = font.render(message, True, WHITE)
         text_rect = text.get_rect(center=(WIDTH/2, HEIGHT/2))
         

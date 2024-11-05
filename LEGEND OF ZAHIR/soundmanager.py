@@ -125,4 +125,4 @@ sound_manager.load_sound('bullet', 'fireball.mp3')
 
 
 # Load background music
-sound_manager.load_music('background_music.wav')
+sound_manager.load_music('A_Journey_Awaits.mp3')
