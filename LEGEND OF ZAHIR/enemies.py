@@ -73,12 +73,24 @@ class Enemy(pygame.sprite.Sprite):
 
         # Initialize animation dictionaries
         self.animations = {
-            'left': [self.game.enemy_spritesheet.get_sprite(1, 0, 15, 15)],
-            'right': [self.game.enemy_spritesheet.get_sprite(1, 0, 15, 15)]
+            'down': [self.game.enemy_spritesheet.get_sprite(0, 0, 16, 16),
+                    self.game.enemy_spritesheet.get_sprite(16, 0, 16, 16),
+                    self.game.enemy_spritesheet.get_sprite(32, 0, 16, 16)],
+            
+            'up': [self.game.enemy_spritesheet.get_sprite(0, 16, 16, 16),
+                self.game.enemy_spritesheet.get_sprite(16, 16, 16, 16),
+                self.game.enemy_spritesheet.get_sprite(32, 16, 16, 16)],
+            
+            'left': [self.game.enemy_spritesheet.get_sprite(0, 32, 16, 16),
+                    self.game.enemy_spritesheet.get_sprite(16, 34, 16, 16),
+                    self.game.enemy_spritesheet.get_sprite(32, 34, 16, 16)],
+            
+            'right': [self.game.enemy_spritesheet.get_sprite(0, 48, 16, 16),
+                    self.game.enemy_spritesheet.get_sprite(16, 50, 16, 16),
+                    self.game.enemy_spritesheet.get_sprite(32, 50, 16, 16)]
         }
-        
         # Scale initial image
-        self.img = self.animations['right'][0]  
+        self.img = self.animations['down'][0]  
         self.image = pygame.transform.scale(self.img, (TILESIZE, TILESIZE))
         
         # Scale all animation frames
@@ -97,14 +109,16 @@ class Enemy(pygame.sprite.Sprite):
         Each frame is scaled to match the tile size.
         """
         self.animations = {
+            'down':[],
+            'up':[],
             'left': [], 
-            'right': []
+            'right': [],
         }
         
         sprite_width = self.sprite_sheet.get_width() // 3
         sprite_height = self.sprite_sheet.get_height() // 4
 
-        for row, direction in enumerate(['left', 'right']):
+        for row, direction in enumerate(['down','up','left', 'right']):
             for col in range(3):
                 x = col * sprite_width
                 y = row * sprite_height
@@ -144,7 +158,11 @@ class Enemy(pygame.sprite.Sprite):
             self.y_change = 0
 
         # Update facing direction
-        if self.x_change > 0:
+        if self.y_change > 0:
+            self.facing = 'up'
+        elif self.y_change < 0:
+            self.facing = 'down'
+        elif self.x_change > 0:
             self.facing = 'right'
         elif self.x_change < 0:
             self.facing = 'left'
