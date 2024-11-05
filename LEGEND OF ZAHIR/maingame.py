@@ -10,7 +10,6 @@ from MINIGAME4 import main as run_language_matching_game
 from MINIGAME5 import main as run_boss_battle
 from soundmanager import sound_manager
 from tutorial import *
-from save_system import SaveSystem, SaveLoadMenu, QuickSaveLoad
 from dialogue import DialogueSystem
 from visual_assets import VisualNovelAssets
 from leaderboard import *
@@ -59,11 +58,13 @@ class Game:
         self.game_sequence = ['main', 'candle memory', 'main', 'timezone', 'main', 'language', 'main', 'continent', 'main', 'boss']
         self.current_sequence_index = 0
         self.total_sequences = len(self.game_sequence)
-        
-        # Initialize save system
-        self.save_system = SaveSystem()
-        self.save_load_menu = None  # Initialize as None, create when needed
-        self.quick_save_load = QuickSaveLoad(self)
+
+        self.game_start_time = None  # Will be set after tutorial
+        self.elapsed_time = 0
+        self.pause_time = 0
+        self.is_paused = False
+        self.pause_start = 0
+        self.in_tutorial = True
         
         self.paused = False
         self.keys_pressed = set()
@@ -75,6 +76,56 @@ class Game:
         self.createTilemap()
         self.create_enemies()
         self.playing = True
+
+
+    def toggle_pause(self):
+        """Toggle the pause state of the game and handle timer accordingly."""
+        if not self.in_tutorial:  # Only allow pause outside tutorial
+            self.paused = not self.paused
+            if self.paused:
+                self.pause_timer()
+                self.show_pause_menu()
+            else:
+                self.resume_timer()
+
+    def show_pause_menu(self):
+        """Display the pause menu."""
+        pause_overlay = pygame.Surface((WIDTH, HEIGHT))
+        pause_overlay.fill((0, 0, 0))
+        pause_overlay.set_alpha(128)
+        
+        # Create menu text
+        menu_font = pygame.font.Font(None, 48)
+        pause_text = menu_font.render("PAUSED", True, WHITE)
+        resume_text = self.font.render("Press ESC to Resume", True, WHITE)
+        quit_text = self.font.render("Press Q to Quit", True, WHITE)
+        
+        # Position text
+        pause_rect = pause_text.get_rect(center=(WIDTH/2, HEIGHT/2 - 50))
+        resume_rect = resume_text.get_rect(center=(WIDTH/2, HEIGHT/2 + 20))
+        quit_rect = quit_text.get_rect(center=(WIDTH/2, HEIGHT/2 + 60))
+        
+        while self.paused and self.running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    self.paused = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.paused = False
+                        self.resume_timer()  # Make sure to resume timer when exiting pause menu
+                    elif event.key == pygame.K_q:
+                        self.running = False
+                        self.paused = False
+            
+            # Draw pause menu
+            self.screen.blit(pause_overlay, (0, 0))
+            self.screen.blit(pause_text, pause_rect)
+            self.screen.blit(resume_text, resume_rect)
+            self.screen.blit(quit_text, quit_rect)
+            
+            pygame.display.flip()
+            self.clock.tick(30)
 
     def game_loop(self):
         """Main game loop with integrated dialogue and tutorial systems."""
@@ -98,8 +149,7 @@ class Game:
                 
                 # Check if tutorial is completed
                 if self.tutorial_system.tutorial_completed:
-                    self.in_tutorial = False
-                    # Create enemies when tutorial completes
+                    self.end_tutorial()  # Start timing after tutorial
                     self.createTilemap()  # Recreate map with enemies
                     self.create_enemies()  # Add random enemies
                     self.dialogue_system.show_dialogue('after_tutorial')
@@ -179,7 +229,6 @@ class Game:
             self.show_congratulations()
         
         self.show_final_results()
-
 
     def name_entry_screen(self):
         """
@@ -499,7 +548,7 @@ class Game:
 
 # Replace the existing events method with this:
     def events(self):
-        """Handle game events with save system integration."""
+        """Handle game events with pause functionality."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.playing = False
@@ -509,15 +558,9 @@ class Game:
             elif event.type == pygame.KEYDOWN:
                 self.keys_pressed.add(event.key)
                 
-                # Handle save system shortcuts
-                if event.key == pygame.K_ESCAPE and not self.paused:
-                    self.paused = True
-                    self.show_save_load_menu()
-                    self.paused = False
-                elif event.key == pygame.K_q and not self.paused:
-                    self.quick_save()
-                elif event.key == pygame.K_r and not self.paused:
-                    self.quick_load()
+                # Handle pause with Escape key
+                if event.key == pygame.K_ESCAPE:
+                    self.toggle_pause()
                     
             # Handle key release events
             elif event.type == pygame.KEYUP:
@@ -528,6 +571,7 @@ class Game:
                 if event.button == 1 and not self.tutorial_system.active:
                     self.player.shoot(pygame.mouse.get_pos())
                     sound_manager.play_sound('bullet')
+
 
 
 # Replace the existing update method with this:
@@ -594,23 +638,45 @@ class Game:
 
     def pause_timer(self):
         """Pause the game timer and record pause start time."""
-        if not self.is_paused:
+        if not self.in_tutorial:
             self.is_paused = True
             self.pause_start = time.time()
 
     def resume_timer(self):
         """Resume the game timer and update total pause time."""
         if self.is_paused:
-            self.pause_time += time.time() - self.pause_start
+            pause_duration = time.time() - self.pause_start
+            self.pause_time += pause_duration
             self.is_paused = False
             self.pause_start = 0
 
     def get_elapsed_time(self):
-        """Calculate actual elapsed time."""
+        """
+        Calculate actual elapsed time, excluding tutorial and accounting for pauses and minigames.
+        Returns the true elapsed time by subtracting all pause durations.
+        """
+        if self.game_start_time is None or self.in_tutorial:
+            return 0
+            
         current_time = time.time()
-        current_pause = current_time - self.pause_start if self.is_paused else 0
-        elapsed = current_time - self.game_start_time - self.pause_time - current_pause
+        
+        # If currently paused, include the current pause duration
+        current_pause_duration = (current_time - self.pause_start) if self.is_paused else 0
+        
+        # Calculate total time minus all pauses
+        total_paused_time = self.pause_time + current_pause_duration
+        elapsed = current_time - self.game_start_time - total_paused_time
+        
         return max(0, elapsed)  # Ensure we never return negative time
+        
+    def end_tutorial(self):
+        """Called when tutorial ends to start the actual game timer."""
+        self.in_tutorial = False
+        self.game_start_time = time.time()  # Start counting time only after tutorial
+        self.elapsed_time = 0  # Reset elapsed time
+        self.pause_time = 0   # Reset pause time
+        self.is_paused = False
+        self.pause_start = 0
 
     def main(self):
         """
@@ -743,9 +809,15 @@ class Game:
         Run a specific minigame while maintaining the cumulative timer.
         """
         try:
-            # No need to pause timer during minigame transitions anymore
-            # Just run the minigame while timer continues
+            # Store the current pause state and time
+            was_paused = self.is_paused
+            if was_paused:
+                self.resume_timer()  # Resume timer before starting minigame
+            
             result = None
+            minigame_start_time = time.time()
+            
+            # Run the appropriate minigame
             if minigame_type == 'candle memory':
                 result = run_memory_game(self.screen, self.clock)
             elif minigame_type == 'timezone':
@@ -757,24 +829,32 @@ class Game:
             elif minigame_type == 'boss':
                 result = run_boss_battle()
             
+            # Add minigame duration to elapsed time
+            minigame_duration = time.time() - minigame_start_time
+            self.game_start_time -= minigame_duration  # Adjust start time to account for minigame duration
+            
+            # Restore pause state if it was paused before
+            if was_paused:
+                self.pause_timer()
+                
             return result
+
         except Exception as e:
             print(f"Error in minigame sequence: {e}")
             return "quit"
-    
+
     def run_main_game_sequence(self):
-        """
-        Run a main game sequence without resetting timer.
-        """
+        """Run a main game sequence without resetting timer."""
         try:
             # Set up new game state
-            self.new()  # No longer resets timer
+            self.new()
             
             # Run main game loop until completion or death
             while self.playing and self.running:
                 self.events()
-                self.update()
-                self.draw()
+                if not self.paused:  # Only update when not paused
+                    self.update()
+                self.draw()  # Always draw, even when paused
                 self.clock.tick(FPS)
 
                 if self.player.health <= 0:
@@ -922,35 +1002,6 @@ class Game:
             pygame.display.update()
             self.clock.tick(FPS)
 
-# Replace the existing quick_save method with this:
-    def quick_save(self):
-        """Perform a quick save with auto-generated name."""
-        try:
-            if self.save_system.save_game(self):
-                self.show_message("Game saved! (Q)", duration=1.0)
-            else:
-                self.show_message("Save failed! (Q)", duration=1.0)
-        except Exception as e:
-            print(f"Error in quick save: {e}")
-            self.show_message("Save error! (Q)", duration=1.0)
-
-# Replace the existing quick_load method with this:
-    def quick_load(self):
-        """Load the most recent save file."""
-        try:
-            saves = self.save_system.list_saves()
-            if saves:
-                # Sort saves by date and get most recent
-                saves.sort(key=lambda x: x['date'], reverse=True)
-                if self.save_system.load_game(saves[0]['name'], self):
-                    self.show_message("Game loaded! (R)", duration=1.0)
-                else:
-                    self.show_message("Load failed! (R)", duration=1.0)
-            else:
-                self.show_message("No saves found! (R)", duration=1.0)
-        except Exception as e:
-            print(f"Error in quick load: {e}")
-            self.show_message("Load error! (R)", duration=1.0)
 
     def show_message(self, message, duration=2.0):
         """
@@ -991,108 +1042,6 @@ class Game:
                     return
                 if event.type == pygame.KEYDOWN:
                     return
-
-    # Replace the existing show_save_load_menu method with this:
-    def show_save_load_menu(self):
-        """Show the save/load menu with improved state handling."""
-        try:
-            self.pause_timer()
-            if self.save_load_menu is None:
-                self.save_load_menu = SaveLoadMenu(self)
-            
-            menu_active = True
-            while menu_active and self.running:
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        self.running = False
-                        self.resume_timer()
-                        return
-                    
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_ESCAPE:
-                            menu_active = False
-                            break
-                        
-                        result = self.save_load_menu.handle_input(event)
-                        if result == 'back':
-                            menu_active = False
-                        elif result == 'save':
-                            self.save_load_menu.handle_save_action()
-                            # Refresh menu display after saving
-                            self.save_load_menu.draw()
-                        elif result == 'load':
-                            if self.save_load_menu.handle_load_action():
-                                # Reset game state with loaded data
-                                self.new()
-                                menu_active = False
-                
-                if menu_active:
-                    self.save_load_menu.draw()
-                    pygame.display.flip()
-                    self.clock.tick(30)
-            
-            self.resume_timer()
-            
-        except Exception as e:
-            print(f"Error in save/load menu: {e}")
-            self.show_message("An error occurred in the menu", duration=2.0)
-            self.resume_timer()
-
-    def handle_save_load_shortcuts(self, event):
-        """Handle save/load keyboard shortcuts."""
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_q and not self.paused:  # Quick Save
-                self.quick_save_load.quick_save()
-            elif event.key == pygame.K_r and not self.paused:  # Quick Load
-                self.quick_save_load.quick_load()
-            elif event.key == pygame.K_ESCAPE and not self.paused:  # Save/Load Menu
-                self.paused = True
-                self.show_save_load_menu()
-                self.paused = False
-                
-    def handle_save_action(self, menu):
-        """Handle save game action with timer state."""
-        try:
-            # Add timer state to save data
-            save_data = {
-                'elapsed_time': self.elapsed_time,
-                'start_time': self.start_time,
-                'pause_time': self.pause_time
-            }
-            success = self.save_system.save_game(self, additional_data=save_data)
-            if success:
-                self.show_message("Game saved successfully!", duration=1.5)
-            else:
-                self.show_message("Failed to save game!", duration=1.5)
-        except Exception as e:
-            print(f"Error saving game: {e}")
-            self.show_message("Error saving game!", duration=1.5)
-
-    def handle_load_action(self, menu):
-        """
-        Handle load game action and restore timer state.
-        
-        Returns:
-            bool: True if load successful, False otherwise
-        """
-        try:
-            saves = self.save_system.list_saves()
-            if saves and menu.selected_index < len(saves):
-                save_data = self.save_system.load_game(saves[menu.selected_index]['name'], self)
-                if save_data:
-                    # Restore timer state
-                    self.elapsed_time = save_data.get('elapsed_time', self.elapsed_time)
-                    self.start_time = save_data.get('start_time', self.start_time)
-                    self.pause_time = save_data.get('pause_time', self.pause_time)
-                    self.show_message("Game loaded successfully!", duration=1.5)
-                    return True
-                else:
-                    self.show_message("Failed to load game!", duration=1.5)
-            return False
-        except Exception as e:
-            print(f"Error loading game: {e}")
-            self.show_message("Error loading game!", duration=1.5)
-            return False
                 
     def reset_game(self):
         """
