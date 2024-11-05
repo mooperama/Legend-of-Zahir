@@ -3,6 +3,7 @@ from sprites import *
 from config_settings import *
 from enemies import *
 from player import *
+from tiles import *
 from MINIGAME1 import run_memory_game
 from MINIGAME2 import run_timezone_game
 from MINIGAME3 import run_continent_game
@@ -29,6 +30,7 @@ class Game:
         self.running = True
         self.dialogue_system = DialogueSystem(self.screen, self.clock)
         self.player_name = ""
+        self.background = Background(self)
         
         # Initialize tutorial system first
         self.tutorial_system = TutorialSystem(self)
@@ -643,22 +645,22 @@ class Game:
                 self.playing = False
                     
     def draw(self):
-        """Draw game state with proper name display."""
-        self.screen.fill(BACKGROUND_COLOR)
+        """Draw game state with background appearing behind all elements."""
+        # Fill with background first
+        if hasattr(self, 'background'):
+            self.background.draw(self.screen)
+        else:
+            self.screen.fill(BACKGROUND_COLOR)  # Fallback if background not initialized
+        
+        # Draw all other game elements in order
         self.allsprites.draw(self.screen)
-        
-        # Update player name before drawing
-        if hasattr(self, 'player'):
-            self.player.name = self.player_name
-        
         self.player.draw_health_bar(self.screen)
         self.player.draw_exp_bar(self.screen)
         self.player.draw_stats(self.screen)
         self.draw_timer()
         
-        # Smaller font for player name
-        name_font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 20)
-        name_text = name_font.render(self.player_name, True, WHITE)
+        # Draw player name
+        name_text = self.font.render(self.player_name, True, WHITE)
         self.screen.blit(name_text, (10, 10))
         
         # Draw tutorial if active
