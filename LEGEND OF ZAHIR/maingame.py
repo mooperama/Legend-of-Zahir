@@ -43,6 +43,10 @@ class Game:
         self.pause_time = 0
         self.is_paused = False
         self.pause_start = 0
+
+        # Initialize sound manager and load button sound
+        sound_manager.load_sound('button_click', 'buttons.mp3')  # Add button click sound
+        sound_manager.play_music()
         
         # Load sprite sheets
         self.character_spritesheet = Spritesheet('LEGEND OF ZAHIR/main character strip.png')
@@ -425,7 +429,7 @@ class Game:
                 'action': self.quit_game
             }
         }
-        
+
         def draw_button(surface, rect, text, is_selected, is_pressed=False):
             """Draw a single button with proper sizing and styling."""
             # Shadow/3D effect
@@ -471,7 +475,6 @@ class Game:
             
             # Main text
             surface.blit(text_surface, text_rect)
-        
         # Main menu loop
         selected_button = None
         pressed_button = None
@@ -530,7 +533,7 @@ class Game:
         return
 
     def show_leaderboard_screen(self):
-        """Display the leaderboard screen."""
+        """Display the leaderboard screen with sound effects."""
         viewing = True
         while viewing and self.running:
             for event in pygame.event.get():
@@ -539,13 +542,11 @@ class Game:
                     return
                 if event.type == pygame.KEYDOWN:
                     if event.key in (pygame.K_ESCAPE, pygame.K_RETURN):
+                        sound_manager.play_sound('button_click')
                         viewing = False
             
             self.screen.fill(BLACK)
-            
-            # Draw leaderboard
             draw_leaderboard(self.screen, self.font, self.leaderboard_system)
-            
             pygame.display.flip()
             self.clock.tick(FPS)
 
@@ -947,17 +948,11 @@ class Game:
         self.screen.blit(text_surface, (10, 10))
 
     def restart_level_prompt(self):
-        """
-        Display a prompt asking if the player wants to restart the level after dying.
-
-        Returns:
-            bool: True if the player wants to restart, False otherwise.
-        """
+        """Display a prompt asking if the player wants to restart the level after dying."""
         prompt_box = pygame.Surface((400, 150))
         prompt_box.fill(WHITE)
         prompt_box_rect = prompt_box.get_rect(center=(WIDTH/2, HEIGHT/2))
 
-        # Smaller font for buttons
         button_font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 20)
         text = self.font.render("You died! Restart level?", True, BLACK)
         text_rect = text.get_rect(center=(200, 50))
@@ -965,15 +960,6 @@ class Game:
 
         yes_button = pygame.Rect(50, 100, 100, 40)
         no_button = pygame.Rect(250, 100, 100, 40)
-
-        pygame.draw.rect(prompt_box, GREEN, yes_button)
-        pygame.draw.rect(prompt_box, RED, no_button)
-
-        yes_text = button_font.render("Yes", True, BLACK)
-        no_text = button_font.render("No", True, BLACK)
-
-        prompt_box.blit(yes_text, (85, 110))
-        prompt_box.blit(no_text, (285, 110))
 
         while True:
             for event in pygame.event.get():
@@ -983,9 +969,21 @@ class Game:
                     mouse_pos = pygame.mouse.get_pos()
                     adjusted_pos = (mouse_pos[0] - prompt_box_rect.x, mouse_pos[1] - prompt_box_rect.y)
                     if yes_button.collidepoint(adjusted_pos):
+                        sound_manager.play_sound('button_click')
                         return True
                     elif no_button.collidepoint(adjusted_pos):
+                        sound_manager.play_sound('button_click')
                         return False
+
+            # Draw buttons
+            pygame.draw.rect(prompt_box, GREEN, yes_button)
+            pygame.draw.rect(prompt_box, RED, no_button)
+
+            yes_text = button_font.render("Yes", True, BLACK)
+            no_text = button_font.render("No", True, BLACK)
+
+            prompt_box.blit(yes_text, (85, 110))
+            prompt_box.blit(no_text, (285, 110))
 
             self.screen.blit(prompt_box, prompt_box_rect)
             pygame.display.update()
