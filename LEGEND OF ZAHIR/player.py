@@ -36,14 +36,14 @@ class Player(pygame.sprite.Sprite):
 
         # Create animation dictionaries
         self.animations = {
-            'down': [self.game.character_spritesheet.get_sprite(3, 3, 15, 30),
-                     self.game.character_spritesheet.get_sprite(24, 3, 15, 30)],
-            'up': [self.game.character_spritesheet.get_sprite(87, 3, 15, 30),
-                   self.game.character_spritesheet.get_sprite(108, 3, 15, 30)],
-            'left': [self.game.character_spritesheet.get_sprite(131, 3, 15, 30),
-                     self.game.character_spritesheet.get_sprite(151, 3, 15, 30)],
-            'right': [self.game.character_spritesheet.get_sprite(46, 3, 15, 30),
-                      self.game.character_spritesheet.get_sprite(68, 3, 15, 30)]
+            'down': [self.game.character_spritesheet.get_sprite(3, 3, 15, 26),
+                     self.game.character_spritesheet.get_sprite(24, 3, 15, 26)],
+            'up': [self.game.character_spritesheet.get_sprite(87, 3, 15, 26),
+                   self.game.character_spritesheet.get_sprite(108, 3, 15, 26)],
+            'left': [self.game.character_spritesheet.get_sprite(131, 3, 11, 29),
+                     self.game.character_spritesheet.get_sprite(151, 3, 11, 30)],
+            'right': [self.game.character_spritesheet.get_sprite(46, 3, 11, 29),
+                      self.game.character_spritesheet.get_sprite(68, 3, 11, 30)]
         }
         
         # Scale all animation frames
@@ -123,17 +123,32 @@ class Player(pygame.sprite.Sprite):
         surface.blit(self.light_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
 
     def movement(self):
+        """
+        Handle player movement based on keyboard input.
+        """
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
+            #camera movement 
+            for sprite in self.game.allsprites:
+                sprite.rect.x += PLAYER_SPEED
             self.x_change -= PLAYER_SPEED
             self.facing = 'left'
         if keys[pygame.K_d]:
+            #camera movement 
+            for sprite in self.game.allsprites:
+                sprite.rect.x -= PLAYER_SPEED        
             self.x_change += PLAYER_SPEED
             self.facing = 'right'
         if keys[pygame.K_w]:
+            #camera movement 
+            for sprite in self.game.allsprites:
+                sprite.rect.y += PLAYER_SPEED
             self.y_change -= PLAYER_SPEED
             self.facing = 'up'
         if keys[pygame.K_s]:
+            #camera movement 
+            for sprite in self.game.allsprites:
+                sprite.rect.y -= PLAYER_SPEED
             self.y_change += PLAYER_SPEED
             self.facing = 'down'
 
