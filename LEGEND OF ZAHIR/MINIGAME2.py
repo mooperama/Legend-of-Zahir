@@ -1,7 +1,6 @@
 import pygame
 import random
 from soundmanager import *
-from maingame import __init__
 
 # Constants
 WIDTH = 960
