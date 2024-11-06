@@ -18,7 +18,7 @@ class SoundManager:
         
         # Load all game sounds at initialization
         self.load_sound('bullet', 'fireball.mp3')
-        self.load_sound('button_click', 'button_click.wav')
+        self.load_sound('button_click', 'buttons.mp3')
         # Add any other game sounds here
         
         # Load background music

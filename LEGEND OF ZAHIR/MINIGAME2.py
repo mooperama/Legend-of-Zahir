@@ -1,5 +1,7 @@
 import pygame
 import random
+from soundmanager import *
+from maingame import __init__
 
 # Constants
 WIDTH = 960
@@ -65,9 +67,10 @@ class Button:
             return False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if self.is_hovered:
+                sound_manager.play_sound('button_click')  # Changed to 'buttons' to match the loaded sound
                 return True
         return False
-
+    
 class TimezoneGame:
     def __init__(self, screen, clock):
         self.screen = screen
@@ -242,6 +245,7 @@ class TimezoneGame:
 
             if self.game_over:
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    sound_manager.play_sound('button_click') 
                     if self.lives <= 0:
                         return "failed"
                     elif self.correct_answers >= 3:
@@ -249,7 +253,7 @@ class TimezoneGame:
                     else:
                         return "failed"
             elif self.show_result:
-                if self.continue_button.handle_event(event):
+                if self.continue_button.handle_event(event):  # Button class handles sound
                     if self.correct_answers >= 3 or self.lives <= 0:
                         self.game_over = True
                     else:
@@ -258,7 +262,7 @@ class TimezoneGame:
                         self.show_result = False
             else:
                 for button in self.buttons:
-                    if button.handle_event(event):
+                    if button.handle_event(event):  # Button class handles sound
                         self.selected_answer = button.text
                         button.was_selected = True
                         self.show_result = True
