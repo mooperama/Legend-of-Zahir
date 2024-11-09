@@ -1,6 +1,7 @@
 import pygame
 from bullets import *
 from config_settings import *
+from bullets import*
 
 class Player(pygame.sprite.Sprite):
     """
@@ -56,6 +57,8 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = self.x
         self.rect.y = self.y
 
+        self.ammo_system = AmmoSystem()
+
         # Player stats
         self.health = 100
         self.max_health = 100
@@ -97,6 +100,14 @@ class Player(pygame.sprite.Sprite):
         # Reset movement changes
         self.x_change = 0
         self.y_change = 0
+
+        #ammo system for bullets
+        self.ammo_system.update()
+        
+        # Check for reload key
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_r]:
+            self.ammo_system.start_reload()
 
         # Update light mask position
         self.update_light_mask()
@@ -214,17 +225,17 @@ class Player(pygame.sprite.Sprite):
                 self.kill()
 
     def shoot(self, target_pos):
-        """
-        Create a bullet sprite moving towards the target position.
-        
-        Args:
-        target_pos (tuple): The (x, y) coordinates of the target.
-        """
-        direction = pygame.math.Vector2(target_pos) - pygame.math.Vector2(self.rect.center)
-        if direction.length() > 0:
-            direction = direction.normalize()
-        Bullet(self.game, self.rect.centerx, self.rect.centery, direction)
-
+        """Modified shoot method to use ammo system."""
+        if self.ammo_system.can_shoot():
+            pos = pygame.math.Vector2(self.rect.center)
+            target = pygame.math.Vector2(target_pos)
+            direction = (target - pos).normalize()
+            
+            Bullet(self.game, pos.x, pos.y, direction)
+            self.ammo_system.shoot()
+            return True
+        return False
+    
     def draw_health_bar(self, surface):
         """
         Draw the player's health bar on the given surface.
@@ -247,18 +258,118 @@ class Player(pygame.sprite.Sprite):
         pygame.draw.rect(surface, WHITE, (10, 40, 200, 20))
         pygame.draw.rect(surface, YELLOW, (10, 40, 200 * exp_ratio, 20))
 
-    def draw_stats(self, surface):
-        """
-        Draw the player's stats (level and attack power) on the given surface.
+    def draw_stats(self, screen):
+        """Draw player stats including health bar, exp bar, and ammo counter."""
+        # Constants for positioning and sizing
+        BAR_WIDTH = 200
+        BAR_HEIGHT = 20
+        MARGIN = 10
+        LEFT_OFFSET = 10
+        TOP_OFFSET = 10
         
-        Args:
-        surface (pygame.Surface): The surface to draw on.
-        """
-        font = pygame.font.Font(None, 24)
-        level_text = font.render(f"Level: {self.level}", True, WHITE)
-        attack_text = font.render(f"Attack: {self.attack_power}", True, WHITE)
-        surface.blit(level_text, (10, 70))
-        surface.blit(attack_text, (10, 100))
+        # Create smaller font for stats
+        small_font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 14)
+        
+        # Health Bar
+        health_y = TOP_OFFSET
+        health_outline = pygame.Rect(LEFT_OFFSET, health_y, BAR_WIDTH, BAR_HEIGHT)
+        health_fill = pygame.Rect(LEFT_OFFSET, health_y, BAR_WIDTH * (self.health / self.max_health), BAR_HEIGHT)
+        
+        # Draw health bar background and fill
+        pygame.draw.rect(screen, (100, 0, 0), health_outline)  # Dark red background
+        pygame.draw.rect(screen, RED, health_fill)  # Health fill
+        pygame.draw.rect(screen, WHITE, health_outline, 2)  # White border
+        
+        # Draw player name on left side of health bar
+        name_text = small_font.render(self.name, True, WHITE)
+        name_rect = name_text.get_rect(midleft=(LEFT_OFFSET + 5, health_y + BAR_HEIGHT//2))
+        screen.blit(name_text, name_rect)
+        
+        # Draw HP counter next to health bar
+        hp_text = small_font.render(f"{self.health}/{self.max_health}", True, WHITE)
+        hp_rect = hp_text.get_rect(midleft=(LEFT_OFFSET + BAR_WIDTH + 5, health_y + BAR_HEIGHT//2))
+        screen.blit(hp_text, hp_rect)
+        
+        # Experience Bar
+        exp_y = health_y + BAR_HEIGHT + MARGIN
+        exp_outline = pygame.Rect(LEFT_OFFSET, exp_y, BAR_WIDTH, BAR_HEIGHT)
+        exp_percentage = min(1, self.experience / self.experience_to_next_level)
+        exp_fill = pygame.Rect(LEFT_OFFSET, exp_y, BAR_WIDTH * exp_percentage, BAR_HEIGHT)
+        
+        pygame.draw.rect(screen, (0, 0, 100), exp_outline)
+        pygame.draw.rect(screen, BLUE, exp_fill)
+        pygame.draw.rect(screen, WHITE, exp_outline, 2)
+        
+        exp_text = small_font.render(f"Level {self.level} - EXP: {self.experience}/{self.experience_to_next_level}", True, WHITE)
+        exp_text_rect = exp_text.get_rect(midleft=(LEFT_OFFSET + BAR_WIDTH + 5, exp_y + BAR_HEIGHT//2))
+        screen.blit(exp_text, exp_text_rect)
+        
+        # Knowledge Points with smaller text
+        kp_y = exp_y + BAR_HEIGHT + MARGIN
+        kp_text = small_font.render(f"KP: {self.knowledge_points}", True, WHITE)
+        kp_rect = kp_text.get_rect(topleft=(LEFT_OFFSET, kp_y))
+        screen.blit(kp_text, kp_rect)
+        
+        # Ammo Display
+        ammo_y = kp_y + BAR_HEIGHT + MARGIN
+        mag_width = BAR_WIDTH
+        mag_height = BAR_HEIGHT
+        
+        # Magazine background
+        mag_rect = pygame.Rect(LEFT_OFFSET, ammo_y, mag_width, mag_height)
+        pygame.draw.rect(screen, (40, 40, 40), mag_rect)  # Darker background
+        pygame.draw.rect(screen, (70, 70, 70), mag_rect, 2)  # Border
+        
+        # Calculate bullet dimensions
+        bullet_width = (mag_width - 20) // self.ammo_system.magazine_size
+        bullet_margin = 2
+        bullet_height = mag_height - 6
+        
+        # Draw ammo slots
+        for i in range(self.ammo_system.magazine_size):
+            bullet_x = LEFT_OFFSET + 10 + (bullet_width + bullet_margin) * i
+            bullet_y = ammo_y + 3
+            bullet_rect = pygame.Rect(bullet_x, bullet_y, bullet_width, bullet_height)
+            
+            # Color each bullet slot
+            if i < self.ammo_system.current_ammo:
+                color = (255, 165, 0)  # Bright orange for loaded bullets
+            else:
+                color = (80, 80, 80)  # Darker gray for empty slots
+            
+            pygame.draw.rect(screen, color, bullet_rect)
+            
+            # Draw separator after each bullet except the last one
+            if i < self.ammo_system.magazine_size - 1:
+                separator_x = bullet_x + bullet_width + bullet_margin//2
+                pygame.draw.line(screen, (70, 70, 70),
+                            (separator_x, ammo_y + 3),
+                            (separator_x, ammo_y + mag_height - 3))
+        
+        # Ammo counter with smaller text
+        ammo_text = small_font.render(
+            f"{self.ammo_system.current_ammo}/{self.ammo_system.magazine_size}", 
+            True, 
+            WHITE
+        )
+        ammo_text_rect = ammo_text.get_rect(midleft=(LEFT_OFFSET + mag_width + 5, ammo_y + mag_height//2))
+        screen.blit(ammo_text, ammo_text_rect)
+        
+        # Reload status
+        if self.ammo_system.reloading:
+            reload_text = small_font.render("RELOADING...", True, (255, 50, 50))
+            reload_rect = reload_text.get_rect(midleft=(LEFT_OFFSET + mag_width + 5, ammo_y + mag_height//2 + BAR_HEIGHT))
+            screen.blit(reload_text, reload_rect)
+        elif self.ammo_system.current_ammo == 0:
+            empty_text = small_font.render("Press R to reload", True, (255, 50, 50))
+            empty_rect = empty_text.get_rect(midleft=(LEFT_OFFSET + mag_width + 5, ammo_y + mag_height//2 + BAR_HEIGHT))
+            screen.blit(empty_text, empty_rect)
+        
+        # Attack Power
+        attack_y = ammo_y + mag_height + MARGIN
+        attack_text = small_font.render(f"ATK: {self.attack_power}", True, WHITE)
+        attack_rect = attack_text.get_rect(topleft=(LEFT_OFFSET, attack_y))
+        screen.blit(attack_text, attack_rect)
 
     def gain_experience(self, amount):
         self.experience += amount

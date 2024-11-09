@@ -82,6 +82,7 @@ class Game:
         
         self.paused = False
         self.keys_pressed = set()
+        self.ammo_system = AmmoSystem() #bullet limits
         
         # Initialize leaderboard
         self.leaderboard_system = LeaderboardSystem()
@@ -562,7 +563,7 @@ class Game:
     def quit_game(self):
         """Handle quitting the game."""
         self.running = False
-
+    
     def createTilemap(self):
         """Create the game world with door position fixed in the middle and ensure player creation."""
         # Clear existing sprites
@@ -593,7 +594,7 @@ class Game:
         
         # Create the player first to ensure it exists
         self.player = Player(self, initial_pos[0], initial_pos[1])
-        self.player.name = self.player_name
+        self.player.name = self.player_name  # Make sure this line is present
         
         # Create actual tilemap
         for i, row in enumerate(TILEMAP):
@@ -747,8 +748,8 @@ class Game:
             # Handle shooting when not paused
             if event.type == pygame.MOUSEBUTTONDOWN and not self.paused:
                 if event.button == 1 and not self.tutorial_system.active:
-                    self.player.shoot(pygame.mouse.get_pos())
-                    sound_manager.play_sound('bullet')
+                    if self.player.shoot(pygame.mouse.get_pos()):
+                        sound_manager.play_sound('bullet')
 
 
 # Replace the existing update method with this:
@@ -800,14 +801,8 @@ class Game:
         self.allsprites.draw(self.screen)
         
         # Draw player UI elements
-        self.player.draw_health_bar(self.screen)
-        self.player.draw_exp_bar(self.screen)
-        self.player.draw_stats(self.screen)
+        self.player.draw_stats(self.screen)  # This now includes the player name
         self.draw_timer()
-        
-        # Draw player name
-        name_text = self.font.render(self.player_name, True, WHITE)
-        self.screen.blit(name_text, (10, 10))
         
         # Draw door prompt if active
         if self.door_prompt_visible and self.door_visible:
