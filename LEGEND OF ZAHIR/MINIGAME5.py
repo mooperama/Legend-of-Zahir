@@ -28,8 +28,8 @@ PLAYER_SPRITE = pygame.transform.rotate(pygame.transform.scale(PLAYER_SPRITE_IMA
 BOSS_SPRITE_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets/Boss Sprite.png'))
 BOSS_SPRITE = pygame.transform.rotate(pygame.transform.scale(BOSS_SPRITE_IMAGE, (BOSS_WIDTH, BOSS_HEIGHT)), 270)
 
-PLAYER_HEALTH_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets/Player health icon.jpg'))
-PLAYER_HEALTH = pygame.transform.scale(PLAYER_HEALTH_IMAGE, (30, 30))
+PLAYER_HEALTH_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets/Player health icon.png'))
+PLAYER_HEALTH = pygame.transform.scale(PLAYER_HEALTH_IMAGE, (50, 50))
 
 # Colors
 BLUE = (25, 118, 210)
