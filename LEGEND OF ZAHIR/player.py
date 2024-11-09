@@ -49,7 +49,7 @@ class Player(pygame.sprite.Sprite):
         
         # Scale all animation frames
         for direction in self.animations:
-            self.animations[direction] = [pygame.transform.scale(img, (TILESIZE, TILESIZE)) 
+            self.animations[direction] = [pygame.transform.scale(img, (30, 48)) 
                                           for img in self.animations[direction]]
         
         self.image = self.animations['down'][0]  # Set initial image
