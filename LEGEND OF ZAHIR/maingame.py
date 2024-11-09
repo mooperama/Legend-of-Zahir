@@ -104,7 +104,7 @@ class Game:
                 self.resume_timer()
 
     def show_pause_menu(self):
-        """Display the pause menu."""
+        """Display the pause menu with restart option."""
         pause_overlay = pygame.Surface((WIDTH, HEIGHT))
         pause_overlay.fill((0, 0, 0))
         pause_overlay.set_alpha(128)
@@ -113,11 +113,13 @@ class Game:
         menu_font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 36)
         pause_text = menu_font.render("PAUSED", True, WHITE)
         resume_text = self.font.render("Press ESC to Resume", True, WHITE)
+        restart_text = self.font.render("Press R to Restart Level", True, WHITE)
         quit_text = self.font.render("Press Q to Quit", True, WHITE)
         
         # Position text
-        pause_rect = pause_text.get_rect(center=(WIDTH/2, HEIGHT/2 - 50))
-        resume_rect = resume_text.get_rect(center=(WIDTH/2, HEIGHT/2 + 20))
+        pause_rect = pause_text.get_rect(center=(WIDTH/2, HEIGHT/2 - 80))
+        resume_rect = resume_text.get_rect(center=(WIDTH/2, HEIGHT/2 - 20))
+        restart_rect = restart_text.get_rect(center=(WIDTH/2, HEIGHT/2 + 20))
         quit_rect = quit_text.get_rect(center=(WIDTH/2, HEIGHT/2 + 60))
         
         while self.paused and self.running:
@@ -128,20 +130,28 @@ class Game:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.paused = False
-                        self.resume_timer()  # Make sure to resume timer when exiting pause menu
+                        self.resume_timer()
                     elif event.key == pygame.K_q:
                         self.running = False
                         self.paused = False
+                    elif event.key == pygame.K_r:
+                        # Handle restart
+                        self.paused = False
+                        self.resume_timer()
+                        self.new()  # Reset the current level
+                        sound_manager.play_sound('button_click')
+                        return
             
             # Draw pause menu
             self.screen.blit(pause_overlay, (0, 0))
             self.screen.blit(pause_text, pause_rect)
             self.screen.blit(resume_text, resume_rect)
+            self.screen.blit(restart_text, restart_rect)
             self.screen.blit(quit_text, quit_rect)
             
             pygame.display.flip()
             self.clock.tick(30)
-
+    
     def game_loop(self):
         """Main game loop with integrated dialogue and tutorial systems."""
         # Show intro dialogue before starting
