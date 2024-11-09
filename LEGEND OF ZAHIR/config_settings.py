@@ -9,6 +9,7 @@ BULLETSIZE = 16
 PLAYER_LAYER = 3
 ENEMY_LAYER = 2
 BLOCK_LAYER = 1
+WALL_LAYER = 1
 
 # Player settings
 PLAYER_SPEED = 4
@@ -46,30 +47,53 @@ HEALTH_BAR_COLOR = RED
 EXP_BAR_COLOR = BLUE
 KP_COLOR = YELLOW
 
-# Tilemap
-# W: Wall, P: Player, E: Enemy, .: Empty space
+# Tilemap Legend:
+# "." - Empty space
+# "P" - Player starting position
+# "W" - Wall
+# "E" - Enemy spawn point
+# "D" - Door position (initially hidden, will appear after enemies are defeated)
+
 TILEMAP = [
-    'WWWWWWWWWWWWWWWWWWWW',
-    'W..................W',
-    'W..WWW.............W',
-    'W........E.........W',
-    'W........WW........W',
-    'W....WW............W',
-    'W.........WWWWW....W',
-    'W........P.........W',
-    'W..................W',
-    'W...WW.....E.......W',
-    'W..........WWWW....W',
-    'W..................W',
-    'WWWWWWWWWWWWWWWWWWWW',
+    "WWWWWWWWWWWWWWWWWWWW",
+    "W..................W",
+    "W..................W",
+    "W..................W",
+    "W........E.........W",
+    "W..................W",
+    "W.......WPW........W",
+    "W........E.........W",
+    "W........D.........W",
+    "W....E.............W",
+    "W..................W",
+    "W..................W",
+    "W.........E........W",
+    "W..................W",
+    "WWWWWWWWWWWWWWWWWWWW"
 ]
 
-# Add this to your config_settings.py file
+# Alternative slightly more complex tilemap with corridors:
+TILEMAP_ALTERNATE = [
+    "WWWWWWWWWWWWWWWWWWWW",
+    "W..............D...W",
+    "W..................W",
+    "W......WWWW........W",
+    "W........E.........W",
+    "W..................W",
+    "W....WWW...........W",
+    "W........E.........W",
+    "W........P.........W",
+    "W....E....WWWW.....W",
+    "W..................W",
+    "W.......WWW........W",
+    "W.........E........W",
+    "W..................W",
+    "WWWWWWWWWWWWWWWWWWWW"
+]
 
-# Memory Game Tilemap
-# . = Blank space (floor)
-# W = Wall
-# P = Player starting position
+# You can choose which tilemap to use by setting:
+# TILEMAP = TILEMAP_ALTERNATE  # For the more complex version
+
 MEMORY_TILEMAP = [
     'WWWWWWWWWWWWWWWWWWWW',
     'W..................W',

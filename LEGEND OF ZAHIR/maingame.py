@@ -4,6 +4,7 @@ from config_settings import *
 from enemies import *
 from player import *
 from tiles import *
+from doors import *
 from MINIGAME1 import run_memory_game
 from MINIGAME2 import run_timezone_game
 from MINIGAME3 import run_continent_game
@@ -59,6 +60,13 @@ class Game:
         self.enemies = pygame.sprite.LayeredUpdates()
         self.attacks = pygame.sprite.LayeredUpdates()
         self.bullets = pygame.sprite.LayeredUpdates()
+
+        # Modified door-related attributes with reset functionality
+        self.door_sprite = None
+        self.door_visible = False
+        self.door_prompt_visible = False
+        self.door_position = None
+        self.enemies_defeated = False  # New flag to track if enemies are defeated
         
         # Game sequence setup
         self.game_sequence = ['main', 'candle memory', 'main', 'timezone', 'main', 'language', 'main', 'continent', 'main', 'boss']
@@ -178,63 +186,64 @@ class Game:
             pygame.display.update()
             self.clock.tick(FPS)
         
-        # Main game sequence loop
-        while self.running and self.current_sequence_index < self.total_sequences:
-            current_mode = self.game_sequence[self.current_sequence_index]
-            
-            if current_mode == 'main':
-                result = self.run_main_game_sequence()
-            else:
-                result = self.run_minigame_sequence(current_mode)
-            
-            if result == "quit":
-                self.running = False
-                break
-            
-            if result == "completed":
-                # Handle dialogue sequences based on completion
+        # Main game sequence loop with proper bounds checking
+        while self.running and self.current_sequence_index < len(self.game_sequence):
+            try:
+                current_mode = self.game_sequence[self.current_sequence_index]
+                
                 if current_mode == 'main':
-                    # Show appropriate dialogue based on sequence
-                    if self.current_sequence_index == 0:  # After first main sequence
-                        self.dialogue_system.show_dialogue('after_tutorial')
-                        self.show_level_complete_dialogue("Press Enter for Candle Memory Challenge")
-                    elif self.current_sequence_index == 2:  # After memory game
-                        self.dialogue_system.show_dialogue('after_memory')
-                        self.show_level_complete_dialogue("Press Enter for Timezone Challenge")
-                    elif self.current_sequence_index == 4:  # After timezone game
-                        self.dialogue_system.show_dialogue('after_timezone')
-                        self.show_level_complete_dialogue("Press Enter for Language Challenge")
-                    elif self.current_sequence_index == 6:  # After language game
-                        self.dialogue_system.show_dialogue('after_language')
-                        self.show_level_complete_dialogue("Press Enter for The Continent Challenge")
-                    elif self.current_sequence_index == 8:  # Before boss battle
-                        self.dialogue_system.show_dialogue('after_continent')
-                        self.dialogue_system.show_dialogue('before_boss')
-                        self.show_level_complete_dialogue("Press Enter for Final Boss Battle")
-                elif current_mode == 'candle memory':
-                    self.show_level_complete_dialogue("Candle Memory completed! Press Enter to continue")
-                elif current_mode == 'timezone':
-                    self.show_level_complete_dialogue("Timezone Challenge completed! Press Enter to continue")
-                elif current_mode == 'language':
-                    self.show_level_complete_dialogue("Language Challenge completed! Press Enter to continue")
-                elif current_mode == 'continent':
-                    self.show_level_complete_dialogue("Continent Challenge completed! Press Enter to continue")
-                elif current_mode == 'boss':
-                    self.dialogue_system.show_dialogue('victory')
+                    result = self.run_main_game_sequence()
+                else:
+                    result = self.run_minigame_sequence(current_mode)
                 
-                self.current_sequence_index += 1
-                
-            elif result == "died":
-                if not self.restart_level_prompt():
+                if result == "quit":
                     self.running = False
                     break
+                
+                if result == "completed":
+                    # Handle dialogue sequences based on completion
+                    if current_mode == 'main':
+                        # Show appropriate dialogue based on sequence index
+                        if self.current_sequence_index == 0:
+                            self.dialogue_system.show_dialogue('after_tutorial')
+                        elif self.current_sequence_index == 2:
+                            self.dialogue_system.show_dialogue('after_memory')
+                        elif self.current_sequence_index == 4:
+                            self.dialogue_system.show_dialogue('after_timezone')
+                        elif self.current_sequence_index == 6:
+                            self.dialogue_system.show_dialogue('after_language')
+                        elif self.current_sequence_index == 8:
+                            self.dialogue_system.show_dialogue('after_continent')
+                            self.dialogue_system.show_dialogue('before_boss')
+                    
+                    # Safely increment sequence index
+                    if self.current_sequence_index < len(self.game_sequence) - 1:
+                        self.current_sequence_index += 1
+                    else:
+                        break
+                        
+                elif result == "died":
+                    if not self.restart_level_prompt():
+                        self.running = False
+                        break
+                        
+            except IndexError as e:
+                print(f"Sequence index error: {e}")
+                self.current_sequence_index = len(self.game_sequence) - 1
+                break
+            except Exception as e:
+                print(f"Unexpected error in game loop: {e}")
+                self.running = False
+                break
         
-        # Game completion check
-        if self.current_sequence_index >= self.total_sequences:
-            self.dialogue_system.show_dialogue('victory')
-            self.show_congratulations()
-        
-        self.show_final_results()
+        # Game completion check - Modified to handle victory properly
+        if self.running and self.current_sequence_index >= len(self.game_sequence) - 1:
+            # Check if the last sequence was completed successfully
+            if self.game_sequence[-1] == 'boss' and result == "completed":
+                self.dialogue_system.show_dialogue('victory')  # Show victory dialogue once
+                self.show_final_results(victory=True)  # Pass victory flag
+            else:
+                self.show_final_results(victory=False)  # Regular game over
 
     def name_entry_screen(self):
         """
@@ -555,7 +564,7 @@ class Game:
         self.running = False
 
     def createTilemap(self):
-        """Create the game world and ensure player name is set."""
+        """Create the game world with door position fixed in the middle and ensure player creation."""
         # Clear existing sprites
         self.allsprites.empty()
         self.blocks.empty()
@@ -563,17 +572,127 @@ class Game:
         self.attacks.empty()
         self.bullets.empty()
         
+        # Find the player's initial spawn position from the TILEMAP
+        initial_pos = None
         for i, row in enumerate(TILEMAP):
             for j, column in enumerate(row):
+                if column == "P":
+                    initial_pos = (j, i)
+                    break
+            if initial_pos:
+                break
+        
+        if not initial_pos:
+            # If no player position found in TILEMAP, use a default position
+            initial_pos = (1, len(TILEMAP) // 2)  # Left side, middle of map
+        
+        # Set door position to the center
+        map_height = len(TILEMAP)
+        map_width = len(TILEMAP[0])
+        self.door_position = (map_width // 2, map_height // 2)
+        
+        # Create the player first to ensure it exists
+        self.player = Player(self, initial_pos[0], initial_pos[1])
+        self.player.name = self.player_name
+        
+        # Create actual tilemap
+        for i, row in enumerate(TILEMAP):
+            for j, column in enumerate(row):
+                # Skip creating wall if it's where the door will be
+                if (j, i) == self.door_position:
+                    continue
+                    
                 if column == "W":
                     Block(self, j, i)
-                if column == "P":
-                    self.player = Player(self, j, i)
-                    self.player.name = self.player_name  # Set player name
-                # Only create enemies if not in tutorial
                 if column == "E" and not self.in_tutorial:
                     Enemy(self, j, i)
+        
+        # Ensure player is added to sprite group
+        self.allsprites.add(self.player)
 
+    def show_door(self):
+        """Create and show the door sprite at the fixed center position."""
+        if not self.door_visible and not self.enemies_defeated:
+            # Verify door position is valid
+            if self.door_position is None:
+                print("Error: Door position not set")
+                return
+                
+            x, y = self.door_position
+            
+            # Create door sprite
+            self.door_sprite = Door(self, x, y)
+            self.allsprites.add(self.door_sprite)
+            self.door_visible = True
+            self.door_prompt_visible = False
+            self.enemies_defeated = True
+            
+            # Remove any blocks at door position
+            for block in self.blocks.copy():
+                block_x = block.rect.x // TILESIZE
+                block_y = block.rect.y // TILESIZE
+                if block_x == x and block_y == y:
+                    block.kill()
+            
+            self.show_message("A door has appeared!", 2.0)
+            sound_manager.play_sound('door_appear')
+    
+    
+    def ensure_door_accessibility(self):
+        """Ensure there's space around the door for the player to access it."""
+        if not self.door_position:
+            return
+            
+        x, y = self.door_position
+        
+        # Check and remove blocks that might block door access
+        for block in self.blocks.copy():
+            block_x = block.rect.x // TILESIZE
+            block_y = block.rect.y // TILESIZE
+            
+            # Remove blocks immediately adjacent to door
+            if (abs(block_x - x) == 1 and (block_y == y or block_y == y + 1)):
+                block.kill()
+
+    def check_door_interaction(self):
+        """Check if player is near the door and handle interaction."""
+        if self.door_visible and self.door_sprite:
+            # Calculate distance between player and door
+            player_pos = pygame.math.Vector2(self.player.rect.center)
+            door_pos = pygame.math.Vector2(self.door_sprite.rect.center)
+            distance = player_pos.distance_to(door_pos)
+            
+            # Show prompt if player is near door
+            if distance < 100:  # Adjust distance as needed
+                self.show_door_prompt()
+                # Check for interaction key (E)
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_e]:
+                    try:
+                        # Safely check next sequence
+                        next_sequence_index = self.current_sequence_index + 1
+                        if next_sequence_index < len(self.game_sequence):
+                            next_sequence = self.game_sequence[next_sequence_index]
+                            if next_sequence != 'main':
+                                self.show_message(f"Entering the {next_sequence.title()} challenge...", 2.0)
+                            else:
+                                self.show_message("Entering the next area...", 2.0)
+                        else:
+                            self.show_message("Congratulations! You've completed the game!", 2.0)
+                        return True
+                    except IndexError:
+                        print("Reached end of game sequences")
+                        return True
+            else:
+                self.door_prompt_visible = False
+        return False
+    
+    def show_door_prompt(self):
+        """Display prompt to enter door."""
+        if self.door_prompt_visible:
+            prompt_text = self.font.render("Press E to enter door", True, WHITE)
+            prompt_rect = prompt_text.get_rect(center=(WIDTH/2, HEIGHT - 50))
+            self.screen.blit(prompt_text, prompt_rect)
 
     def new(self):
         """Set up new game state while preserving necessary data."""
@@ -586,6 +705,12 @@ class Game:
         self.enemies = pygame.sprite.LayeredUpdates()
         self.attacks = pygame.sprite.LayeredUpdates()
         self.bullets = pygame.sprite.LayeredUpdates()
+        
+        # Reset door state
+        self.door_visible = False
+        self.door_prompt_visible = False
+        self.door_sprite = None
+        self.enemies_defeated = False
         
         # Create game world
         self.createTilemap()
@@ -626,35 +751,55 @@ class Game:
                     sound_manager.play_sound('bullet')
 
 
-
 # Replace the existing update method with this:
     def update(self):
-        """Update game state when not paused."""
+        """Update game state with modified door logic."""
         if not self.paused:
             self.allsprites.update()
             self.elapsed_time = self.get_elapsed_time()
-
+            
             # Check player health
             if self.player.health <= 0:
                 self.playing = False
-
+                return "died"
+            
             # Check for bullet collisions
             hits = pygame.sprite.groupcollide(self.bullets, self.enemies, True, True)
             
-            # Check if all enemies are defeated
-            if len(self.enemies) == 0:
-                self.playing = False
+            # Show door when all enemies are defeated
+            if len(self.enemies) == 0 and not self.door_visible and not self.enemies_defeated:
+                self.show_door()
+                self.enemies_defeated = True
+            
+            # Handle door interaction
+            if self.door_visible and self.door_sprite:
+                player_pos = pygame.math.Vector2(self.player.rect.center)
+                door_pos = pygame.math.Vector2(self.door_sprite.rect.center)
+                distance = player_pos.distance_to(door_pos)
+                
+                if distance < 100:
+                    self.door_prompt_visible = True
+                    keys = pygame.key.get_pressed()
+                    if keys[pygame.K_e]:
+                        self.playing = False
+                        return "completed"
+                else:
+                    self.door_prompt_visible = False
+            
+            return None
                     
     def draw(self):
-        """Draw game state with background appearing behind all elements."""
+        """Draw game state with all elements including door and prompts."""
         # Fill with background first
         if hasattr(self, 'background'):
             self.background.draw(self.screen)
         else:
-            self.screen.fill(BACKGROUND_COLOR)  # Fallback if background not initialized
+            self.screen.fill(BACKGROUND_COLOR)
         
-        # Draw all other game elements in order
+        # Draw all sprites
         self.allsprites.draw(self.screen)
+        
+        # Draw player UI elements
         self.player.draw_health_bar(self.screen)
         self.player.draw_exp_bar(self.screen)
         self.player.draw_stats(self.screen)
@@ -663,6 +808,10 @@ class Game:
         # Draw player name
         name_text = self.font.render(self.player_name, True, WHITE)
         self.screen.blit(name_text, (10, 10))
+        
+        # Draw door prompt if active
+        if self.door_prompt_visible and self.door_visible:
+            self.show_door_prompt()
         
         # Draw tutorial if active
         if self.tutorial_system.active:
@@ -859,20 +1008,23 @@ class Game:
             self.clock.tick(FPS)
 
 
+
     def run_minigame_sequence(self, minigame_type):
         """
         Run a specific minigame while maintaining the cumulative timer.
+        Each minigame's result is properly handled and door state is managed appropriately.
         """
         try:
             # Store the current pause state and time
             was_paused = self.is_paused
             if was_paused:
-                self.resume_timer()  # Resume timer before starting minigame
+                self.resume_timer()
             
-            result = None
+            # Record minigame start time
             minigame_start_time = time.time()
             
             # Run the appropriate minigame
+            result = None
             if minigame_type == 'candle memory':
                 result = run_memory_game(self.screen, self.clock)
             elif minigame_type == 'timezone':
@@ -884,14 +1036,41 @@ class Game:
             elif minigame_type == 'boss':
                 result = run_boss_battle()
             
-            # Add minigame duration to elapsed time
-            minigame_duration = time.time() - minigame_start_time
-            self.game_start_time -= minigame_duration  # Adjust start time to account for minigame duration
+            # Handle minigame completion
+            if result == "completed":
+                # Only adjust main game state if it wasn't the boss battle
+                if minigame_type != 'boss':
+                    # Reset door and enemy state for the next main game sequence
+                    self.door_visible = False
+                    self.door_prompt_visible = False
+                    self.door_sprite = None
+                    self.enemies_defeated = False
+                else:
+                    # For boss battle completion, keep the completed state
+                    self.enemies_defeated = True
+                    
+                # Add minigame duration to elapsed time
+                minigame_duration = time.time() - minigame_start_time
+                self.game_start_time -= minigame_duration
+
+                # Show appropriate completion message
+                if minigame_type == 'boss':
+                    self.show_message("Boss defeated! Victory!", 2.0)
+                else:
+                    self.show_message(f"{minigame_type.title()} challenge completed!", 2.0)
+                    
+            elif result == "died" or result == "failed":
+                # Handle minigame failure
+                if minigame_type == 'boss':
+                    self.show_message("Defeated by the boss...", 2.0)
+                else:
+                    self.show_message(f"{minigame_type.title()} challenge failed!", 2.0)
             
             # Restore pause state if it was paused before
             if was_paused:
                 self.pause_timer()
-                
+            
+            # Return the minigame result
             return result
 
         except Exception as e:
@@ -899,35 +1078,72 @@ class Game:
             return "quit"
 
     def run_main_game_sequence(self):
-        """Run a main game sequence without resetting timer."""
+        """Run main game sequence with proper door reset."""
         try:
-            # Set up new game state
+            # Reset game state including door
             self.new()
             
-            # Run main game loop until completion or death
             while self.playing and self.running:
                 self.events()
-                if not self.paused:  # Only update when not paused
-                    self.update()
-                self.draw()  # Always draw, even when paused
+                if not self.paused:
+                    result = self.update()
+                    if result == "completed":
+                        return "completed"
+                self.draw()
                 self.clock.tick(FPS)
 
                 if self.player.health <= 0:
                     return "died"
-                
-                # Check if all enemies are defeated
-                if len(self.enemies) == 0:
-                    return "completed"
-                    
-            # If we broke out of the loop due to self.running becoming False
-            if not self.running:
-                return "quit"
-                
-            return "completed"
+            
+            if self.enemies_defeated:
+                return "completed"
+            return "quit"
             
         except Exception as e:
-            print(f"Error in main game sequence: {e}")
+            print(f"Error in main sequence: {e}")
             return "quit"
+
+    def show_door(self):
+        """Create and show the door sprite in center position."""
+        if not self.door_visible and not self.enemies_defeated:
+            # Create door sprite at center position
+            self.door_sprite = Door(self, self.door_position[0], self.door_position[1])
+            self.allsprites.add(self.door_sprite)
+            self.door_visible = True
+            self.door_prompt_visible = False
+            self.enemies_defeated = True
+            
+            # Ensure no collision blocks where door spawns
+            for block in self.blocks:
+                if (block.rect.x // TILESIZE == self.door_position[0] and 
+                    block.rect.y // TILESIZE in [self.door_position[1], self.door_position[1] - 1]):
+                    block.kill()
+            
+            self.show_message("A door has appeared!", 2.0)
+            sound_manager.play_sound('door_appear')
+
+    def check_door_interaction(self):
+        """Simplified door interaction check."""
+        if self.door_visible and self.door_sprite:
+            player_pos = pygame.math.Vector2(self.player.rect.center)
+            door_pos = pygame.math.Vector2(self.door_sprite.rect.center)
+            distance = player_pos.distance_to(door_pos)
+            
+            if distance < 100:
+                self.door_prompt_visible = True
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_e]:
+                    return True
+            else:
+                self.door_prompt_visible = False
+        return False
+
+    def show_door_prompt(self):
+        """Display prompt to enter door."""
+        if self.door_prompt_visible:
+            prompt_text = self.font.render("Press E to enter door", True, WHITE)
+            prompt_rect = prompt_text.get_rect(center=(WIDTH/2, HEIGHT - 50))
+            self.screen.blit(prompt_text, prompt_rect)
 
     def show_progress(self):
         """
@@ -989,12 +1205,11 @@ class Game:
             pygame.display.update()
             self.clock.tick(FPS)
 
-    def show_final_results(self):
+    def show_final_results(self, victory=False):
         """
         Display the final results screen showing total cumulative time and score.
-        Only shows and records leaderboard if player completed the entire game.
+        Modified to properly handle victory condition.
         """
-        # Get final total time from the very start of the game
         final_time = int(self.get_elapsed_time())
         
         # Calculate time string for display
@@ -1006,19 +1221,19 @@ class Game:
             seconds = final_time % 60
             time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
         
-        # Check if game was completed (reached the end of all sequences)
-        game_completed = self.current_sequence_index >= self.total_sequences
+        # Check victory condition
+        game_completed = victory and self.current_sequence_index >= len(self.game_sequence) - 1
         
         if game_completed:
-            # Only check rank and add to leaderboard if game was completed
+            # Add to leaderboard if game was won
             rank = self.leaderboard_system.get_rank(final_time)
             if rank is not None:
                 show_new_highscore(self.screen, self.font, rank, final_time)
                 self.leaderboard_system.add_score(self.player_name, final_time)
         
         # Show completion or game over text
-        if game_completed:
-            text = self.font.render('Game Complete!', True, WHITE)
+        if victory:
+            text = self.font.render('Congratulations! Game Complete!', True, (255, 215, 0))  # Golden color
         else:
             text = self.font.render('Game Over', True, RED)
         text_rect = text.get_rect(center=(WIDTH/2, HEIGHT/2 - 50))
@@ -1028,9 +1243,10 @@ class Game:
         time_rect = time_text.get_rect(center=(WIDTH/2, HEIGHT/2))
         
         show_leaderboard = True
-        while show_leaderboard:
+        while show_leaderboard and self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    self.running = False
                     return
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                     show_leaderboard = False
@@ -1039,23 +1255,20 @@ class Game:
             self.screen.blit(text, text_rect)
             self.screen.blit(time_text, time_rect)
             
-            # Only show leaderboard if game was completed
             if game_completed:
+                # Show leaderboard for completed game
                 draw_leaderboard(self.screen, self.font, self.leaderboard_system)
             else:
-                # Show message explaining why leaderboard isn't shown
-                msg = self.font.render('Complete the game to appear on leaderboard!', True, YELLOW)
+                # Show appropriate message based on victory state
+                if victory:
+                    msg = self.font.render('Game completed! Press ENTER to continue', True, GREEN)
+                else:
+                    msg = self.font.render('Game over! Press ENTER to continue', True, RED)
                 msg_rect = msg.get_rect(center=(WIDTH/2, HEIGHT/2 + 50))
                 self.screen.blit(msg, msg_rect)
-                
-                # Show continue prompt
-                continue_text = self.font.render('Press ENTER to continue', True, WHITE)
-                continue_rect = continue_text.get_rect(center=(WIDTH/2, HEIGHT - 50))
-                self.screen.blit(continue_text, continue_rect)
             
             pygame.display.update()
             self.clock.tick(FPS)
-
 
     def show_message(self, message, duration=2.0):
         """

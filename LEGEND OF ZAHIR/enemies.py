@@ -225,7 +225,7 @@ class Enemy(pygame.sprite.Sprite):
     @classmethod
     def create_random(cls, game):
         """
-        Create an enemy at a random valid position within the game's walls.
+        Create an enemy at a random valid position within the game's boundary walls.
         
         Args:
             game (Game): Reference to the main game instance
@@ -239,60 +239,89 @@ class Enemy(pygame.sprite.Sprite):
         map_height = len(TILEMAP)
         map_width = len(TILEMAP[0])
         min_distance = 5  # Minimum tiles away from player
+        max_attempts = 50  # Maximum attempts to find valid position
         
         # Get player position in tile coordinates
         player_tile_x = game.player.rect.x // TILESIZE
         player_tile_y = game.player.rect.y // TILESIZE
         
-        valid_positions = []
+        # Initialize boundary values
+        left_bound = 1  # Start at 1 to avoid leftmost wall
+        right_bound = map_width - 2  # Subtract 2 to avoid rightmost wall
+        top_bound = 1  # Start at 1 to avoid top wall
+        bottom_bound = map_height - 2  # Subtract 2 to avoid bottom wall
         
-        # Find the boundaries of the inner area by locating the walls
-        left_bound = 0
-        right_bound = map_width - 1
-        top_bound = 0
-        bottom_bound = map_height - 1
-        
-        # Find first wall from left in first row
+        # Find valid spawn area boundaries by scanning for walls
+        # Scan horizontally for first non-wall tiles
         for x in range(map_width):
-            if TILEMAP[1][x] == "W":
-                left_bound = x + 1
+            if TILEMAP[1][x] != "W":
+                left_bound = x
                 break
                 
-        # Find first wall from right in first row
         for x in range(map_width - 1, -1, -1):
-            if TILEMAP[1][x] == "W":
-                right_bound = x - 1
+            if TILEMAP[1][x] != "W":
+                right_bound = x
                 break
                 
-        # Find first wall from top in first column
+        # Scan vertically for first non-wall tiles
         for y in range(map_height):
-            if TILEMAP[y][1] == "W":
-                top_bound = y + 1
+            if TILEMAP[y][1] != "W":
+                top_bound = y
                 break
                 
-        # Find first wall from bottom in first column
         for y in range(map_height - 1, -1, -1):
-            if TILEMAP[y][1] == "W":
-                bottom_bound = y - 1
+            if TILEMAP[y][1] != "W":
+                bottom_bound = y
                 break
         
-        # Check only positions within the walls
+        # Collect valid spawn positions
+        valid_positions = []
         for y in range(top_bound, bottom_bound + 1):
             for x in range(left_bound, right_bound + 1):
-                # Check if position is empty
-                if TILEMAP[y][x] == ".":
-                    # Calculate distance from player
-                    dx = abs(x - player_tile_x)
-                    dy = abs(y - player_tile_y)
-                    distance = (dx ** 2 + dy ** 2) ** 0.5
+                # Skip if position is a wall or other obstacle
+                if TILEMAP[y][x] not in [".", "E", "P"]:
+                    continue
                     
-                    # Add position if it's far enough from player
-                    if distance >= min_distance:
-                        valid_positions.append((x, y))
-
+                # Calculate distance from player
+                dx = x - player_tile_x
+                dy = y - player_tile_y
+                distance = (dx * dx + dy * dy) ** 0.5
+                
+                # Skip if too close to player
+                if distance < min_distance:
+                    continue
+                    
+                # Check for collisions with existing sprites
+                temp_rect = pygame.Rect(x * TILESIZE, y * TILESIZE, TILESIZE, TILESIZE)
+                collision = False
+                
+                for sprite in game.allsprites:
+                    if sprite.rect.colliderect(temp_rect):
+                        collision = True
+                        break
+                
+                if not collision:
+                    valid_positions.append((x, y))
+        
+        # If no valid positions found, try emergency fallback positions
         if not valid_positions:
+            # Try corners first (avoiding actual corners which are usually walls)
+            fallback_positions = [
+                (left_bound + 1, top_bound + 1),
+                (right_bound - 1, top_bound + 1),
+                (left_bound + 1, bottom_bound - 1),
+                (right_bound - 1, bottom_bound - 1)
+            ]
+            
+            for pos in fallback_positions:
+                x, y = pos
+                if 0 < x < map_width - 1 and 0 < y < map_height - 1 and TILEMAP[y][x] not in ["W", "E", "P"]:
+                    return cls(game, x, y)
+            
+            # If still no valid position, raise error
             raise ValueError("No valid positions found for enemy spawn")
-
+        
+        # Choose random position from valid positions
         x, y = random.choice(valid_positions)
         return cls(game, x, y)
 
