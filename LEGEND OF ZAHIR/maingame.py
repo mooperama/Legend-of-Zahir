@@ -582,10 +582,9 @@ class Game:
                     break
             if initial_pos:
                 break
-        
+
         if not initial_pos:
-            # If no player position found in TILEMAP, use a default position
-            initial_pos = (1, len(TILEMAP) // 2)  # Left side, middle of map
+            initial_pos = (1, len(TILEMAP) // 2)
         
         # Set door position to the center
         map_height = len(TILEMAP)
@@ -655,39 +654,6 @@ class Game:
             if (abs(block_x - x) == 1 and (block_y == y or block_y == y + 1)):
                 block.kill()
 
-    def check_door_interaction(self):
-        """Check if player is near the door and handle interaction."""
-        if self.door_visible and self.door_sprite:
-            # Calculate distance between player and door
-            player_pos = pygame.math.Vector2(self.player.rect.center)
-            door_pos = pygame.math.Vector2(self.door_sprite.rect.center)
-            distance = player_pos.distance_to(door_pos)
-            
-            # Show prompt if player is near door
-            if distance < 100:  # Adjust distance as needed
-                self.show_door_prompt()
-                # Check for interaction key (E)
-                keys = pygame.key.get_pressed()
-                if keys[pygame.K_e]:
-                    try:
-                        # Safely check next sequence
-                        next_sequence_index = self.current_sequence_index + 1
-                        if next_sequence_index < len(self.game_sequence):
-                            next_sequence = self.game_sequence[next_sequence_index]
-                            if next_sequence != 'main':
-                                self.show_message(f"Entering the {next_sequence.title()} challenge...", 2.0)
-                            else:
-                                self.show_message("Entering the next area...", 2.0)
-                        else:
-                            self.show_message("Congratulations! You've completed the game!", 2.0)
-                        return True
-                    except IndexError:
-                        print("Reached end of game sequences")
-                        return True
-            else:
-                self.door_prompt_visible = False
-        return False
-    
     def show_door_prompt(self):
         """Display prompt to enter door."""
         if self.door_prompt_visible:
@@ -876,22 +842,6 @@ class Game:
         self.is_paused = False
         self.pause_start = 0
 
-    def main(self):
-        """
-        Main game loop that runs while the game is playing.
-        """
-        while self.playing:
-            self.events()  # Handle events
-            self.update()  # Update game objects
-            self.draw()  # Draw the game
-            self.clock.tick(FPS)  # Control the frame rate
-
-            if self.player.health <= 0:
-                return "died"  # Player died
-
-        if len(self.enemies) == 0:
-            return "completed"  # Level completed
-
 
     def create_enemies(self):
         """Create enemies only if not in tutorial."""
@@ -904,75 +854,6 @@ class Game:
             self.enemies.add(enemy)
             self.allsprites.add(enemy)
 
-    def game_over(self):
-        """
-        Display the game over screen and handle restart or quit options.
-        """
-        text = self.font.render('GAME OVER', True, WHITE)
-        text_rect = text.get_rect(center=(WIDTH/2, HEIGHT/2 - 50))
-
-        time_text = self.font.render(f'Time: {int(self.elapsed_time)}s', True, WHITE)
-        time_rect = time_text.get_rect(center=(WIDTH/2, HEIGHT/2))
-
-        restart_button = pygame.Rect(WIDTH/2 - 70, HEIGHT/2 + 50, 140, 40)
-        restart_text = self.font.render('Restart', True, BLACK)
-
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                    return
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if restart_button.collidepoint(event.pos):
-                        self.reset_game()
-                        return
-
-            self.screen.fill(BLACK)
-            self.screen.blit(text, text_rect)
-            self.screen.blit(time_text, time_rect)
-            pygame.draw.rect(self.screen, WHITE, restart_button)
-            self.screen.blit(restart_text, (restart_button.x + 30, restart_button.y + 10))
-            pygame.display.update()
-            self.clock.tick(FPS)
-
-    def show_congratulations(self):
-        """
-        Display the victory screen and handle play again or quit options.
-        """
-        text = self.font.render('Congratulations! You won!', True, WHITE)
-        text_rect = text.get_rect(center=(WIDTH/2, HEIGHT/2 - 125))
-
-        time_text = self.font.render(f'Time: {int(self.elapsed_time)}s', True, WHITE)
-        time_rect = time_text.get_rect(center=(WIDTH/2, HEIGHT/2 - 75))
-
-        play_again_button = pygame.Rect(WIDTH/2 - 70, HEIGHT/2 + 25, 140, 40)
-        play_again_text = self.font.render('Play Again', True, BLACK)
-
-        quit_button = pygame.Rect(WIDTH/2 + 85, HEIGHT/2 + 25, 140, 40)
-        quit_text = self.font.render('Quit', True, BLACK)
-
-        while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                    return False
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if play_again_button.collidepoint(event.pos):
-                        self.reset_game()
-                        return True
-                    elif quit_button.collidepoint(event.pos):
-                        self.running = False
-                        return False
-
-            self.screen.fill(BLACK)
-            self.screen.blit(text, text_rect)
-            self.screen.blit(time_text, time_rect)
-            pygame.draw.rect(self.screen, WHITE, play_again_button)
-            self.screen.blit(play_again_text, (play_again_button.x + 20, play_again_button.y + 10))
-            pygame.draw.rect(self.screen, WHITE, quit_button)
-            self.screen.blit(quit_text, (quit_button.x + 45, quit_button.y + 10))
-            pygame.display.update()
-            self.clock.tick(FPS)
 
     def show_level_complete_dialogue(self, message):
         """
@@ -1098,25 +979,6 @@ class Game:
             print(f"Error in main sequence: {e}")
             return "quit"
 
-    def show_door(self):
-        """Create and show the door sprite in center position."""
-        if not self.door_visible and not self.enemies_defeated:
-            # Create door sprite at center position
-            self.door_sprite = Door(self, self.door_position[0], self.door_position[1])
-            self.allsprites.add(self.door_sprite)
-            self.door_visible = True
-            self.door_prompt_visible = False
-            self.enemies_defeated = True
-            
-            # Ensure no collision blocks where door spawns
-            for block in self.blocks:
-                if (block.rect.x // TILESIZE == self.door_position[0] and 
-                    block.rect.y // TILESIZE in [self.door_position[1], self.door_position[1] - 1]):
-                    block.kill()
-            
-            self.show_message("A door has appeared!", 2.0)
-            sound_manager.play_sound('door_appear')
-
     def check_door_interaction(self):
         """Simplified door interaction check."""
         if self.door_visible and self.door_sprite:
@@ -1132,13 +994,6 @@ class Game:
             else:
                 self.door_prompt_visible = False
         return False
-
-    def show_door_prompt(self):
-        """Display prompt to enter door."""
-        if self.door_prompt_visible:
-            prompt_text = self.font.render("Press E to enter door", True, WHITE)
-            prompt_rect = prompt_text.get_rect(center=(WIDTH/2, HEIGHT - 50))
-            self.screen.blit(prompt_text, prompt_rect)
 
     def show_progress(self):
         """
@@ -1312,8 +1167,6 @@ class Game:
         """
         self.minigames_completed = 0
         self.current_level = 0
-        self.in_main_game = True
-        self.current_minigame_index = 0
         self.current_sequence_index = 0
         self.in_tutorial = True
         

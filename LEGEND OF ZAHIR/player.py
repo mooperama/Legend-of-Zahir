@@ -346,15 +346,6 @@ class Player(pygame.sprite.Sprite):
                             (separator_x, ammo_y + 3),
                             (separator_x, ammo_y + mag_height - 3))
         
-        # Ammo counter with smaller text
-        ammo_text = small_font.render(
-            f"{self.ammo_system.current_ammo}/{self.ammo_system.magazine_size}", 
-            True, 
-            WHITE
-        )
-        ammo_text_rect = ammo_text.get_rect(midleft=(LEFT_OFFSET + mag_width + 5, ammo_y + mag_height//2))
-        screen.blit(ammo_text, ammo_text_rect)
-        
         # Reload status
         if self.ammo_system.reloading:
             reload_text = small_font.render("RELOADING...", True, (255, 50, 50))
