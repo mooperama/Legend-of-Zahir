@@ -104,7 +104,7 @@ class TimezoneGame:
     def create_continue_button(self):
         self.continue_button = Button(
             (WIDTH - 160) // 2,
-            HEIGHT - 350,
+            HEIGHT - 100,
             160,
             45,
             "Continue"
@@ -114,8 +114,8 @@ class TimezoneGame:
         self.buttons = []
         button_width = 160
         button_height = 45
-        spacing = 15
-        start_y = HEIGHT // 2
+        spacing = 5
+        start_y = HEIGHT - 300
 
         for i, choice in enumerate(self.choices):
             x = (WIDTH - button_width) // 2
@@ -182,7 +182,7 @@ class TimezoneGame:
         # Draw calculation hint
         hint_text = self.get_calculation_hint()
         hint_surface = self.regular_font.render(hint_text, True, BLUE)
-        hint_rect = hint_surface.get_rect(center=(WIDTH//2, HEIGHT//3 + 50))
+        hint_rect = hint_surface.get_rect(center=(WIDTH//2, HEIGHT//3 + 30))
         self.screen.blit(hint_surface, hint_rect)
 
         for button in self.buttons:
