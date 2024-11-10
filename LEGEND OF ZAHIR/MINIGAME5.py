@@ -122,6 +122,33 @@ class Bullet(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(self.original_image, angle)
         self.rect = self.image.get_rect(center=self.rect.center)
 
+class BossBullet(pygame.sprite.Sprite):
+    def __init__(self, x, y, direction):
+        super().__init__()
+        try:
+            # Load and scale the boss bullet image
+            self.original_image = pygame.image.load('LEGEND OF ZAHIR/purple (2).png').convert_alpha()
+            self.original_image = pygame.transform.scale(self.original_image, (50, 50))
+        except pygame.error:
+            # Fallback if image loading fails
+            print("Could not load boss bullet image - using default shape")
+            self.original_image = pygame.Surface((30, 30), pygame.SRCALPHA)
+            pygame.draw.circle(self.original_image, (255, 0, 0), (15, 15), 15)
+            
+        self.image = self.original_image
+        self.rect = self.image.get_rect(center=(x, y))
+        self.dx = direction[0]
+        self.dy = direction[1]
+        
+        # Calculate angle for rotation
+        angle = pygame.math.Vector2(direction).angle_to((1, 0))
+        self.image = pygame.transform.rotate(self.original_image, angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
+
+    def update(self):
+        self.rect.x += self.dx
+        self.rect.y += self.dy
+
 def create_text_input(shuffled_word):
     """
     Create a text input popup surface for the word unscrambling game.
@@ -151,8 +178,8 @@ def draw_window(player, boss, playerBullets, bossBullets, player_hp, boss_hp,
     # Draw bullets
     for bullet in playerBullets:
         WIN.blit(bullet.image, bullet.rect)
-    for bullet, dx, dy in bossBullets:
-        pygame.draw.rect(WIN, YELLOW, bullet)
+    for bullet in bossBullets:  # Changed from tuple unpacking to direct sprite usage
+        WIN.blit(bullet.image, bullet.rect)
 
     # Draw health
     for i in range(player_hp):
@@ -160,13 +187,11 @@ def draw_window(player, boss, playerBullets, bossBullets, player_hp, boss_hp,
     pygame.draw.rect(WIN, RED, (WIDTH - 950, 10, 200, 20))
     pygame.draw.rect(WIN, GREEN, (WIDTH - 950, 10, 200 * (boss_hp / 100), 20))
 
-    # Draw popup if active
     if popup:
         WIN.blit(popup, (WIDTH//2 - 300, HEIGHT//2 - 100))
         input_surface = FONT.render(player_input, True, BLACK)
         WIN.blit(input_surface, (WIDTH//2 - input_surface.get_width()//2, HEIGHT//2 + 20))
 
-    # Draw game over text
     if game_over:
         game_over_text = "YOU WIN!" if win else "DEFEAT"
         game_over_surface = FONT.render(game_over_text, True, WHITE)
@@ -231,23 +256,35 @@ def shooting(playerBullets, player, boss):
 
 def boss_shooting(bossBullets, boss):
     """Create boss bullets in a circular pattern."""
-    if random.randint(1, 90) == 1:
-        for angle in range(0, 360, 45):
-            dx = BOSS_BULLET_VEL * pygame.math.Vector2(1, 0).rotate(angle).x
-            dy = BOSS_BULLET_VEL * pygame.math.Vector2(1, 0).rotate(angle).y
-            bullet = pygame.Rect(boss.x + boss.width // 2, boss.y + boss.height//2, 30, 30)
-            bossBullets.append((bullet, dx, dy))
+    if random.randint(1, 90) == 1:  # Random chance to shoot
+        for angle in range(0, 360, 45):  # 8 directions
+            # Calculate direction vector
+            direction = pygame.math.Vector2(1, 0).rotate(angle)
+            dx = BOSS_BULLET_VEL * direction.x
+            dy = BOSS_BULLET_VEL * direction.y
+            
+            # Create new bullet at boss center
+            bullet = BossBullet(
+                boss.x + boss.width // 2,
+                boss.y + boss.height // 2,
+                (dx, dy)
+            )
+            bossBullets.append(bullet)
 
 def update_boss_shooting(bossBullets, player):
     """Update boss bullet positions and handle collisions."""
-    for bullet, dx, dy in bossBullets[:]:
-        bullet.x += dx
-        bullet.y += dy
-        if player.rect.colliderect(bullet):
+    for bullet in bossBullets[:]:
+        bullet.update()
+        
+        # Check for collision with player
+        if player.rect.colliderect(bullet.rect):
             pygame.event.post(pygame.event.Event(PLAYER_HIT))
-            bossBullets.remove((bullet, dx, dy))
-        elif not bullet.colliderect(pygame.Rect(0, 0, WIDTH, HEIGHT)):
-            bossBullets.remove((bullet, dx, dy))
+            bossBullets.remove(bullet)
+            continue
+            
+        # Remove bullets that are off screen
+        if not bullet.rect.colliderect(pygame.Rect(0, 0, WIDTH, HEIGHT)):
+            bossBullets.remove(bullet)
 
 def generate_word():
     """Generate a random Southeast Asian country name and its scrambled version."""
@@ -265,7 +302,7 @@ def main():
 
     # Initialize game state
     playerBullets = []
-    bossBullets = []
+    bossBullets = []  # Now stores BossBullet sprites
     player_hp = 4
     boss_hp = 100
     clock = pygame.time.Clock()
@@ -332,7 +369,7 @@ def main():
         if player_hp <= 0 or boss_hp <= 0:
             draw_window(player, boss, playerBullets, bossBullets, player_hp, boss_hp, 
                        shuffled_word, player_input, game_over=True, win=boss_hp <= 0)
-            pygame.time.delay(3000)  # Show end screen for 3 seconds
+            pygame.time.delay(3000)
             return "completed" if boss_hp <= 0 else "died"
 
         # Update game state when popup is not active
@@ -340,8 +377,9 @@ def main():
             player_movement(keys_pressed, player)
             shooting(playerBullets, player, boss)
             boss_movement(boss)
-            boss_shooting(bossBullets, boss)
-            update_boss_shooting(bossBullets, player)
+            if not popup_active:  # Only shoot when popup is not active
+                boss_shooting(bossBullets, boss)
+                update_boss_shooting(bossBullets, player)
 
         # Handle popup timing
         if popup_active and current_time - popup_start_time >= POPUP_DURATION:
