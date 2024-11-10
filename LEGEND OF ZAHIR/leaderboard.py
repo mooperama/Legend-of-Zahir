@@ -81,7 +81,7 @@ class LeaderboardSystem:
 
 def draw_leaderboard(screen, font, leaderboard_system):
     """
-    Draw the leaderboard on screen.
+    Draw the leaderboard on screen with properly aligned columns.
     Only shows completed game scores.
     """
     # Create semi-transparent overlay
@@ -95,12 +95,43 @@ def draw_leaderboard(screen, font, leaderboard_system):
     title_rect = title.get_rect(center=(WIDTH/2, 50))
     screen.blit(title, title_rect)
     
-    # Draw entries
-    y_spacing = 40
+    # Column settings
+    col_widths = {
+        'rank': 100,    # Width for rank column
+        'name': 250,    # Width for name column
+        'time': 150,    # Width for time column
+        'date': 250    # Width for date column
+    }
+    
+    total_width = sum(col_widths.values())
+    start_x = (WIDTH - total_width) // 2
+    y_spacing = 50  # Increased spacing
     start_y = 120
     
-    headers = font.render("Rank  Name           Time     Date", True, WHITE)
-    screen.blit(headers, (WIDTH/2 - 200, start_y - y_spacing))
+    # Draw column headers with background
+    header_bg = pygame.Surface((total_width, y_spacing))
+    header_bg.fill((40, 40, 40))
+    screen.blit(header_bg, (start_x, start_y - y_spacing))
+    
+    headers = [
+        ('RANK', col_widths['rank']),
+        ('PLAYER NAME', col_widths['name']),
+        ('TIME', col_widths['time']),
+        ('DATE', col_widths['date'])
+    ]
+    
+    current_x = start_x
+    for header_text, width in headers:
+        header = font.render(header_text, True, YELLOW)
+        # Center text within column
+        text_x = current_x + (width - header.get_width()) // 2
+        screen.blit(header, (text_x, start_y - y_spacing))
+        current_x += width
+    
+    # Draw separator line
+    pygame.draw.line(screen, WHITE, 
+                    (start_x, start_y - y_spacing/2 + y_spacing/2),
+                    (start_x + total_width, start_y - y_spacing/2 + y_spacing/2), 2)
     
     if not leaderboard_system.leaderboard:
         # Show message if no completed games yet
@@ -108,23 +139,55 @@ def draw_leaderboard(screen, font, leaderboard_system):
         no_scores_rect = no_scores.get_rect(center=(WIDTH/2, start_y + y_spacing))
         screen.blit(no_scores, no_scores_rect)
     else:
-        # Show completed game scores
+        # First draw all row backgrounds
+        for i in range(len(leaderboard_system.leaderboard)):
+            y = start_y + i * y_spacing
+            if i % 2 == 0:
+                row_bg = pygame.Surface((total_width, y_spacing))
+                row_bg.fill((50, 50, 50))
+                screen.blit(row_bg, (start_x, y))
+        
+        # Then draw the text
         for i, entry in enumerate(leaderboard_system.leaderboard):
-            # Format the entry text
-            rank_text = f"{i+1:2d}"
-            name_text = f"{entry['name']:<15}"
-            time_text = f"{int(entry['time']):>4d}s"
-            date_text = entry['date']
+            y = start_y + i * y_spacing + (y_spacing - font.get_height()) // 2  # Center text vertically
             
-            entry_text = f"{rank_text}.  {name_text} {time_text}  {date_text}"
-            entry_surface = font.render(entry_text, True, WHITE)
-            screen.blit(entry_surface, (WIDTH/2 - 200, start_y + i * y_spacing))
+            # Rank - Left aligned with padding
+            rank_text = font.render(f"#{i+1}", True, WHITE)
+            screen.blit(rank_text, (start_x + 20, y))
+            
+            # Name - Left aligned with padding
+            name_text = font.render(entry['name'], True, WHITE)
+            screen.blit(name_text, (start_x + col_widths['rank'] + 20, y))
+            
+            # Time - Center aligned in column
+            time_text = font.render(f"{int(entry['time'])}s", True, WHITE)
+            time_x = start_x + col_widths['rank'] + col_widths['name'] + (col_widths['time'] - time_text.get_width()) // 2
+            screen.blit(time_text, (time_x, y))
+            
+            # Date - Center aligned in column
+            date_text = font.render(entry['date'], True, WHITE)
+            date_x = start_x + col_widths['rank'] + col_widths['name'] + col_widths['time'] + (col_widths['date'] - date_text.get_width()) // 2
+            screen.blit(date_text, (date_x, y))
+    
+    # Draw bottom separator line
+    if leaderboard_system.leaderboard:
+        end_y = start_y + len(leaderboard_system.leaderboard) * y_spacing
+        pygame.draw.line(screen, WHITE, 
+                        (start_x, end_y),
+                        (start_x + total_width, end_y), 2)
+    
+    # Draw container box
+    pygame.draw.rect(screen, WHITE, 
+                    (start_x, start_y - y_spacing, 
+                     total_width, y_spacing * (len(leaderboard_system.leaderboard) + 1)), 
+                    2)
     
     # Draw exit instruction
     exit_text = font.render('Press ENTER to continue', True, WHITE)
     exit_rect = exit_text.get_rect(center=(WIDTH/2, HEIGHT - 50))
     screen.blit(exit_text, exit_rect)
-
+    
+    pygame.display.update()
 
 def show_new_highscore(screen, font, rank, completion_time):
     """
