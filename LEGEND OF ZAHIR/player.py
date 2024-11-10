@@ -101,13 +101,8 @@ class Player(pygame.sprite.Sprite):
         self.x_change = 0
         self.y_change = 0
 
-        #ammo system for bullets
+        # Update ammo system
         self.ammo_system.update()
-        
-        # Check for reload key
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_r]:
-            self.ammo_system.start_reload()
 
         # Update light mask position
         self.update_light_mask()
@@ -225,7 +220,7 @@ class Player(pygame.sprite.Sprite):
                 self.kill()
 
     def shoot(self, target_pos):
-        """Modified shoot method to use ammo system."""
+        """Modified shoot method to use ammo system with cooldown."""
         if self.ammo_system.can_shoot():
             pos = pygame.math.Vector2(self.rect.center)
             target = pygame.math.Vector2(target_pos)
@@ -346,22 +341,12 @@ class Player(pygame.sprite.Sprite):
                             (separator_x, ammo_y + 3),
                             (separator_x, ammo_y + mag_height - 3))
         
-        # Reload status
-        if self.ammo_system.reloading:
-            reload_text = small_font.render("RELOADING...", True, (255, 50, 50))
-            reload_rect = reload_text.get_rect(midleft=(LEFT_OFFSET + mag_width + 5, ammo_y + mag_height//2 + BAR_HEIGHT))
-            screen.blit(reload_text, reload_rect)
-        elif self.ammo_system.current_ammo == 0:
-            empty_text = small_font.render("Press R to reload", True, (255, 50, 50))
-            empty_rect = empty_text.get_rect(midleft=(LEFT_OFFSET + mag_width + 5, ammo_y + mag_height//2 + BAR_HEIGHT))
-            screen.blit(empty_text, empty_rect)
-        
         # Attack Power
         attack_y = ammo_y + mag_height + MARGIN
         attack_text = small_font.render(f"ATK: {self.attack_power}", True, WHITE)
         attack_rect = attack_text.get_rect(topleft=(LEFT_OFFSET, attack_y))
         screen.blit(attack_text, attack_rect)
-
+        
     def gain_experience(self, amount):
         self.experience += amount
         # Check if the player has enough experience to level up

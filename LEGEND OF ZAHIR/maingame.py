@@ -169,8 +169,10 @@ class Game:
                 # Handle tutorial system input
                 self.tutorial_system.handle_input(events)
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    self.player.shoot(pygame.mouse.get_pos())
-                    sound_manager.play_sound('bullet')
+                    if self.ammo_system.can_shoot():  # Add cooldown check
+                        if self.player.shoot(pygame.mouse.get_pos()):
+                            self.ammo_system.shoot()  # Update ammo system
+                            sound_manager.play_sound('bullet')
                 
                 # Check if tutorial is completed
                 if self.tutorial_system.tutorial_completed:
@@ -683,6 +685,9 @@ class Game:
         self.attacks = pygame.sprite.LayeredUpdates()
         self.bullets = pygame.sprite.LayeredUpdates()
         
+        # Reset ammo system
+        self.ammo_system = AmmoSystem()
+        
         # Reset door state
         self.door_visible = False
         self.door_prompt_visible = False
@@ -700,8 +705,8 @@ class Game:
         # Create enemies
         self.create_enemies()
         self.playing = True
-
-# Replace the existing events method with this:
+         
+    # Replace the existing events method with this:
     def events(self):
         """Handle game events with pause functionality."""
         for event in pygame.event.get():
@@ -724,16 +729,20 @@ class Game:
             # Handle shooting when not paused
             if event.type == pygame.MOUSEBUTTONDOWN and not self.paused:
                 if event.button == 1 and not self.tutorial_system.active:
-                    if self.player.shoot(pygame.mouse.get_pos()):
-                        sound_manager.play_sound('bullet')
+                    if self.ammo_system.can_shoot():  # Check if we can shoot
+                        if self.player.shoot(pygame.mouse.get_pos()):
+                            self.ammo_system.shoot()  # Update ammo system
+                            sound_manager.play_sound('bullet')
 
-
-# Replace the existing update method with this:
+    # Replace the existing update method with this:
     def update(self):
         """Update game state with modified door logic."""
         if not self.paused:
             self.allsprites.update()
             self.elapsed_time = self.get_elapsed_time()
+            
+            # Update ammo system
+            self.ammo_system.update()
             
             # Check player health
             if self.player.health <= 0:
@@ -765,6 +774,7 @@ class Game:
             
             return None
                     
+    # Update the draw method:
     def draw(self):
         """Draw game state with all elements including door and prompts."""
         # Fill with background first
@@ -777,8 +787,11 @@ class Game:
         self.allsprites.draw(self.screen)
         
         # Draw player UI elements
-        self.player.draw_stats(self.screen)  # This now includes the player name
+        self.player.draw_stats(self.screen)
         self.draw_timer()
+        
+        # Draw ammo system cooldown text
+        self.ammo_system.draw(self.screen)
         
         # Draw door prompt if active
         if self.door_prompt_visible and self.door_visible:

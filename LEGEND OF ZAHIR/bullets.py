@@ -2,40 +2,50 @@ import pygame
 from config_settings import *
 
 class AmmoSystem:
-    """Manages the player's ammunition and magazine system."""
+    """Manages the player's ammunition system with cooldown text."""
     def __init__(self):
         self.magazine_size = 10
         self.current_ammo = self.magazine_size
-        self.reloading = False
-        self.reload_time = 2000  # 2 seconds
-        self.reload_start = 0
+        self.on_cooldown = False
+        self.cooldown_time = 3000  # 3 seconds in milliseconds
+        self.cooldown_start = 0
+        
+        # Setup the cooldown text
+        self.font = pygame.font.Font(None, 36)
+        self.cooldown_text = self.font.render("On Cooldown", True, (255, 0, 0))
+        self.cooldown_text_rect = self.cooldown_text.get_rect(center=(WIDTH/2, 50))
         
     def can_shoot(self):
         """Check if player can shoot."""
-        return self.current_ammo > 0 and not self.reloading
+        return self.current_ammo > 0 and not self.on_cooldown
         
     def shoot(self):
         """Use one bullet."""
         if self.can_shoot():
             self.current_ammo -= 1
+            if self.current_ammo <= 0:
+                self.start_cooldown()
             return True
         return False
             
-    def start_reload(self):
-        """Start the reload process."""
-        if not self.reloading and self.current_ammo < self.magazine_size:
-            self.reloading = True
-            self.reload_start = pygame.time.get_ticks()
-            return True
-        return False
+    def start_cooldown(self):
+        """Start the cooldown period."""
+        if not self.on_cooldown:
+            self.on_cooldown = True
+            self.cooldown_start = pygame.time.get_ticks()
             
     def update(self):
-        """Update reload progress."""
-        if self.reloading:
+        """Update cooldown status."""
+        if self.on_cooldown:
             current_time = pygame.time.get_ticks()
-            if current_time - self.reload_start >= self.reload_time:
+            if current_time - self.cooldown_start >= self.cooldown_time:
                 self.current_ammo = self.magazine_size
-                self.reloading = False
+                self.on_cooldown = False
+                
+    def draw(self, screen):
+        """Draw the cooldown text if on cooldown."""
+        if self.on_cooldown:
+            screen.blit(self.cooldown_text, self.cooldown_text_rect)
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, game, x, y, direction):
@@ -84,7 +94,7 @@ class Bullet(pygame.sprite.Sprite):
         if (self.rect.left > WIDTH or self.rect.right < 0 or 
             self.rect.top > HEIGHT or self.rect.bottom < 0):
             self.kill()
-
+            
     def animate(self):
         """
         Animate the bullet (if using animation frames).
