@@ -43,12 +43,14 @@ class DialogueSystem:
         
         # Initialize dialogue sequences with your existing dialogue_sequences dictionary
         self.dialogue_sequences = {
-    'intro': [
+    'intro': 
+    [
         {
             'text': "In an age where knowledge is condemned as dangerous, you stand before the entrance of Vitano's Sanctuary. Within these halls, the last remnants of ancient wisdom lie protected by their eternal guardian.",
             'characters': [
                 {'name': 'VN1', 'position': 'CENTER'}
             ]
+    
         },
         {
             'text': "You are Zahir, last apprentice of the hidden Scholar's Academy. Your quest is noble - to preserve knowledge not for power, but to reignite the light of learning in a darkened world.",
@@ -58,8 +60,10 @@ class DialogueSystem:
         },
         {
             'text': "The great doors of the sanctuary creak open. Vitano's presence fills the air with electric anticipation. Your trials await, young seeker...",
+            'transition': 'fade',
+            'background': 'backgrounds',
             'characters': [
-                {'name': 'VN3', 'position': 'RIGHT'},
+                {'name': 'VN3', 'position': 'CENTER'},
             ]
         }
     ],
@@ -74,14 +78,13 @@ class DialogueSystem:
         {
             'text': "But physical prowess alone will not unlock the secrets of Vitano's trials. Mind and body must work as one.",
             'characters': [
-                {'name': 'VN5r', 'position': 'RIGHT'},
+                {'name': 'VN4', 'position': 'CENTER'},
             ]
         },
         {
             'text': "Before you stands the Chamber of Memory, where patterns of color dance in eternal sequence. The first Orb pulses gently within, waiting for one who understands its rhythm.",
             'characters': [
-                {'name': 'BlueCharacter', 'position': 'OFF_SCREEN'},
-                {'name': 'Boss1', 'position': 'CENTER'}
+                {'name': 'VN5', 'position': 'CENTER'}
             ]
         }
     ],
@@ -90,21 +93,23 @@ class DialogueSystem:
         {
             'text': "The Chamber of Memory recognizes your mastery of patterns. The ancient runes glow with approval as the first trial concludes.",
             'characters': [
-                {'name': 'BlueCharacter', 'position': 'RIGHT'},
-                {'name': 'PinkCharacter', 'position': 'LEFT'}
+                {'name': 'VN5', 'position': 'CENTER'}
             ]
         },
         {
             'text': "The Orb of Sequential Thought resonates with blue light, its knowledge flowing into you. You begin to understand how patterns shape our understanding of the world.",
+            'transition': "fade",
             'characters': [
-                {'name': 'BlueCharacterHappy', 'position': 'CENTER'},
-                {'name': 'PinkCharacter', 'position': 'OFF_SCREEN'}
+                {'name': 'VN6', 'position': 'CENTER'}
             ]
         },
         {
             'text': "But this is just the beginning. Three more Orbs await, each holding fundamental truths about our world that must be preserved.",
+            'transition': 'fade',
             'characters': [
-                {'name': 'BlueCharacter', 'position': 'CENTER'}
+                {'name': 'VN7', 'position': 'LEFT'},
+                {'name': 'VN8', 'position': 'CENTER'},
+                {'name': 'VN9', 'position': 'RIGHT'}
             ]
         }
     ],
@@ -113,21 +118,19 @@ class DialogueSystem:
         {
             'text': "Within the Temporal Sanctum, you have proven your understanding of how time flows differently across our world. The sundials and celestial maps around you glow with approval.",
             'characters': [
-                {'name': 'TimeMan', 'position': 'LEFT'},
-                {'name': 'BlueCharacter', 'position': 'RIGHT'}
+                {'name': 'VN1', 'position': 'CENTER'}
             ]
         },
         {
             'text': "The Orb of Temporal Wisdom pulses with golden light, sharing its knowledge of time's eternal dance across the globe.",
             'characters': [
-                {'name': 'TimeMan', 'position': 'OFF_SCREEN'},
-                {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
+                {'name': 'VN7', 'position': 'CENTER'}
             ]
         },
         {
             'text': "As this knowledge merges with your consciousness, you begin to grasp how time connects all peoples across vast distances.",
             'characters': [
-                {'name': 'BlueCharacter', 'position': 'CENTER'}
+                {'name': 'VN13', 'position': 'CENTER'}
             ]
         }
     ],
@@ -136,14 +139,12 @@ class DialogueSystem:
         {
             'text': "The Linguistics Chamber echoes with the whispers of a thousand tongues. Your mastery of these ancient forms of communication has awakened something deep within its walls.",
             'characters': [
-                {'name': 'LanguageMan', 'position': 'LEFT'},
-                {'name': 'BlueCharacter', 'position': 'RIGHT'}
+                {'name': 'LanguageMan', 'position': 'LEFT'}
             ]
         },
         {
             'text': "The Orb of Universal Speech bathes the chamber in ethereal purple light. Its power allows you to understand how language bridges the gaps between cultures and minds.",
             'characters': [
-                {'name': 'LanguageMan', 'position': 'OFF_SCREEN'},
                 {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
             ]
         },
@@ -159,22 +160,19 @@ class DialogueSystem:
         {
             'text': "The Geographic Nexus responds to your understanding of our world's physical form. Ancient maps spring to life around you, their boundaries glowing with validated truth.",
             'characters': [
-                {'name': 'PinkCharacter', 'position': 'LEFT'},
-                {'name': 'BlueCharacter', 'position': 'RIGHT'}
+                {'name': 'PinkCharacter', 'position': 'LEFT'}
             ]
         },
         {
             'text': "The Orb of Terrestrial Knowledge radiates emerald light, completing the quartet of fundamental wisdom. Its power shows you how the physical world shapes the destiny of all who dwell within it.",
             'characters': [
-                {'name': 'PinkCharacter', 'position': 'OFF_SCREEN'},
-                {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
+                {'name': 'PinkCharacter', 'position': 'OFF_SCREEN'}
             ]
         },
         {
             'text': "With all four Orbs resonating in harmony, Vitano himself stirs. The true test approaches - will you prove worthy of becoming a new Keeper of Wisdom?",
             'characters': [
-                {'name': 'BlueCharacter', 'position': 'RIGHT'},
-                {'name': 'Boss1', 'position': 'LEFT'}
+                {'name': 'BlueCharacter', 'position': 'RIGHT'}
             ]
         }
     ],
@@ -183,22 +181,19 @@ class DialogueSystem:
         {
             'text': "The central chamber trembles as Vitano materializes, his form shifting between scholar and guardian, between wisdom and power.",
             'characters': [
-                {'name': 'Boss1', 'position': 'LEFT'},
-                {'name': 'BlueCharacter', 'position': 'RIGHT'}
+                {'name': 'Boss1', 'position': 'LEFT'}
             ]
         },
         {
             'text': "'You have gathered the four fundamental truths, young seeker. But knowledge without wisdom is like a sword without a wielder - dangerous and unpredictable.'",
             'characters': [
-                {'name': 'Boss2', 'position': 'LEFT'},
-                {'name': 'BlueCharacter', 'position': 'RIGHT'}
+                {'name': 'Boss2', 'position': 'LEFT'}
             ]
         },
         {
             'text': "'Show me that you understand not just the knowledge contained within the Orbs, but the responsibility that comes with it. Let the final trial begin!'",
             'characters': [
-                {'name': 'Boss3', 'position': 'LEFT'},
-                {'name': 'BlueCharacter', 'position': 'RIGHT'}
+                {'name': 'Boss3', 'position': 'LEFT'}
             ]
         }
     ],
@@ -208,15 +203,12 @@ class DialogueSystem:
             'text': "As Vitano's form dissolves into pure light, a profound truth washes over you. The trials were never about proving your worth to him.",
             'characters': [
                 {'name': 'Boss1', 'position': 'OFF_SCREEN'},
-                {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
             ]
         },
         {
             'text': "'You have shown wisdom beyond mere knowledge,' Vitano's voice echoes. 'The Orbs were never meant to be hidden forever, but to be rediscovered when the world was ready.'",
             'characters': [
-                {'name': 'BlueCharacterHappy', 'position': 'CENTER'},
-                {'name': 'PinkCharacterHappy', 'position': 'LEFT'},
-                {'name': 'LanguageMan', 'position': 'RIGHT'}
+                {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
             ]
         },
         {
@@ -338,7 +330,19 @@ class DialogueSystem:
         """Set up the visual novel scene for the current dialogue line."""
         if sequence_key in self.dialogue_sequences:
             current_line = self.dialogue_sequences[sequence_key][line_index]
+                
+            # Get characters from current line
             characters = current_line.get('characters', [])
+            
+            # Set the background with transition
+            background_name = current_line.get('background', 'default')
+            transition_type = current_line.get('transition', 'fade')  # Default to fade transition
+            
+            # Different transition types
+            if transition_type == 'fade':
+                self.visual_assets.set_background(background_name)  # Uses existing fade transition
+            elif transition_type == 'instant':
+                self.visual_assets.set_background_instant(background_name)
             
             # Move all existing characters off screen first
             for char_name in self.visual_assets.characters:
@@ -349,7 +353,6 @@ class DialogueSystem:
                 character_name = char_data.get('name', '')
                 position = char_data.get('position', 'CENTER')
                 
-                # Convert position string to CharacterPosition enum
                 try:
                     pos = CharacterPosition[position]
                     self.visual_assets.move_character(character_name, pos)

@@ -17,10 +17,15 @@ class SpriteType(Enum):
     VN3 = "VN3"
     VN4 = "VN4"
     VN5 = "VN5"
-    VN6 = "boss 2_3 sprite"
-    VN7 = "boss 3_3 sprite"
-    VN8 = "pink_happy"
-    VN9 = "pink_normal"
+    VN6 = "VN6"
+    VN7 = "VN7"
+    VN8 = "VN8"
+    VN9 = "VN9"
+    VN10 = "VN10"
+    VN11 = "VN11"
+    VN12 = "VN12"
+    VN13 = "Language man NPC sheet"
+    boss_room = "boss_room"
 
 class Character:
     """Represents a character in the visual novel scenes."""
@@ -97,33 +102,28 @@ class VisualNovelAssets:
         """Initialize all game characters."""
         base_path = "LEGEND OF ZAHIR/visual_novel_assets"
         return {
-            "VN1": Character("TimeMan", base_path, SpriteType.VN1),
-            "LanguageMan": Character("LanguageMan", base_path, SpriteType.VN2),
-            "BlueCharacter": Character("BlueCharacter", base_path, SpriteType.VN3),
-            "BlueCharacterHappy": Character("BlueCharacterHappy", base_path, SpriteType.VN4),
-            "PinkCharacter": Character("PinkCharacter", base_path, SpriteType.VN8),
-            "PinkCharacterHappy": Character("PinkCharacterHappy", base_path, SpriteType.VN9),
-            "Boss1": Character("Boss1", base_path, SpriteType.VN5),
-            "Boss2": Character("Boss2", base_path, SpriteType.VN6),
-            "Boss3": Character("Boss3", base_path, SpriteType.VN7),
-        }
-    
+            "VN1": Character("VN1", base_path, SpriteType.VN1),
+            "VN2": Character("VN2", base_path, SpriteType.VN2),
+            "VN3": Character("VN3", base_path, SpriteType.VN3),
+            "VN4": Character("VN4", base_path, SpriteType.VN4),
+            "VN5": Character("VN5", base_path, SpriteType.VN5),
+            "VN6": Character("VN6", base_path, SpriteType.VN6),
+            "VN7": Character("VN7", base_path, SpriteType.VN7),
+            "VN8": Character("VN8", base_path, SpriteType.VN8),
+            "VN9": Character("VN9", base_path, SpriteType.VN9),
+            "VN10": Character("VN10", base_path, SpriteType.VN10),
+            "VN11": Character("VN11", base_path, SpriteType.VN11),
+            "VN12": Character("VN12", base_path, SpriteType.VN12),
+            "VN13": Character("pink_normal", base_path, SpriteType.VN13)
+            }  
     def _load_backgrounds(self) -> Dict[str, Optional[pygame.Surface]]:
         """Load all background images."""
         current_dir = os.path.dirname(os.path.abspath(__file__))
         backgrounds_path = os.path.join(current_dir, "LEGEND OF ZAHIR", "visual_novel_assets", "backgrounds")
         print(f"Looking for backgrounds in: {backgrounds_path}")
         
-        backgrounds = {}
+        backgrounds = {"boss_room"}
         
-        if not os.path.exists(backgrounds_path):
-            print(f"Error: Backgrounds directory not found at {backgrounds_path}")
-            # Create a default background
-            bg = pygame.Surface((self.width, self.height))
-            bg.fill((50, 50, 50))
-            backgrounds["default"] = bg
-            return backgrounds
-            
         # List background directory contents
         try:
             bg_files = [f for f in os.listdir(backgrounds_path) if f.endswith('.png')]
