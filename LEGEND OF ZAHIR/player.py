@@ -68,8 +68,6 @@ class Player(pygame.sprite.Sprite):
         self.health = 100
         self.max_health = 100
         self.attack_power = 10
-        self.exp = 0
-        self.knowledge_points = 0  # Add this line
         self.level = 1
 
         # Add light halo properties
@@ -78,9 +76,7 @@ class Player(pygame.sprite.Sprite):
         self.light_gradient_steps = 5  # Number of gradient steps for smooth falloff
         self.update_light_mask()  # Now safe to call this
 
-        self.experience = 0
         self.level = 1
-        self.experience_to_next_level = 100  # Adjust this value as needed
         self.attack_power = 10  # Initial attack power
         self.max_health = 100  # Initial max health
         self.health = self.max_health
@@ -254,19 +250,9 @@ class Player(pygame.sprite.Sprite):
         pygame.draw.rect(surface, RED, (10, 10, 200, 20))
         pygame.draw.rect(surface, GREEN, (10, 10, 200 * health_ratio, 20))
 
-    def draw_exp_bar(self, surface):
-        """
-        Draw the player's experience bar on the given surface.
-        
-        Args:
-        surface (pygame.Surface): The surface to draw on.
-        """
-        exp_ratio = self.exp / (self.level * 100)  # Assuming 100 exp points per level
-        pygame.draw.rect(surface, WHITE, (10, 40, 200, 20))
-        pygame.draw.rect(surface, YELLOW, (10, 40, 200 * exp_ratio, 20))
 
     def draw_stats(self, screen):
-        """Draw player stats including health bar, exp bar, and ammo counter."""
+        """Draw player stats including health bar, and ammo counter."""
         # Constants for positioning and sizing
         BAR_WIDTH = 200
         BAR_HEIGHT = 20
@@ -297,28 +283,8 @@ class Player(pygame.sprite.Sprite):
         hp_rect = hp_text.get_rect(midleft=(LEFT_OFFSET + BAR_WIDTH + 5, health_y + BAR_HEIGHT//2))
         screen.blit(hp_text, hp_rect)
         
-        # Experience Bar
-        exp_y = health_y + BAR_HEIGHT + MARGIN
-        exp_outline = pygame.Rect(LEFT_OFFSET, exp_y, BAR_WIDTH, BAR_HEIGHT)
-        exp_percentage = min(1, self.experience / self.experience_to_next_level)
-        exp_fill = pygame.Rect(LEFT_OFFSET, exp_y, BAR_WIDTH * exp_percentage, BAR_HEIGHT)
-        
-        pygame.draw.rect(screen, (0, 0, 100), exp_outline)
-        pygame.draw.rect(screen, BLUE, exp_fill)
-        pygame.draw.rect(screen, WHITE, exp_outline, 2)
-        
-        exp_text = small_font.render(f"Level {self.level} - EXP: {self.experience}/{self.experience_to_next_level}", True, WHITE)
-        exp_text_rect = exp_text.get_rect(midleft=(LEFT_OFFSET + BAR_WIDTH + 5, exp_y + BAR_HEIGHT//2))
-        screen.blit(exp_text, exp_text_rect)
-        
-        # Knowledge Points with smaller text
-        kp_y = exp_y + BAR_HEIGHT + MARGIN
-        kp_text = small_font.render(f"KP: {self.knowledge_points}", True, WHITE)
-        kp_rect = kp_text.get_rect(topleft=(LEFT_OFFSET, kp_y))
-        screen.blit(kp_text, kp_rect)
-        
         # Ammo Display
-        ammo_y = kp_y + BAR_HEIGHT + MARGIN
+        ammo_y = BAR_HEIGHT + MARGIN
         mag_width = BAR_WIDTH
         mag_height = BAR_HEIGHT
         
@@ -358,18 +324,3 @@ class Player(pygame.sprite.Sprite):
         attack_text = small_font.render(f"ATK: {self.attack_power}", True, WHITE)
         attack_rect = attack_text.get_rect(topleft=(LEFT_OFFSET, attack_y))
         screen.blit(attack_text, attack_rect)
-        
-    def gain_experience(self, amount):
-        self.experience += amount
-        # Check if the player has enough experience to level up
-        while self.experience >= self.experience_to_next_level:
-            self.level_up()
-
-    def level_up(self):
-        self.level += 1
-        self.experience -= self.experience_to_next_level
-        self.experience_to_next_level = int(self.experience_to_next_level * 1.5)  # Increase exp needed for next level
-        self.attack_power += 1  # Increase attack power on level up
-        self.max_health += 10  # Increase max health on level up
-        self.health = self.max_health  # Restore health to full on level up
-        print(f"Level up! You are now level {self.level}")

@@ -189,7 +189,6 @@ class Game:
             self.screen.fill(BACKGROUND_COLOR)
             self.allsprites.draw(self.screen)
             self.player.draw_health_bar(self.screen)
-            self.player.draw_exp_bar(self.screen)
             self.player.draw_stats(self.screen)
             self.draw_timer()
             

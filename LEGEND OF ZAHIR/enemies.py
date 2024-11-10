@@ -219,8 +219,6 @@ class Enemy(pygame.sprite.Sprite):
         self.health -= amount
         if self.health <= 0:
             self.kill()
-            self.game.player.gain_experience(EXP_YIELD)
-            self.game.player.gain_knowledge_points(KP_YIELD)
 
     @classmethod
     def create_random(cls, game):
