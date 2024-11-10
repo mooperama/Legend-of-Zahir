@@ -777,6 +777,7 @@ class Game:
     # Update the draw method:
     def draw(self):
         """Draw game state with all elements including door and prompts."""
+    
         # Fill with background first
         if hasattr(self, 'background'):
             self.background.draw(self.screen)
@@ -785,6 +786,9 @@ class Game:
         
         # Draw all sprites
         self.allsprites.draw(self.screen)
+        
+        # Draw player spotlight
+        self.player.draw(self.screen)  # This should follow allsprites for spotlight to be applied correctly
         
         # Draw player UI elements
         self.player.draw_stats(self.screen)

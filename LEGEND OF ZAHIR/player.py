@@ -35,6 +35,11 @@ class Player(pygame.sprite.Sprite):
         self.animation_speed = 0.1  # Adjust this to control animation speed
         self.last_update = pygame.time.get_ticks()
 
+        self.light_radius = 150  # Increased radius for better visibility
+        self.light_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        self.light_gradient_steps = 5  # Number of gradient steps for smooth falloff
+        self.update_light_mask()
+
         # Create animation dictionaries
         self.animations = {
             'down': [self.game.character_spritesheet.get_sprite(3, 3, 15, 26),
@@ -68,9 +73,10 @@ class Player(pygame.sprite.Sprite):
         self.level = 1
 
         # Add light halo properties
-        self.light_radius = 10  # Radius of the light halo
+        self.light_radius = 150
         self.light_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        self.update_light_mask()
+        self.light_gradient_steps = 5  # Number of gradient steps for smooth falloff
+        self.update_light_mask()  # Now safe to call this
 
         self.experience = 0
         self.level = 1
@@ -84,6 +90,7 @@ class Player(pygame.sprite.Sprite):
         Update the player's state each frame.
         """
         self.movement()  # Handle player movement
+        self.update_light_mask()
         
         # Only animate if the player is moving
         if self.x_change != 0 or self.y_change != 0:
@@ -108,25 +115,30 @@ class Player(pygame.sprite.Sprite):
         self.update_light_mask()
 
     def update_light_mask(self):
-        """
-        Update the light mask surface based on the player's position.
-        """
-        self.light_surface.fill((0, 0, 0, 255))  # Fill with opaque black
-        pygame.draw.circle(self.light_surface, (0, 0, 0, 0), 
-                           (self.rect.centerx, self.rect.centery), self.light_radius)
-    
-    def draw(self, surface):
-        """
-        Draw the player and apply the light mask to the game surface.
+        """Create a super visible spotlight effect."""
+        if not hasattr(self, 'rect'):
+            return
+            
+        self.light_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
         
-        Args:
-        surface (pygame.Surface): The surface to draw on.
-        """
-        # Draw the player
-        surface.blit(self.image, self.rect)
+        # Darker area
+        self.light_surface.fill((0, 0, 0, 240))
+        
+        # Circle of visibility
+        pygame.draw.circle(
+            self.light_surface,
+            (0, 0, 0, 0),
+            (self.rect.centerx, self.rect.centery),
+            80
+        )
 
+    def draw(self, surface):
+        """Draw the player and apply the light mask."""
+        # Draw all sprites normally
+        surface.blit(self.image, self.rect)
+        
         # Apply the light mask
-        surface.blit(self.light_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
+        surface.blit(self.light_surface, (0, 0))
 
     def movement(self):
         """
