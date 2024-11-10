@@ -24,8 +24,8 @@ PLAYER_WIDTH, PLAYER_HEIGHT = 30, 48  # Modified to match main game sprite size
 BOSS_WIDTH, BOSS_HEIGHT = 170, 170
 
 # Load and transform boss sprite
-BOSS_SPRITE_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets/Boss Sprite.png'))
-BOSS_SPRITE = pygame.transform.rotate(pygame.transform.scale(BOSS_SPRITE_IMAGE, (BOSS_WIDTH, BOSS_HEIGHT)), 270)
+BOSS_SPRITE_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR/assets/graphics/sprites/boss 3_3 sprite.PNG'))
+BOSS_SPRITE = pygame.transform.rotate(pygame.transform.scale(BOSS_SPRITE_IMAGE, (BOSS_WIDTH, BOSS_HEIGHT)), 360)
 
 PLAYER_HEALTH_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets/Player health icon.png'))
 PLAYER_HEALTH = pygame.transform.scale(PLAYER_HEALTH_IMAGE, (50, 50))
