@@ -43,6 +43,7 @@ class MemoryGame:
         self.screen = screen
         self.clock = clock
         self.initialize_game()
+        self.light_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
 
     def initialize_game(self):
         """Initialize or reset the game state"""
@@ -112,6 +113,42 @@ class MemoryGame:
         self.sequence_index = 0
         self.flash_alpha = 255
 
+    #nye 
+    def update_light_mask(self):
+        """Create the spotlight effect around the player and candles"""
+        if not hasattr(self, 'player') or not hasattr(self.player, 'rect'):
+            return
+            
+        # Create the dark overlay
+        self.light_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        self.light_surface.fill((0, 0, 0, 250))
+
+        # Player's spotlight
+        pygame.draw.circle(
+            self.light_surface,
+            (0, 0, 0, 0),
+            self.player.rect.center,
+            50
+        )
+
+        # Candle spotlights with orange rings
+        for square in self.squares:
+            # Clear circle for each candle
+            pygame.draw.circle(
+                self.light_surface,
+                (0, 0, 0, 0),
+                square.center,
+                50
+            )
+            # Orange ring around each candle
+            pygame.draw.circle(
+                self.light_surface,
+                (255, 165, 0, 100),
+                square.center,
+                55,
+                5
+            )
+
     def draw(self):
         self.screen.fill(BLACK)
         
@@ -123,6 +160,11 @@ class MemoryGame:
             elif i < len(self.tile_images):
                 self.screen.blit(self.tile_images[i], square)
         
+        # Apply the light mask before drawing text
+        self.update_light_mask()
+        self.screen.blit(self.light_surface, (0, 0))
+        
+        # Text
         try:
             font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 36)
         except pygame.error:
