@@ -41,86 +41,248 @@ class DialogueSystem:
         self.current_line_index = 0
         self.current_sequence = []
         
-        # Story dialogue sequences remain the same
+        # Initialize dialogue sequences with your existing dialogue_sequences dictionary
         self.dialogue_sequences = {
-            'intro': [
-                "In a world where knowledge is power, an ancient being known as Uhand guards powerful orbs of wisdom.",
-                "You are Zahir, a scholar-warrior seeking these orbs not for power, but to preserve knowledge for future generations.",
-                "Enter Uhand's lair, where both combat skills and intellectual prowess will be tested..."
-            ],
-            'after_tutorial': [
-                "The shadows retreat as you master the basic arts of combat.",
-                "But greater challenges lie ahead...",
-                "The first trial awaits - the Chamber of Memory."
-            ],
-            'after_memory': [
-                "The ancient candles flicker with approval as you complete the Color Trial.",
-                "The first orb of knowledge pulses with a gentle blue light.",
-                "Its power flows into you, but three more still remain hidden in the darkness..."
-            ],
-            'after_timezone': [
-                "As the Timeline Challenge concludes, time itself seems to bend around you.",
-                "The second orb thrums with temporal energy.",
-                "Its golden light merges with the blue, strengthening your resolve..."
-            ],
-            'after_language': [
-                "The shadow creatures' whispers fade as you master their ancient tongue.",
-                "The third orb gleams with ethereal purple light.",
-                "Its wisdom joins with the others, but one final challenge remains..."
-            ],
-            'after_continent': [
-                "The world's geography yields its secrets to your understanding.",
-                "The fourth orb shimmers with emerald radiance.",
-                "With all four orbs in your possession, only Uhand stands between you and your destiny..."
-            ],
-            'before_boss': [
-                "The chamber trembles as Uhand emerges from the shadows.",
-                "'So, young seeker, you have gathered the orbs. But are you truly worthy of their power?'",
-                "Prepare yourself, Zahir. The final test begins..."
-            ],
-            'victory': [
-                "As Uhand falls, a profound realization washes over you.",
-                "The true knowledge was not in the orbs themselves, but in the journey to obtain them.",
-                "The dark lair transforms, becoming a beacon of learning for future generations.",
-                "You, Zahir, are now the guardian of wisdom, tasked with preserving these teachings for ages to come."
+    'intro': [
+        {
+            'text': "In an age where knowledge is condemned as dangerous, you stand before the entrance of Vitano's Sanctuary. Within these halls, the last remnants of ancient wisdom lie protected by their eternal guardian.",
+            'characters': [
+                {'name': 'VN1', 'position': 'CENTER'}
+            ]
+        },
+        {
+            'text': "You are Zahir, last apprentice of the hidden Scholar's Academy. Your quest is noble - to preserve knowledge not for power, but to reignite the light of learning in a darkened world.",
+            'characters': [
+                {'name': 'VN2', 'position': 'CENTER'},
+            ]
+        },
+        {
+            'text': "The great doors of the sanctuary creak open. Vitano's presence fills the air with electric anticipation. Your trials await, young seeker...",
+            'characters': [
+                {'name': 'VN3', 'position': 'RIGHT'},
             ]
         }
+    ],
 
+    'after_tutorial': [
+        {
+            'text': "The ancient training grounds hum with approval as you demonstrate your basic combat forms. These halls remember countless seekers before you.",
+            'characters': [
+                {'name': 'VN4', 'position': 'CENTER'}
+            ]
+        },
+        {
+            'text': "But physical prowess alone will not unlock the secrets of Vitano's trials. Mind and body must work as one.",
+            'characters': [
+                {'name': 'VN5r', 'position': 'RIGHT'},
+            ]
+        },
+        {
+            'text': "Before you stands the Chamber of Memory, where patterns of color dance in eternal sequence. The first Orb pulses gently within, waiting for one who understands its rhythm.",
+            'characters': [
+                {'name': 'BlueCharacter', 'position': 'OFF_SCREEN'},
+                {'name': 'Boss1', 'position': 'CENTER'}
+            ]
+        }
+    ],
+
+    'after_memory': [
+        {
+            'text': "The Chamber of Memory recognizes your mastery of patterns. The ancient runes glow with approval as the first trial concludes.",
+            'characters': [
+                {'name': 'BlueCharacter', 'position': 'RIGHT'},
+                {'name': 'PinkCharacter', 'position': 'LEFT'}
+            ]
+        },
+        {
+            'text': "The Orb of Sequential Thought resonates with blue light, its knowledge flowing into you. You begin to understand how patterns shape our understanding of the world.",
+            'characters': [
+                {'name': 'BlueCharacterHappy', 'position': 'CENTER'},
+                {'name': 'PinkCharacter', 'position': 'OFF_SCREEN'}
+            ]
+        },
+        {
+            'text': "But this is just the beginning. Three more Orbs await, each holding fundamental truths about our world that must be preserved.",
+            'characters': [
+                {'name': 'BlueCharacter', 'position': 'CENTER'}
+            ]
+        }
+    ],
+
+    'after_timezone': [
+        {
+            'text': "Within the Temporal Sanctum, you have proven your understanding of how time flows differently across our world. The sundials and celestial maps around you glow with approval.",
+            'characters': [
+                {'name': 'TimeMan', 'position': 'LEFT'},
+                {'name': 'BlueCharacter', 'position': 'RIGHT'}
+            ]
+        },
+        {
+            'text': "The Orb of Temporal Wisdom pulses with golden light, sharing its knowledge of time's eternal dance across the globe.",
+            'characters': [
+                {'name': 'TimeMan', 'position': 'OFF_SCREEN'},
+                {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
+            ]
+        },
+        {
+            'text': "As this knowledge merges with your consciousness, you begin to grasp how time connects all peoples across vast distances.",
+            'characters': [
+                {'name': 'BlueCharacter', 'position': 'CENTER'}
+            ]
+        }
+    ],
+
+    'after_language': [
+        {
+            'text': "The Linguistics Chamber echoes with the whispers of a thousand tongues. Your mastery of these ancient forms of communication has awakened something deep within its walls.",
+            'characters': [
+                {'name': 'LanguageMan', 'position': 'LEFT'},
+                {'name': 'BlueCharacter', 'position': 'RIGHT'}
+            ]
+        },
+        {
+            'text': "The Orb of Universal Speech bathes the chamber in ethereal purple light. Its power allows you to understand how language bridges the gaps between cultures and minds.",
+            'characters': [
+                {'name': 'LanguageMan', 'position': 'OFF_SCREEN'},
+                {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
+            ]
+        },
+        {
+            'text': "With each orb's power, you feel your consciousness expanding. But the final trial still awaits - the test of earthly knowledge itself.",
+            'characters': [
+                {'name': 'BlueCharacter', 'position': 'CENTER'}
+            ]
+        }
+    ],
+
+    'after_continent': [
+        {
+            'text': "The Geographic Nexus responds to your understanding of our world's physical form. Ancient maps spring to life around you, their boundaries glowing with validated truth.",
+            'characters': [
+                {'name': 'PinkCharacter', 'position': 'LEFT'},
+                {'name': 'BlueCharacter', 'position': 'RIGHT'}
+            ]
+        },
+        {
+            'text': "The Orb of Terrestrial Knowledge radiates emerald light, completing the quartet of fundamental wisdom. Its power shows you how the physical world shapes the destiny of all who dwell within it.",
+            'characters': [
+                {'name': 'PinkCharacter', 'position': 'OFF_SCREEN'},
+                {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
+            ]
+        },
+        {
+            'text': "With all four Orbs resonating in harmony, Vitano himself stirs. The true test approaches - will you prove worthy of becoming a new Keeper of Wisdom?",
+            'characters': [
+                {'name': 'BlueCharacter', 'position': 'RIGHT'},
+                {'name': 'Boss1', 'position': 'LEFT'}
+            ]
+        }
+    ],
+
+    'before_boss': [
+        {
+            'text': "The central chamber trembles as Vitano materializes, his form shifting between scholar and guardian, between wisdom and power.",
+            'characters': [
+                {'name': 'Boss1', 'position': 'LEFT'},
+                {'name': 'BlueCharacter', 'position': 'RIGHT'}
+            ]
+        },
+        {
+            'text': "'You have gathered the four fundamental truths, young seeker. But knowledge without wisdom is like a sword without a wielder - dangerous and unpredictable.'",
+            'characters': [
+                {'name': 'Boss2', 'position': 'LEFT'},
+                {'name': 'BlueCharacter', 'position': 'RIGHT'}
+            ]
+        },
+        {
+            'text': "'Show me that you understand not just the knowledge contained within the Orbs, but the responsibility that comes with it. Let the final trial begin!'",
+            'characters': [
+                {'name': 'Boss3', 'position': 'LEFT'},
+                {'name': 'BlueCharacter', 'position': 'RIGHT'}
+            ]
+        }
+    ],
+
+    'victory': [
+        {
+            'text': "As Vitano's form dissolves into pure light, a profound truth washes over you. The trials were never about proving your worth to him.",
+            'characters': [
+                {'name': 'Boss1', 'position': 'OFF_SCREEN'},
+                {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
+            ]
+        },
+        {
+            'text': "'You have shown wisdom beyond mere knowledge,' Vitano's voice echoes. 'The Orbs were never meant to be hidden forever, but to be rediscovered when the world was ready.'",
+            'characters': [
+                {'name': 'BlueCharacterHappy', 'position': 'CENTER'},
+                {'name': 'PinkCharacterHappy', 'position': 'LEFT'},
+                {'name': 'LanguageMan', 'position': 'RIGHT'}
+            ]
+        },
+        {
+            'text': "The sanctuary transforms, darkness giving way to light. What was once a hidden vault of knowledge shall become a beacon of learning.",
+            'characters': [
+                {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
+            ]
+        },
+        {
+            'text': "You, Zahir, are no longer just a seeker of knowledge. You have become its guardian and teacher, tasked with sharing these fundamental truths with a world too long kept in darkness.",
+            'characters': [
+                {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
+            ]
+        }
+    ]
+}
         # Test the text wrapping with the longest dialogue line
-        longest_line = max([line for sequence in self.dialogue_sequences.values() for line in sequence], 
-                          key=len)
-        test_wrap = self.wrap_text(longest_line)
+        longest_text = max([dialogue['text'] for sequence in self.dialogue_sequences.values() 
+                          for dialogue in sequence], key=len)
+        
+        test_wrap = self.wrap_text(longest_text)
         if len(test_wrap) > 3:
-            self.max_chars_per_line = len(longest_line) // 2
+            self.max_chars_per_line = len(longest_text) // 2
 
     def wrap_text(self, text: str) -> List[str]:
-        """Wrap text to fit within the dialogue box with improved word wrapping."""
+        """
+        Wrap text to fit within the dialogue box with improved word wrapping.
+        
+        Args:
+            text: The text to wrap
+            
+        Returns:
+            List of wrapped text lines
+        """
         words = text.split()
         lines = []
         current_line = []
-        current_length = 0
-
+        current_width = 0
+        space_width = self.font.size(' ')[0]
+        
         for word in words:
-            word_length = len(word)
-            # Account for space between words
-            space_length = 1 if current_line else 0
+            word_surface = self.font.render(word, True, (255, 255, 255))
+            word_width = word_surface.get_width()
             
-            if current_length + word_length + space_length <= self.max_chars_per_line:
-                current_line.append(word)
-                current_length += word_length + space_length
-            else:
-                if current_line:  # Only append if there are words in the current line
+            # If adding this word exceeds the box width
+            if current_width + word_width + (space_width if current_line else 0) > self.box_width - (2 * self.padding):
+                if current_line:  # If there are words in the current line
                     lines.append(' '.join(current_line))
-                current_line = [word]
-                current_length = word_length
-
-        if current_line:  # Don't forget to append the last line
+                    current_line = [word]
+                    current_width = word_width
+                else:  # If the word itself is longer than the line
+                    lines.append(word)
+                    current_line = []
+                    current_width = 0
+            else:
+                current_line.append(word)
+                current_width += word_width + (space_width if current_line else 0)
+        
+        # Add the last line if there's anything left
+        if current_line:
             lines.append(' '.join(current_line))
-            
+        
         return lines
 
     def draw(self):
-        """Draw the dialogue scene with improved text positioning."""
+        """Draw the dialogue scene with improved text positioning and wrapping."""
         if not self.dialogue_active:
             return
 
@@ -131,95 +293,81 @@ class DialogueSystem:
         self.visual_assets.update()
         self.visual_assets.draw()
 
-        # Calculate dialogue box position (moved up slightly)
+        # Calculate dialogue box position
         box_rect = self.dialogue_box.get_rect(center=(self.screen.get_width() // 2, 
-                                                     self.screen.get_height() - 120))
+                                                    self.screen.get_height() - 120))
 
         # Draw semi-transparent dialogue box
         self.dialogue_box.fill((20, 20, 20))
         self.screen.blit(self.dialogue_box, box_rect)
         pygame.draw.rect(self.screen, self.border_color, box_rect, self.border_width)
 
-        # Draw text with improved positioning
-        current_wrapped = []
+        # Get the current text to display
         current_text = self.target_text[:int(self.text_counter)]
+        
         if current_text:
-            current_wrapped = self.wrap_text(current_text)
+            # Wrap the current text
+            wrapped_lines = self.wrap_text(current_text)
+            
+            # Calculate starting Y position to center text vertically
+            total_text_height = len(wrapped_lines) * self.line_spacing
+            start_y = box_rect.top + (self.box_height - total_text_height) // 2
+            
+            # Draw each line
+            for i, line in enumerate(wrapped_lines):
+                text_surface = self.font.render(line, True, (255, 255, 255))
+                text_rect = text_surface.get_rect()
+                text_rect.x = box_rect.left + self.padding
+                text_rect.y = start_y + (i * self.line_spacing)
+                self.screen.blit(text_surface, text_rect)
 
-        # Calculate starting Y position to center text vertically in the box
-        total_text_height = len(current_wrapped) * self.line_spacing
-        start_y = box_rect.top + (self.box_height - total_text_height) // 2
-
-        # Draw each line of text
-        for i, line in enumerate(current_wrapped):
-            text_surface = self.font.render(line, True, (255, 255, 255))
-            text_rect = text_surface.get_rect()
-            text_rect.x = box_rect.left + self.padding
-            text_rect.y = start_y + (i * self.line_spacing)
-            self.screen.blit(text_surface, text_rect)
-
-        # Draw continue prompt in bottom right corner with proper padding
+        # Draw continue prompt when text is fully displayed
         if self.text_counter >= len(self.target_text):
             prompt = self.font.render("Press SPACE to continue...", True, (200, 200, 200))
             prompt_rect = prompt.get_rect(bottomright=(box_rect.right - self.padding,
-                                                     box_rect.bottom - self.padding))
+                                                    box_rect.bottom - self.padding))
             self.screen.blit(prompt, prompt_rect)
 
     def update_text(self):
-        """Update the currently displaying text."""
+        """Update the current text based on dialogue speed."""
         if self.text_counter < len(self.target_text):
             self.text_counter += self.dialogue_speed
             self.current_text = self.target_text[:int(self.text_counter)]
 
-    def setup_scene(self, sequence_key: str):
-        """Setup the visual novel scene for a dialogue sequence."""
-        # Set background based on sequence
-        background_mapping = {
-            'intro': 'intro',
-            'after_tutorial': 'dungeon',
-            'after_memory': 'trial',
-            'after_timezone': 'trial',
-            'after_language': 'trial',
-            'after_continent': 'trial',
-            'before_boss': 'boss_room',
-            'victory': 'victory'
-        }
-        
-        # Set the background
-        background = background_mapping.get(sequence_key, 'dungeon')
-        self.visual_assets.set_background(background)
-        
-        # Clear all characters first by moving them off screen
-        for char_name in self.visual_assets.characters:
-            self.visual_assets.move_character(char_name, CharacterPosition.OFF_SCREEN)
-        
-        # Setup characters based on sequence
-        if sequence_key == 'intro':
-            self.visual_assets.move_character('VN1', CharacterPosition.CENTER)
-        
-        elif sequence_key == 'after_tutorial':
-            self.visual_assets.move_character('BlueCharacter', CharacterPosition.CENTER)
-        
-        elif sequence_key == 'after_memory':
-            self.visual_assets.move_character('PinkCharacter', CharacterPosition.LEFT)
-            self.visual_assets.move_character('BlueCharacter', CharacterPosition.RIGHT)
-        
-        elif sequence_key == 'before_boss':
-            self.visual_assets.move_character('Boss1', CharacterPosition.LEFT)
-            self.visual_assets.move_character('BlueCharacter', CharacterPosition.RIGHT)
-        
-        elif sequence_key == 'victory':
-            self.visual_assets.move_character('BlueCharacterHappy', CharacterPosition.CENTER)
-
+    def setup_scene(self, sequence_key: str, line_index: int):
+        """Set up the visual novel scene for the current dialogue line."""
+        if sequence_key in self.dialogue_sequences:
+            current_line = self.dialogue_sequences[sequence_key][line_index]
+            characters = current_line.get('characters', [])
+            
+            # Move all existing characters off screen first
+            for char_name in self.visual_assets.characters:
+                self.visual_assets.move_character(char_name, CharacterPosition.OFF_SCREEN)
+            
+            # Position the new characters
+            for char_data in characters:
+                character_name = char_data.get('name', '')
+                position = char_data.get('position', 'CENTER')
+                
+                # Convert position string to CharacterPosition enum
+                try:
+                    pos = CharacterPosition[position]
+                    self.visual_assets.move_character(character_name, pos)
+                except KeyError:
+                    print(f"Warning: Invalid position {position} for character {character_name}")
+                    self.visual_assets.move_character(character_name, CharacterPosition.CENTER)
+                
     def start_dialogue(self, sequence_key: str):
         """Start a specific dialogue sequence."""
         if sequence_key in self.dialogue_sequences:
-            # Setup the scene first
-            self.setup_scene(sequence_key)
-            
             self.current_sequence = self.dialogue_sequences[sequence_key]
             self.current_line_index = 0
-            self.target_text = self.current_sequence[0]
+            
+            # Setup the scene for the first line
+            self.setup_scene(sequence_key, self.current_line_index)
+            
+            # Set the text for the first line
+            self.target_text = self.current_sequence[self.current_line_index]['text']
             self.wrapped_lines = self.wrap_text(self.target_text)
             self.current_text = ""
             self.text_counter = 0
@@ -241,13 +389,16 @@ class DialogueSystem:
                     return False
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                     if self.text_counter < len(self.target_text):
+                        # Complete current text immediately
                         self.text_counter = len(self.target_text)
                     else:
+                        # Move to next line
                         self.current_line_index += 1
                         if self.current_line_index < len(self.current_sequence):
-                            self.target_text = self.current_sequence[self.current_line_index]
-                            self.wrapped_lines = self.wrap_text(self.target_text)
-                            self.current_text = ""
+                            # Setup scene for the next line
+                            self.setup_scene(sequence_key, self.current_line_index)
+                            # Set the text for the next line
+                            self.target_text = self.current_sequence[self.current_line_index]['text']
                             self.text_counter = 0
                         else:
                             self.dialogue_active = False
