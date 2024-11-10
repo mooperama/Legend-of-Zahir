@@ -6,6 +6,8 @@ from soundmanager import *
 WIDTH = 960
 HEIGHT = 540
 FPS = 60
+PLAYER_HEALTH_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets/Player health icon.png'))
+PLAYER_HEALTH = pygame.transform.scale(PLAYER_HEALTH_IMAGE, (50, 55))
 
 # Updated colors to match dark theme
 WHITE = (200, 190, 220)  # Lighter purple/white
@@ -158,35 +160,37 @@ class TimezoneGame:
             return "Hint: Time is the same in both zones"
 
     def draw_question_screen(self):
-        # Draw lives and correct answers
-        lives_text = f"Lives: {'<3' * self.lives}"
-        lives_surface = self.regular_font.render(lives_text, True, RED)
-        self.screen.blit(lives_surface, (20, 20))
+        # Draw lives using heart images
+        for i in range(self.lives):
+            self.screen.blit(PLAYER_HEALTH, (15 + i * 45, 10))  # Position hearts with spacing
 
+        # Draw correct answers text
         correct_text = f"Correct Answers: {self.correct_answers}/3"
         correct_surface = self.regular_font.render(correct_text, True, GREEN)
-        self.screen.blit(correct_surface, (20, 50))
+        self.screen.blit(correct_surface, (20, 60))
 
         # Draw question
         question_text = f"Convert time from {self.source_tz_name} to {self.target_tz_name}"
         text_surface = self.medium_font.render(question_text, True, WHITE)
-        text_rect = text_surface.get_rect(center=(WIDTH//2, HEIGHT//6))
+        text_rect = text_surface.get_rect(center=(WIDTH // 2, HEIGHT // 6))
         self.screen.blit(text_surface, text_rect)
 
         # Draw time
         time_text = f"{self.source_hour:02d}:{self.source_minute:02d}"
         time_surface = self.large_font.render(time_text, True, WHITE)
-        time_rect = time_surface.get_rect(center=(WIDTH//2, HEIGHT//3))
+        time_rect = time_surface.get_rect(center=(WIDTH // 2, HEIGHT // 3))
         self.screen.blit(time_surface, time_rect)
 
         # Draw calculation hint
         hint_text = self.get_calculation_hint()
         hint_surface = self.regular_font.render(hint_text, True, BLUE)
-        hint_rect = hint_surface.get_rect(center=(WIDTH//2, HEIGHT//3 + 30))
+        hint_rect = hint_surface.get_rect(center=(WIDTH // 2, HEIGHT // 3 + 30))
         self.screen.blit(hint_surface, hint_rect)
 
+        # Draw answer buttons
         for button in self.buttons:
             button.draw(self.screen, self.regular_font)
+
 
     def draw_result_screen(self):
         result_text = "Correct!" if self.selected_answer == self.correct_answer else "Wrong!"
