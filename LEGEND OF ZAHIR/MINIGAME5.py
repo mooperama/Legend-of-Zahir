@@ -2,6 +2,7 @@ import pygame
 import os
 import random
 import string
+from sprites import Spritesheet
 
 # Initialize Pygame
 pygame.init()
@@ -16,15 +17,13 @@ VEL = 7
 BOSS_BULLET_VEL = 10
 BULLET_VEL = 12
 MAG = 3  # Bullets allowed at a time
+BULLETSIZE = 32  # Added for bullet size consistency
 
 # Sprite Dimensions
-PLAYER_WIDTH, PLAYER_HEIGHT = 100, 100
+PLAYER_WIDTH, PLAYER_HEIGHT = 30, 48  # Modified to match main game sprite size
 BOSS_WIDTH, BOSS_HEIGHT = 170, 170
 
-# Load and transform sprites
-PLAYER_SPRITE_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets', 'Player Sprite.png'))
-PLAYER_SPRITE = pygame.transform.rotate(pygame.transform.scale(PLAYER_SPRITE_IMAGE, (PLAYER_WIDTH, PLAYER_HEIGHT)), 90)
-
+# Load and transform boss sprite
 BOSS_SPRITE_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets/Boss Sprite.png'))
 BOSS_SPRITE = pygame.transform.rotate(pygame.transform.scale(BOSS_SPRITE_IMAGE, (BOSS_WIDTH, BOSS_HEIGHT)), 270)
 
@@ -54,15 +53,78 @@ FONT = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 30)
 POPUP_DURATION = 8000  # 8 seconds
 SHOOTING_PHASE_DURATION = 10000  # 10 seconds
 
+# Player Animation Setup
+class Player(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.character_spritesheet = Spritesheet('LEGEND OF ZAHIR/main character strip.png')
+        
+        # Create animation dictionaries
+        self.animations = {
+            'down': [self.character_spritesheet.get_sprite(3, 3, 15, 26),
+                    self.character_spritesheet.get_sprite(24, 3, 15, 26)],
+            'up': [self.character_spritesheet.get_sprite(87, 3, 15, 26),
+                  self.character_spritesheet.get_sprite(108, 3, 15, 26)],
+            'left': [self.character_spritesheet.get_sprite(131, 3, 11, 29),
+                    self.character_spritesheet.get_sprite(151, 3, 11, 30)],
+            'right': [self.character_spritesheet.get_sprite(46, 3, 11, 29),
+                     self.character_spritesheet.get_sprite(68, 3, 11, 30)]
+        }
+        
+        # Scale all animation frames
+        for direction in self.animations:
+            self.animations[direction] = [pygame.transform.scale(img, (PLAYER_WIDTH, PLAYER_HEIGHT)) 
+                                       for img in self.animations[direction]]
+        
+        self.facing = 'right'
+        self.animation_loop = 0
+        self.animation_speed = 0.1
+        self.last_update = pygame.time.get_ticks()
+        
+        self.image = self.animations[self.facing][0]
+        self.rect = pygame.Rect(x, y, PLAYER_WIDTH, PLAYER_HEIGHT)
+
+    def animate(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.animation_speed * 1000:
+            self.last_update = now
+            self.animation_loop = (self.animation_loop + 1) % len(self.animations[self.facing])
+            self.image = self.animations[self.facing][self.animation_loop]
+
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, x, y, direction):
+        super().__init__()
+        try:
+            self.original_image = pygame.image.load('LEGEND OF ZAHIR/fireball.png').convert_alpha()
+            self.original_image = pygame.transform.scale(self.original_image, (BULLETSIZE, BULLETSIZE))
+        except pygame.error:
+            self.original_image = pygame.Surface((BULLETSIZE, BULLETSIZE))
+            self.original_image.fill((255, 165, 0))
+            
+        self.image = self.original_image
+        self.rect = self.image.get_rect(center=(x, y))
+        self.direction = direction
+        self.speed = BULLET_VEL
+        
+        # Add sound effect
+        try:
+            self.shoot_sound = pygame.mixer.Sound('LEGEND OF ZAHIR/assets/sounds/sfx/fireball.mp3')
+            self.shoot_sound.play()
+        except:
+            print("Could not load bullet sound")
+
+    def update(self):
+        self.rect.x += self.direction[0] * self.speed
+        self.rect.y += self.direction[1] * self.speed
+        
+        # Rotate bullet to face direction
+        angle = pygame.math.Vector2(self.direction).angle_to((1, 0))
+        self.image = pygame.transform.rotate(self.original_image, angle)
+        self.rect = self.image.get_rect(center=self.rect.center)
+
 def create_text_input(shuffled_word):
     """
     Create a text input popup surface for the word unscrambling game.
-    
-    Args:
-        shuffled_word (str): The scrambled word to display
-        
-    Returns:
-        pygame.Surface: The rendered popup surface
     """
     popup = pygame.Surface((600, 200))
     popup.fill(WHITE)
@@ -81,29 +143,14 @@ def create_text_input(shuffled_word):
 
 def draw_window(player, boss, playerBullets, bossBullets, player_hp, boss_hp, 
                 shuffled_word, player_input, popup=None, game_over=False, win=False):
-    """
-    Draw the game window with all elements.
-    
-    Args:
-        player (pygame.Rect): Player rectangle
-        boss (pygame.Rect): Boss rectangle
-        playerBullets (list): List of player bullet rectangles
-        bossBullets (list): List of boss bullet tuples (rect, dx, dy)
-        player_hp (int): Player health
-        boss_hp (int): Boss health
-        shuffled_word (str): Current scrambled word
-        player_input (str): Current player input
-        popup (pygame.Surface, optional): Popup surface. Defaults to None.
-        game_over (bool, optional): Whether game is over. Defaults to False.
-        win (bool, optional): Whether player won. Defaults to False.
-    """
+    """Draw the game window with all elements."""
     WIN.blit(BACKGROUND, (0, 0))
-    WIN.blit(PLAYER_SPRITE, (player.x, player.y))
+    WIN.blit(player.image, player.rect)
     WIN.blit(BOSS_SPRITE, (boss.x, boss.y))
 
     # Draw bullets
     for bullet in playerBullets:
-        pygame.draw.rect(WIN, RED, bullet)
+        WIN.blit(bullet.image, bullet.rect)
     for bullet, dx, dy in bossBullets:
         pygame.draw.rect(WIN, YELLOW, bullet)
 
@@ -129,29 +176,32 @@ def draw_window(player, boss, playerBullets, bossBullets, player_hp, boss_hp,
     pygame.display.update()
 
 def player_movement(keys_pressed, player):
-    """
-    Handle player movement based on keyboard input.
-    
-    Args:
-        keys_pressed (pygame.key.ScancodeWrapper): Current keyboard state
-        player (pygame.Rect): Player rectangle
-    """
-    if keys_pressed[pygame.K_a] and player.x - VEL > WALL.x:  # left
-        player.x -= VEL
-    if keys_pressed[pygame.K_d] and player.x + VEL + player.width < WIDTH:  # right
-        player.x += VEL
-    if keys_pressed[pygame.K_w] and player.y - VEL > 0:  # up
-        player.y -= VEL
-    if keys_pressed[pygame.K_s] and player.y + VEL + player.height < HEIGHT:  # down
-        player.y += VEL
+    """Handle player movement and animation."""
+    moved = False
+    if keys_pressed[pygame.K_a] and player.rect.x - VEL > WALL.x:  # left
+        player.rect.x -= VEL
+        player.facing = 'left'
+        moved = True
+    if keys_pressed[pygame.K_d] and player.rect.x + VEL + player.rect.width < WIDTH:  # right
+        player.rect.x += VEL
+        player.facing = 'right'
+        moved = True
+    if keys_pressed[pygame.K_w] and player.rect.y - VEL > 0:  # up
+        player.rect.y -= VEL
+        player.facing = 'up'
+        moved = True
+    if keys_pressed[pygame.K_s] and player.rect.y + VEL + player.rect.height < HEIGHT:  # down
+        player.rect.y += VEL
+        player.facing = 'down'
+        moved = True
+        
+    if moved:
+        player.animate()
+    else:
+        player.image = player.animations[player.facing][0]
 
 def boss_movement(boss):
-    """
-    Handle random boss movement.
-    
-    Args:
-        boss (pygame.Rect): Boss rectangle
-    """
+    """Handle random boss movement."""
     direction = random.choice(['up', 'down', 'left', 'right'])
     if direction == 'up' and boss.y > 0:
         boss.y -= BOSS_VEL
@@ -163,30 +213,24 @@ def boss_movement(boss):
         boss.x += BOSS_VEL
 
 def shooting(playerBullets, player, boss):
-    """
-    Handle player bullet movement and collision.
-    
-    Args:
-        playerBullets (list): List of player bullet rectangles
-        player (pygame.Rect): Player rectangle
-        boss (pygame.Rect): Boss rectangle
-    """
+    """Handle player bullet movement and collision."""
     for bullet in playerBullets[:]:
-        bullet.x -= BULLET_VEL
-        if boss.colliderect(bullet):
-            pygame.event.post(pygame.event.Event(BOSS_HIT))
+        bullet.update()
+        
+        # Check if bullet is out of bounds
+        if bullet.rect.right < 0 or bullet.rect.left > WIDTH or \
+           bullet.rect.bottom < 0 or bullet.rect.top > HEIGHT:
             playerBullets.remove(bullet)
-        elif bullet.x < 0:
+            continue
+            
+        # Check for collision with boss
+        boss_rect = pygame.Rect(boss.x, boss.y, BOSS_WIDTH, BOSS_HEIGHT)
+        if boss_rect.colliderect(bullet.rect):
+            pygame.event.post(pygame.event.Event(BOSS_HIT))
             playerBullets.remove(bullet)
 
 def boss_shooting(bossBullets, boss):
-    """
-    Create boss bullets in a circular pattern.
-    
-    Args:
-        bossBullets (list): List of boss bullet tuples (rect, dx, dy)
-        boss (pygame.Rect): Boss rectangle
-    """
+    """Create boss bullets in a circular pattern."""
     if random.randint(1, 90) == 1:
         for angle in range(0, 360, 45):
             dx = BOSS_BULLET_VEL * pygame.math.Vector2(1, 0).rotate(angle).x
@@ -195,29 +239,18 @@ def boss_shooting(bossBullets, boss):
             bossBullets.append((bullet, dx, dy))
 
 def update_boss_shooting(bossBullets, player):
-    """
-    Update boss bullet positions and handle collisions.
-    
-    Args:
-        bossBullets (list): List of boss bullet tuples (rect, dx, dy)
-        player (pygame.Rect): Player rectangle
-    """
+    """Update boss bullet positions and handle collisions."""
     for bullet, dx, dy in bossBullets[:]:
         bullet.x += dx
         bullet.y += dy
-        if player.colliderect(bullet):
+        if player.rect.colliderect(bullet):
             pygame.event.post(pygame.event.Event(PLAYER_HIT))
             bossBullets.remove((bullet, dx, dy))
         elif not bullet.colliderect(pygame.Rect(0, 0, WIDTH, HEIGHT)):
             bossBullets.remove((bullet, dx, dy))
 
 def generate_word():
-    """
-    Generate a random Southeast Asian country name and its scrambled version.
-    
-    Returns:
-        tuple: (original word, scrambled word)
-    """
+    """Generate a random Southeast Asian country name and its scrambled version."""
     wordList = ['PHILIPPINES', 'LAOS', 'SINGAPORE', 'THAILAND', 'VIETNAM', 
                 'CAMBODIA', 'TIMOR LESTE', 'MYANMAR', 'BRUNEI', 'MALAYSIA', 'INDONESIA']
     word = random.choice(wordList)
@@ -225,15 +258,10 @@ def generate_word():
     return word, shuffled
 
 def main():
-    """
-    Main game loop for the boss battle.
-    
-    Returns:
-        str: Game outcome - "completed" for victory, "died" for defeat, "quit" for exit
-    """
+    """Main game loop for the boss battle."""
     # Initialize game objects
     boss = pygame.Rect(100, 300, BOSS_WIDTH, BOSS_HEIGHT)
-    player = pygame.Rect(700, 300, PLAYER_WIDTH, PLAYER_HEIGHT)
+    player = Player(700, 300)
 
     # Initialize game state
     playerBullets = []
@@ -263,7 +291,6 @@ def main():
             if event.type == pygame.QUIT:
                 return "quit"
 
-            # Handle word puzzle input
             if popup_active:
                 if event.type == pygame.KEYDOWN:
                     if event.unicode.isalpha():
@@ -283,15 +310,19 @@ def main():
                         player_input = ""
                         popup_active = False
 
-            # Handle shooting
             elif can_shoot and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and bullets_fired < MAG:
-                bullet = pygame.Rect(player.x - player.width, player.y + player.height // 2 - 2, 40, 15)
-                playerBullets.append(bullet)
-                bullets_fired += 1
-                if bullets_fired == MAG:
-                    can_shoot = False
+                # Calculate direction vector
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                start_pos = (player.rect.centerx, player.rect.centery)
+                direction = pygame.math.Vector2(mouse_x - start_pos[0], mouse_y - start_pos[1])
+                if direction.length() > 0:
+                    direction = direction.normalize()
+                    bullet = Bullet(start_pos[0], start_pos[1], (direction.x, direction.y))
+                    playerBullets.append(bullet)
+                    bullets_fired += 1
+                    if bullets_fired == MAG:
+                        can_shoot = False
 
-            # Handle hits
             if event.type == BOSS_HIT:
                 boss_hp -= 10
             if event.type == PLAYER_HIT:
@@ -302,7 +333,6 @@ def main():
             draw_window(player, boss, playerBullets, bossBullets, player_hp, boss_hp, 
                        shuffled_word, player_input, game_over=True, win=boss_hp <= 0)
             pygame.time.delay(3000)  # Show end screen for 3 seconds
-            # Return game outcome instead of quitting
             return "completed" if boss_hp <= 0 else "died"
 
         # Update game state when popup is not active
