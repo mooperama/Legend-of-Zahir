@@ -104,7 +104,7 @@ class TimezoneGame:
     def create_continue_button(self):
         self.continue_button = Button(
             (WIDTH - 160) // 2,
-            HEIGHT - 100,
+            HEIGHT - 350,
             160,
             45,
             "Continue"
