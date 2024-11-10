@@ -14,7 +14,7 @@ pygame.display.set_caption("BOSS BATTLE!!")
 FPS = 60
 BOSS_VEL = random.randint(7, 10)
 VEL = 7
-BOSS_BULLET_VEL = 10
+BOSS_BULLET_VEL = 8
 BULLET_VEL = 12
 MAG = 3  # Bullets allowed at a time
 BULLETSIZE = 32  # Added for bullet size consistency
