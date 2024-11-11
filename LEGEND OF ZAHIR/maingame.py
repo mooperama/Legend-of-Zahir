@@ -82,8 +82,7 @@ class Game:
         
         self.paused = False
         self.keys_pressed = set()
-        self.ammo_system = AmmoSystem() #bullet limits
-        
+        self.ammo_system = AmmoSystem() #bullet limits 
         # Initialize leaderboard
         self.leaderboard_system = LeaderboardSystem()
         
