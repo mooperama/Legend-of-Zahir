@@ -118,7 +118,7 @@ class DialogueSystem:
         {
             'text': "Within the Temporal Sanctum, you have proven your understanding of how time flows differently across our world. The sundials and celestial maps around you glow with approval.",
             'characters': [
-                {'name': 'VN1', 'position': 'CENTER'}
+                {'name': 'temp1', 'position': 'CENTER'}
             ]
         },
         {
@@ -139,19 +139,19 @@ class DialogueSystem:
         {
             'text': "The Linguistics Chamber echoes with the whispers of a thousand tongues. Your mastery of these ancient forms of communication has awakened something deep within its walls.",
             'characters': [
-                {'name': 'LanguageMan', 'position': 'LEFT'}
+                {'name': 'VN1', 'position': 'CENTER'}
             ]
         },
         {
             'text': "The Orb of Universal Speech bathes the chamber in ethereal purple light. Its power allows you to understand how language bridges the gaps between cultures and minds.",
             'characters': [
-                {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
+                {'name': 'VN8', 'position': 'CENTER'}
             ]
         },
         {
             'text': "With each orb's power, you feel your consciousness expanding. But the final trial still awaits - the test of earthly knowledge itself.",
             'characters': [
-                {'name': 'BlueCharacter', 'position': 'CENTER'}
+                {'name': 'VN14', 'position': 'CENTER'}
             ]
         }
     ],
@@ -160,19 +160,19 @@ class DialogueSystem:
         {
             'text': "The Geographic Nexus responds to your understanding of our world's physical form. Ancient maps spring to life around you, their boundaries glowing with validated truth.",
             'characters': [
-                {'name': 'PinkCharacter', 'position': 'LEFT'}
+                {'name': 'map', 'position': 'CENTER'}
             ]
         },
         {
             'text': "The Orb of Terrestrial Knowledge radiates emerald light, completing the quartet of fundamental wisdom. Its power shows you how the physical world shapes the destiny of all who dwell within it.",
             'characters': [
-                {'name': 'PinkCharacter', 'position': 'OFF_SCREEN'}
+                {'name': 'VN9', 'position': 'CENTER'}
             ]
         },
         {
             'text': "With all four Orbs resonating in harmony, Vitano himself stirs. The true test approaches - will you prove worthy of becoming a new Keeper of Wisdom?",
             'characters': [
-                {'name': 'BlueCharacter', 'position': 'RIGHT'}
+                {'name': 'Boss', 'position': 'CENTER'}
             ]
         }
     ],
@@ -181,19 +181,19 @@ class DialogueSystem:
         {
             'text': "The central chamber trembles as Vitano materializes, his form shifting between scholar and guardian, between wisdom and power.",
             'characters': [
-                {'name': 'Boss1', 'position': 'LEFT'}
+                {'name': 'Boss1', 'position': 'CENTER'}
             ]
         },
         {
             'text': "'You have gathered the four fundamental truths, young seeker. But knowledge without wisdom is like a sword without a wielder - dangerous and unpredictable.'",
             'characters': [
-                {'name': 'Boss2', 'position': 'LEFT'}
+                {'name': 'VN12', 'position': 'CENTER'}
             ]
         },
         {
             'text': "'Show me that you understand not just the knowledge contained within the Orbs, but the responsibility that comes with it. Let the final trial begin!'",
             'characters': [
-                {'name': 'Boss3', 'position': 'LEFT'}
+                {'name': 'VN13', 'position': 'CENTER'}
             ]
         }
     ],
@@ -202,25 +202,25 @@ class DialogueSystem:
         {
             'text': "As Vitano's form dissolves into pure light, a profound truth washes over you. The trials were never about proving your worth to him.",
             'characters': [
-                {'name': 'Boss1', 'position': 'OFF_SCREEN'},
+                {'name': 'Boss2', 'position': 'CENTER'},
             ]
         },
         {
             'text': "'You have shown wisdom beyond mere knowledge,' Vitano's voice echoes. 'The Orbs were never meant to be hidden forever, but to be rediscovered when the world was ready.'",
             'characters': [
-                {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
+                {'name': 'Boss4', 'position': 'CENTER'}
             ]
         },
         {
             'text': "The sanctuary transforms, darkness giving way to light. What was once a hidden vault of knowledge shall become a beacon of learning.",
             'characters': [
-                {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
+                {'name': 'Boss5', 'position': 'CENTER'}
             ]
         },
         {
             'text': "You, Zahir, are no longer just a seeker of knowledge. You have become its guardian and teacher, tasked with sharing these fundamental truths with a world too long kept in darkness.",
             'characters': [
-                {'name': 'BlueCharacterHappy', 'position': 'CENTER'}
+                {'name': 'VN11', 'position': 'CENTER'}
             ]
         }
     ]

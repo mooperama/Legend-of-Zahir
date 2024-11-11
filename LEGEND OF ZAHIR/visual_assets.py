@@ -25,6 +25,14 @@ class SpriteType(Enum):
     VN11 = "VN11"
     VN12 = "VN12"
     VN13 = "Language man NPC sheet"
+    VN14 = "Time man NPC sheet"
+    map = "Map NPC"
+    Boss = "boss spritesheet"
+    Boss1 = "boss2_3 sprite"
+    Boss2 = "Boss3"
+    Boss4 = "Boss4"
+    Boss5 = "Boss5"
+    temp1 = "temp1"
     boss_room = "boss_room"
 
 class Character:
@@ -50,11 +58,10 @@ class Character:
             
     def _load_sprite(self, path: str) -> Optional[pygame.Surface]:
         """Load a sprite with error handling and placeholder generation."""
-        PIXEL_ART_SIZE = (256, 256)  # Increased sprite size here
-        
+        PIXEL_ART_SIZE = (512, 512)  # Doubled from 256x256
         try:
             sprite = pygame.image.load(path).convert_alpha()
-            return pygame.transform.scale(sprite, PIXEL_ART_SIZE)  # Scale all sprites to the larger size
+            return pygame.transform.scale(sprite, PIXEL_ART_SIZE)
         except (pygame.error, FileNotFoundError):
             print(f"Warning: Could not load sprite {path}")
             sprite = pygame.Surface(PIXEL_ART_SIZE, pygame.SRCALPHA)
@@ -114,7 +121,16 @@ class VisualNovelAssets:
             "VN10": Character("VN10", base_path, SpriteType.VN10),
             "VN11": Character("VN11", base_path, SpriteType.VN11),
             "VN12": Character("VN12", base_path, SpriteType.VN12),
-            "VN13": Character("pink_normal", base_path, SpriteType.VN13)
+            "VN13": Character("Language man NPC sheet", base_path, SpriteType.VN13),
+            "VN14": Character("Time man NPC sheet", base_path, SpriteType.VN14),
+            "map": Character("Map NPC", base_path, SpriteType.map),
+            "Boss": Character("boss spritesheet", base_path, SpriteType.Boss),
+            "Boss1": Character("boss2_3 sprite", base_path, SpriteType.Boss1),
+            "Boss2": Character("Boss3", base_path, SpriteType.Boss2),
+            "Boss4": Character("Boss4", base_path, SpriteType.Boss4),
+            "Boss5": Character("Boss5", base_path, SpriteType.Boss5),
+            "temp1": Character("temp1", base_path, SpriteType.temp1),
+            "boss_room": Character("boss_room", base_path, SpriteType.boss_room)
             }  
     def _load_backgrounds(self) -> Dict[str, Optional[pygame.Surface]]:
         """Load all background images."""
