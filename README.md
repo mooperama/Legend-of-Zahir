@@ -1,6 +1,10 @@
 # Legend-of-Zahir
 
 ![alt](/LEGEND%20OF%20ZAHIR/VN11.PNG)
+
+To play the game open "maingame.py" and run the game 
+if you want to play the game open the individual minigames (NOTE: you cannot do this for minigames 2,3,4)
+
 ## Setting & Background
 In a mystical world where knowledge is a precious and powerful resource, an ancient being known as Vitano guards four orbs of wisdom within a hidden lair. Each orb contains fragments of universal knowledge, and legends say that collecting all four will grant insight into the mysteries of existence. Only those with pure intentions are believed to be capable of unlocking the secrets of the orbs.
 
@@ -44,7 +48,9 @@ In a mystical world where knowledge is a precious and powerful resource, an anci
    - **Goal**: Press **SPACE** to proceed to the next step.
 
 6. **Start the Game**
-   - **Action**: Press **SPACE** to officially begin your adventure.
+   - **Initiate**: Start the game by running the **maingame** file.
+   - **Start**: Load a new run by clicking the **New Game** button.
+   - **Name**: Personalize your run with a unique name of your choosing. 
   ---
 
 ## Story Structure
@@ -61,6 +67,7 @@ In a mystical world where knowledge is a precious and powerful resource, an anci
 ### Act 2: The Tests Begin
 - **The Memory Trial**:
   - **Objective**: Test perception and recall by matching ancient candles with corresponding colors.
+  - **Instructions**: light up the candles in the order it lights up in. (memory game like simon says)
   - **Reward**: Completion of this trial grants the **first orb**.
 - **The Language Challenge**:
   - **Objective**: Decipher cryptic language and riddles spoken by shadow creatures.
@@ -71,9 +78,11 @@ In a mystical world where knowledge is a precious and powerful resource, an anci
 ### Act 3: The World’s Wisdom
 - **The Geography Trial**:
   - **Objective**: Solve a blank map puzzle by correctly placing continents.
+  - **Instructions**: Drag and drop the labels on the map where the continent is 
   - **Reward**: The **third orb** becomes accessible.
 - **The Timeline Challenge**:
   - **Objective**: Solve timezone puzzles intertwined with math, all while battling aggressive shadows.
+  - **Instructions**: Convert the time using the hints.
   - **Reward**: Completion reveals the **fourth and final orb**.
 
 ---
@@ -81,6 +90,7 @@ In a mystical world where knowledge is a precious and powerful resource, an anci
 ### Act 4: The Final Confrontation
 - **The Boss Battle**: Vitano, the ancient guardian, confronts Zahir as the ultimate test.
   - **Mechanics**: Combines all learned skills—combat, puzzle-solving, and knowledge gained from each orb.
+  -**Instructions**: Unscramble the words to gain bullets and defeat Vitano (if not you loose a life), and    dodge Vitano's Projectiles.
   - **Purpose**: Zahir must demonstrate worthiness to safeguard the orbs responsibly.
 
 ---
