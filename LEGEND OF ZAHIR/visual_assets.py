@@ -28,7 +28,7 @@ class SpriteType(Enum):
     VN14 = "Time man NPC sheet"
     map = "Map NPC"
     Boss = "boss spritesheet"
-    Boss1 = "boss2_3 sprite"
+    Boss1 = "BOSS"
     Boss2 = "Boss3"
     Boss4 = "Boss4"
     Boss5 = "Boss5"
@@ -125,7 +125,7 @@ class VisualNovelAssets:
             "VN14": Character("Time man NPC sheet", base_path, SpriteType.VN14),
             "map": Character("Map NPC", base_path, SpriteType.map),
             "Boss": Character("boss spritesheet", base_path, SpriteType.Boss),
-            "Boss1": Character("boss2_3 sprite", base_path, SpriteType.Boss1),
+            "Boss1": Character("BOSS", base_path, SpriteType.Boss1),
             "Boss2": Character("Boss3", base_path, SpriteType.Boss2),
             "Boss4": Character("Boss4", base_path, SpriteType.Boss4),
             "Boss5": Character("Boss5", base_path, SpriteType.Boss5),

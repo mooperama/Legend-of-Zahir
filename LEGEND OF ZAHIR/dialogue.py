@@ -214,7 +214,7 @@ class DialogueSystem:
         {
             'text': "The sanctuary transforms, darkness giving way to light. What was once a hidden vault of knowledge shall become a beacon of learning.",
             'characters': [
-                {'name': 'Boss5', 'position': 'CENTER'}
+                {'name': 'temp1', 'position': 'CENTER'}
             ]
         },
         {
