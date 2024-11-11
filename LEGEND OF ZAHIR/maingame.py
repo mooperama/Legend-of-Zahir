@@ -22,6 +22,7 @@ import time
 
 class Game:
     def __init__(self):
+        "initialize everything needed"
         pygame.init()
         pygame.mixer.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -82,7 +83,8 @@ class Game:
         
         self.paused = False
         self.keys_pressed = set()
-        self.ammo_system = AmmoSystem() #bullet limits 
+        self.ammo_system = AmmoSystem() #bullet limits
+        
         # Initialize leaderboard
         self.leaderboard_system = LeaderboardSystem()
         
@@ -869,15 +871,17 @@ class Game:
 
 
     def create_enemies(self):
-        """Create enemies only if not in tutorial."""
-        # Skip enemy creation during tutorial
         if self.in_tutorial:
-            return
-            
-        for _ in range(3):
-            enemy = Enemy.create_random(self)
-            self.enemies.add(enemy)
-            self.allsprites.add(enemy)
+            return 
+        # Find all 'E' positions in the tilemap and create enemies there
+        for i, row in enumerate(TILEMAP):
+            for j, column in enumerate(row):
+                if column == 'E':
+                    enemy = Enemy(self, j, i)  # Create enemy at the 'E' position
+                    self.enemies.add(enemy)
+                    self.allsprites.add(enemy)
+        
+        print(f"Created {len(self.enemies)} enemies at marked positions")
 
 
     def show_level_complete_dialogue(self, message):

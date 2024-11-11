@@ -232,7 +232,7 @@ class Enemy(pygame.sprite.Sprite):
         top_bound = 1
         bottom_bound = map_height - 2
         
-        # Debug print
+        
         print(f"Spawn boundaries: {left_bound}-{right_bound} x {top_bound}-{bottom_bound}")
         
         valid_positions = []
