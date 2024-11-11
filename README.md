@@ -1,6 +1,6 @@
 # Legend-of-Zahir
 
-![alt](VN11.png)
+![alt](/LEGEND%20OF%20ZAHIR/VN11.PNG)
 ## Setting & Background
 In a mystical world where knowledge is a precious and powerful resource, an ancient being known as Vitano guards four orbs of wisdom within a hidden lair. Each orb contains fragments of universal knowledge, and legends say that collecting all four will grant insight into the mysteries of existence. Only those with pure intentions are believed to be capable of unlocking the secrets of the orbs.
 
