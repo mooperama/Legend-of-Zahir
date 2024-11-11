@@ -209,37 +209,87 @@ class TimezoneGame:
         self.continue_button.draw(self.screen, self.regular_font)
 
     def draw(self):
+        """Draw the game state with updated victory/defeat messages."""
         # Draw background and overlay
         self.screen.blit(self.bg_img, (0, 0))
         self.screen.blit(self.overlay, (0, 0))
 
-        if self.game_over:
-            game_over_text = self.large_font.render("Game Over!", True, WHITE)
-            final_score_text = self.medium_font.render(
-                f"Correct Answers: {self.correct_answers}/3", True, WHITE
-            )
-            if self.lives <= 0:
-                status_text = self.regular_font.render("Out of lives!", True, RED)
-            else:
-                status_text = self.regular_font.render(
-                    "Victory! Press SPACE to finish" if self.correct_answers >= 3 
-                    else "Not enough correct answers! Press SPACE to finish", 
-                    True, 
-                    GREEN if self.correct_answers >= 3 else RED
-                )
-            
-            self.screen.blit(game_over_text, 
-                           (WIDTH//2 - game_over_text.get_width()//2, HEIGHT//3))
-            self.screen.blit(final_score_text, 
-                           (WIDTH//2 - final_score_text.get_width()//2, HEIGHT//2))
-            self.screen.blit(status_text,
-                           (WIDTH//2 - status_text.get_width()//2, HEIGHT*2//3))
-        elif self.show_result:
-            self.draw_result_screen()
-        else:
-            self.draw_question_screen()
+        # Draw lives using heart images
+        for i in range(self.lives):
+            self.screen.blit(PLAYER_HEALTH, (15 + i * 45, 10))
 
-        pygame.display.flip()
+        # Draw correct answers text
+        correct_text = f"Correct Answers: {self.correct_answers}/3"
+        correct_surface = self.regular_font.render(correct_text, True, GREEN)
+        self.screen.blit(correct_surface, (20, 60))
+
+        if self.game_over:
+            if self.correct_answers >= 3:  # Victory condition
+                title_text = "Challenge Complete!"
+                title_color = GREEN
+            else:  # Failed condition
+                title_text = "Challenge Failed!"
+                title_color = RED
+
+            # Draw main result text
+            result_text = self.large_font.render(title_text, True, title_color)
+            result_rect = result_text.get_rect(center=(WIDTH//2, HEIGHT//2 - 50))
+            self.screen.blit(result_text, result_rect)
+
+            # Draw score text
+            score_text = self.medium_font.render(
+                f"Final Score: {self.correct_answers}/3", True, WHITE)
+            score_rect = score_text.get_rect(center=(WIDTH//2, HEIGHT//2 + 20))
+            self.screen.blit(score_text, score_rect)
+
+            # Draw continue instruction
+            continue_text = self.regular_font.render(
+                "Press SPACE to continue", True, WHITE)
+            continue_rect = continue_text.get_rect(center=(WIDTH//2, HEIGHT//2 + 80))
+            self.screen.blit(continue_text, continue_rect)
+            
+        else:
+            # Draw normal game elements when game is not over
+            if not self.show_result:
+                # Draw question
+                question_text = f"Convert time from {self.source_tz_name} to {self.target_tz_name}"
+                text_surface = self.medium_font.render(question_text, True, WHITE)
+                text_rect = text_surface.get_rect(center=(WIDTH//2, HEIGHT//6))
+                self.screen.blit(text_surface, text_rect)
+
+                # Draw time
+                time_text = f"{self.source_hour:02d}:{self.source_minute:02d}"
+                time_surface = self.large_font.render(time_text, True, WHITE)
+                time_rect = time_surface.get_rect(center=(WIDTH//2, HEIGHT//3))
+                self.screen.blit(time_surface, time_rect)
+
+                # Draw calculation hint
+                hint_text = self.get_calculation_hint()
+                hint_surface = self.regular_font.render(hint_text, True, BLUE)
+                hint_rect = hint_surface.get_rect(center=(WIDTH//2, HEIGHT//3 + 30))
+                self.screen.blit(hint_surface, hint_rect)
+
+                # Draw answer buttons
+                for button in self.buttons:
+                    button.draw(self.screen, self.regular_font)
+            else:
+                # Draw result screen
+                result_text = "Correct!" if self.selected_answer == self.correct_answer else "Wrong!"
+                color = GREEN if self.selected_answer == self.correct_answer else RED
+                result_surface = self.medium_font.render(result_text, True, color)
+                result_rect = result_surface.get_rect(center=(WIDTH//2, HEIGHT//6))
+                self.screen.blit(result_surface, result_rect)
+
+                explanation_text = f"The correct time in {self.target_tz_name} is {self.correct_answer}"
+                explanation_surface = self.regular_font.render(explanation_text, True, WHITE)
+                explanation_rect = explanation_surface.get_rect(center=(WIDTH//2, HEIGHT//3))
+                self.screen.blit(explanation_surface, explanation_rect)
+
+                for button in self.buttons:
+                    button.draw(self.screen, self.regular_font)
+                self.continue_button.draw(self.screen, self.regular_font)
+
+        pygame.display.update()
 
     def handle_events(self):
         for event in pygame.event.get():
