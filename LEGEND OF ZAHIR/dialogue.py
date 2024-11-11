@@ -47,13 +47,17 @@ class DialogueSystem:
     [
         {
             'text': "In an age where knowledge is condemned as dangerous, you stand before the entrance of Vitano's Sanctuary. Within these halls, the last remnants of ancient wisdom lie protected by their eternal guardian.",
+            'background': 'intro1',
+            'transition': 'fade',
             'characters': [
-                {'name': 'VN1', 'position': 'CENTER'}
+                {'name': 'VN1', 'position': 'CENTER'},
             ]
     
         },
         {
             'text': "You are Zahir, last apprentice of the hidden Scholar's Academy. Your quest is noble - to preserve knowledge not for power, but to reignite the light of learning in a darkened world.",
+            'background': 'intro2',
+            'transition': 'fade',
             'characters': [
                 {'name': 'VN2', 'position': 'CENTER'},
             ]
@@ -61,7 +65,7 @@ class DialogueSystem:
         {
             'text': "The great doors of the sanctuary creak open. Vitano's presence fills the air with electric anticipation. Your trials await, young seeker...",
             'transition': 'fade',
-            'background': 'backgrounds',
+            'background': 'boss_room',
             'characters': [
                 {'name': 'VN3', 'position': 'CENTER'},
             ]
@@ -71,18 +75,23 @@ class DialogueSystem:
     'after_tutorial': [
         {
             'text': "The ancient training grounds hum with approval as you demonstrate your basic combat forms. These halls remember countless seekers before you.",
+            'background': 'hum',
+            'transition': 'fade',
             'characters': [
                 {'name': 'VN4', 'position': 'CENTER'}
             ]
         },
         {
             'text': "But physical prowess alone will not unlock the secrets of Vitano's trials. Mind and body must work as one.",
+            'background': 'hum',
+            'transition': 'fade',
             'characters': [
                 {'name': 'VN4', 'position': 'CENTER'},
             ]
         },
         {
             'text': "Before you stands the Chamber of Memory, where patterns of color dance in eternal sequence. The first Orb pulses gently within, waiting for one who understands its rhythm.",
+            'background': 'black',
             'characters': [
                 {'name': 'VN5', 'position': 'CENTER'}
             ]
@@ -117,18 +126,20 @@ class DialogueSystem:
     'after_timezone': [
         {
             'text': "Within the Temporal Sanctum, you have proven your understanding of how time flows differently across our world. The sundials and celestial maps around you glow with approval.",
+            'background': 'temp1',
             'characters': [
-                {'name': 'temp1', 'position': 'CENTER'}
             ]
         },
         {
             'text': "The Orb of Temporal Wisdom pulses with golden light, sharing its knowledge of time's eternal dance across the globe.",
+            'background': 'temp1',
             'characters': [
                 {'name': 'VN7', 'position': 'CENTER'}
             ]
         },
         {
             'text': "As this knowledge merges with your consciousness, you begin to grasp how time connects all peoples across vast distances.",
+            'background': 'black',
             'characters': [
                 {'name': 'VN13', 'position': 'CENTER'}
             ]
@@ -144,6 +155,7 @@ class DialogueSystem:
         },
         {
             'text': "The Orb of Universal Speech bathes the chamber in ethereal purple light. Its power allows you to understand how language bridges the gaps between cultures and minds.",
+            'background': 'black',
             'characters': [
                 {'name': 'VN8', 'position': 'CENTER'}
             ]
@@ -201,24 +213,25 @@ class DialogueSystem:
     'victory': [
         {
             'text': "As Vitano's form dissolves into pure light, a profound truth washes over you. The trials were never about proving your worth to him.",
-            'characters': [
-                {'name': 'Boss2', 'position': 'CENTER'},
-            ]
+            'background': 'Boss3',
+            'transition': 'fade',
+            'characters': []
         },
         {
             'text': "'You have shown wisdom beyond mere knowledge,' Vitano's voice echoes. 'The Orbs were never meant to be hidden forever, but to be rediscovered when the world was ready.'",
-            'characters': [
-                {'name': 'Boss4', 'position': 'CENTER'}
-            ]
+            'background': 'Boss4',
+            'transition': 'fade',
+            'characters': []
         },
         {
             'text': "The sanctuary transforms, darkness giving way to light. What was once a hidden vault of knowledge shall become a beacon of learning.",
-            'characters': [
-                {'name': 'temp1', 'position': 'CENTER'}
-            ]
+            'background': 'Boss5',
+            'transition': 'fade',
+            'characters': []
         },
         {
             'text': "You, Zahir, are no longer just a seeker of knowledge. You have become its guardian and teacher, tasked with sharing these fundamental truths with a world too long kept in darkness.",
+            'background': 'Boss5',
             'characters': [
                 {'name': 'VN11', 'position': 'CENTER'}
             ]

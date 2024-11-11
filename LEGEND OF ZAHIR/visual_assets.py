@@ -34,6 +34,8 @@ class SpriteType(Enum):
     Boss5 = "Boss5"
     temp1 = "temp1"
     boss_room = "boss_room"
+    intro1 = "intro1"
+    intro2 = "intro2"
 
 class Character:
     """Represents a character in the visual novel scenes."""
@@ -135,14 +137,27 @@ class VisualNovelAssets:
     def _load_backgrounds(self) -> Dict[str, Optional[pygame.Surface]]:
         """Load all background images."""
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        backgrounds_path = os.path.join(current_dir, "LEGEND OF ZAHIR", "visual_novel_assets", "backgrounds")
+        backgrounds_path = os.path.join(current_dir, "visual_novel_assets", "backgrounds")
         print(f"Looking for backgrounds in: {backgrounds_path}")
         
-        backgrounds = {"boss_room"}
+        # Initialize backgrounds dictionary with required backgrounds
+        backgrounds = {
+            "boss_room": None,
+            "Boss3": None,
+            "Boss4": None,
+            "temp1": None,
+            "Boss5": None,
+            "Boss2": None,
+            "intro1": None,
+            "intro2": None,
+            "black": None,
+            "hum": None,
+
+        }
         
         # List background directory contents
         try:
-            bg_files = [f for f in os.listdir(backgrounds_path) if f.endswith('.png')]
+            bg_files = [f for f in os.listdir(backgrounds_path) if f.endswith(('.png', '.jpg', '.jpeg'))]
             print(f"Found background files: {bg_files}")
             
             for bg_file in bg_files:
@@ -158,12 +173,14 @@ class VisualNovelAssets:
         except OSError as e:
             print(f"Error reading backgrounds directory: {str(e)}")
             
-        if not backgrounds:
-            # Create a default background if none were loaded
-            bg = pygame.Surface((self.width, self.height))
-            bg.fill((50, 50, 50))
-            backgrounds["default"] = bg
-            
+        # Create default background for any missing backgrounds
+        for bg_name in backgrounds:
+            if backgrounds[bg_name] is None:
+                bg = pygame.Surface((self.width, self.height))
+                bg.fill((50, 50, 50))
+                backgrounds[bg_name] = bg
+                print(f"Created default background for: {bg_name}")
+        
         return backgrounds
     
     def move_character(self, character_name: str, position: CharacterPosition):
