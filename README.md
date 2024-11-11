@@ -1,5 +1,6 @@
 # Legend-of-Zahir
 
+![alt](VN11.png)
 ## Setting & Background
 In a mystical world where knowledge is a precious and powerful resource, an ancient being known as Vitano guards four orbs of wisdom within a hidden lair. Each orb contains fragments of universal knowledge, and legends say that collecting all four will grant insight into the mysteries of existence. Only those with pure intentions are believed to be capable of unlocking the secrets of the orbs.
 
@@ -11,12 +12,7 @@ In a mystical world where knowledge is a precious and powerful resource, an anci
 ---
 ### Step-by-Step Tutorial
 
-1. **Introduction**
-   - **Message**: "Welcome to Legend of Zahir! Press SPACE to continue."
-   - **Action**: Press **SPACE** to proceed.
-
-2. **Basic Movement Controls**
-   - **Message**: "Basic Movement Controls:"
+1. **Basic Movement Controls**
    - **Controls**:
      - Press **W** to move **Up**
      - Press **A** to move **Left**
@@ -25,22 +21,20 @@ In a mystical world where knowledge is a precious and powerful resource, an anci
    - **Goal**: Press each key (**W, A, S, D**) to complete this step.
 
 3. **Combat Basics**
-   - **Message**: "Combat Basics:"
    - **Instructions**:
      - **Left Click** to **shoot**.
-     - Defeat enemies to gain **experience**.
+     - Defeat enemies to move to the **next level**.
      - Monitor your **health bar** to stay alive!
    - **Goal**: Use a **mouse click** to practice shooting.
 
 4. **Dialogue and Interaction**
-   - **Message**: "Dialogue and Interaction:"
    - **Instructions**:
      - Press **SPACE** to interact with NPCs.
      - Press **SPACE** again to continue through dialogue with NPCs.
    - **Goal**: Press **SPACE** to interact and proceed with dialogues.
 
 5. **Upcoming Challenges**
-   - **Message**: "Your journey will include challenges:"
+   - **Your journey will include challenges:**
    - **Challenges Overview**:
      - **Order Pattern Memory**
      - **Language Challenge**
@@ -50,7 +44,6 @@ In a mystical world where knowledge is a precious and powerful resource, an anci
    - **Goal**: Press **SPACE** to proceed to the next step.
 
 6. **Start the Game**
-   - **Message**: "You're ready to begin! Press SPACE to start."
    - **Action**: Press **SPACE** to officially begin your adventure.
   ---
 
