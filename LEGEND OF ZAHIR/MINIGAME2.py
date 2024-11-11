@@ -3,8 +3,8 @@ import random
 from soundmanager import *
 
 # Constants
-WIDTH = 960
-HEIGHT = 540
+WIDTH = 1366
+HEIGHT = 768
 FPS = 60
 PLAYER_HEALTH_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR/Minigame 5 Assets/Player health icon.png'))
 PLAYER_HEALTH = pygame.transform.scale(PLAYER_HEALTH_IMAGE, (50, 55))

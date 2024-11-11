@@ -6,7 +6,7 @@ from config_settings import *
 pygame.init()
 
 # Set up the display
-WIDTH, HEIGHT = 960, 720
+WIDTH, HEIGHT = 1366, 768
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Language Matching Memory Game")
 

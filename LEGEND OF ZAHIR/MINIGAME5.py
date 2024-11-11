@@ -8,20 +8,20 @@ from sprites import Spritesheet
 pygame.init()
 
 # Game Constants
-WIDTH, HEIGHT = 960, 540
+WIDTH, HEIGHT = 1366, 768
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("BOSS BATTLE!!")
 FPS = 60
 BOSS_VEL = random.randint(7, 10)
 VEL = 7
-BOSS_BULLET_VEL = 8
+BOSS_BULLET_VEL = 25
 BULLET_VEL = 12
 MAG = 3  # Bullets allowed at a time
 BULLETSIZE = 32  # Added for bullet size consistency
 
 # Sprite Dimensions
-PLAYER_WIDTH, PLAYER_HEIGHT = 30, 48  # Modified to match main game sprite size
-BOSS_WIDTH, BOSS_HEIGHT = 170, 170
+PLAYER_WIDTH, PLAYER_HEIGHT = 50, 68  # Modified to match main game sprite size
+BOSS_WIDTH, BOSS_HEIGHT = 360, 360
 
 # Load and transform boss sprite
 BOSS_SPRITE_IMAGE = pygame.image.load(os.path.join('LEGEND OF ZAHIR/assets/graphics/sprites/boss 3_3 sprite.PNG'))
@@ -151,26 +151,81 @@ class BossBullet(pygame.sprite.Sprite):
 
 def create_text_input(shuffled_word):
     """
-    Create a text input popup surface for the word unscrambling game.
+    Create a themed text input popup surface for the word unscrambling game.
+    Match the dungeon aesthetic with dark colors and stone-like appearance.
     """
-    popup = pygame.Surface((600, 200))
-    popup.fill(WHITE)
-    pygame.draw.rect(popup, BLACK, popup.get_rect(), 5)
+    # Create base surface with padding for border effects
+    popup = pygame.Surface((600, 200), pygame.SRCALPHA)
+    
+    # Main background - dark stone color
+    background_color = (40, 40, 45)
+    border_color = (255, 98, 0)  # Orange to match theme
+    text_color = (255, 255, 255)  # White text
+    
+    # Draw main background
+    pygame.draw.rect(popup, background_color, popup.get_rect())
+    
+    # Draw border with orange glow effect
+    border_width = 3
+    pygame.draw.rect(popup, border_color, popup.get_rect(), border_width)
+    
+    # Add some stone-like texture effects
+    for _ in range(50):
+        x = random.randint(0, 600)
+        y = random.randint(0, 200)
+        radius = random.randint(1, 3)
+        shade = random.randint(35, 45)
+        pygame.draw.circle(popup, (shade, shade, shade), (x, y), radius)
 
+    # Create semi-transparent overlay for depth
+    overlay = pygame.Surface((600, 200), pygame.SRCALPHA)
+    pygame.draw.rect(overlay, (0, 0, 0, 50), overlay.get_rect())
+    
+    # Add text with shadow effect
     font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 20)
-    text1 = font.render("Unscramble the Southeast Asian", True, BLACK)
-    text2 = font.render("country to unlock 3 bullets:", True, BLACK)
-    text3 = font.render(f"{shuffled_word}", True, BLACK)
-
+    
+    # Text shadows
+    text1_shadow = font.render("Unscramble the Southeast Asian", True, (0, 0, 0))
+    text2_shadow = font.render("country to unlock 3 bullets:", True, (0, 0, 0))
+    text3_shadow = font.render(f"{shuffled_word}", True, (0, 0, 0))
+    
+    # Main text
+    text1 = font.render("Unscramble the Southeast Asian", True, text_color)
+    text2 = font.render("country to unlock 3 bullets:", True, text_color)
+    text3 = font.render(f"{shuffled_word}", True, border_color)  # Word in orange
+    
+    # Draw shadows slightly offset
+    shadow_offset = 2
+    popup.blit(text1_shadow, (popup.get_width() // 2 - text1.get_width() // 2 + shadow_offset, 
+                             20 + shadow_offset))
+    popup.blit(text2_shadow, (popup.get_width() // 2 - text2.get_width() // 2 + shadow_offset, 
+                             50 + shadow_offset))
+    popup.blit(text3_shadow, (popup.get_width() // 2 - text3.get_width() // 2 + shadow_offset, 
+                             80 + shadow_offset))
+    
+    # Draw main text
     popup.blit(text1, (popup.get_width() // 2 - text1.get_width() // 2, 20))
     popup.blit(text2, (popup.get_width() // 2 - text2.get_width() // 2, 50))
     popup.blit(text3, (popup.get_width() // 2 - text3.get_width() // 2, 80))
-
-    return popup
+    
+    # Add some glow effects around the border
+    glow_surf = pygame.Surface((604, 204), pygame.SRCALPHA)
+    for i in range(3):
+        glow_alpha = 100 - i * 30
+        glow_color = (*border_color, glow_alpha)
+        pygame.draw.rect(glow_surf, glow_color, (i, i, 600-i*2, 200-i*2), 1)
+    
+    # Create final surface and combine all elements
+    final_surface = pygame.Surface((604, 204), pygame.SRCALPHA)
+    final_surface.blit(glow_surf, (0, 0))
+    final_surface.blit(popup, (2, 2))
+    
+    return final_surface
 
 def draw_window(player, boss, playerBullets, bossBullets, player_hp, boss_hp, 
                 shuffled_word, player_input, popup=None, game_over=False, win=False):
     """Draw the game window with all elements."""
+    # Background and core elements
     WIN.blit(BACKGROUND, (0, 0))
     WIN.blit(player.image, player.rect)
     WIN.blit(BOSS_SPRITE, (boss.x, boss.y))
@@ -178,26 +233,73 @@ def draw_window(player, boss, playerBullets, bossBullets, player_hp, boss_hp,
     # Draw bullets
     for bullet in playerBullets:
         WIN.blit(bullet.image, bullet.rect)
-    for bullet in bossBullets:  # Changed from tuple unpacking to direct sprite usage
+    for bullet in bossBullets:
         WIN.blit(bullet.image, bullet.rect)
 
-    # Draw health
+    # Draw player health icons
     for i in range(player_hp):
         WIN.blit(PLAYER_HEALTH, (775 + i * 45, 10))
-    pygame.draw.rect(WIN, RED, (WIDTH - 950, 10, 200, 20))
-    pygame.draw.rect(WIN, GREEN, (WIDTH - 950, 10, 200 * (boss_hp / 100), 20))
 
+    # Draw boss health bar background
+    health_bar_bg = pygame.Surface((200, 20))
+    health_bar_bg.fill(RED)
+    WIN.blit(health_bar_bg, (WIDTH - 950, 10))
+
+    # Draw boss health bar
+    if boss_hp > 0:
+        health_width = int(200 * (boss_hp / 100))
+        health_bar = pygame.Surface((health_width, 20))
+        health_bar.fill(GREEN)
+        WIN.blit(health_bar, (WIDTH - 950, 10))
+
+    # Draw popup if active
     if popup:
-        WIN.blit(popup, (WIDTH//2 - 300, HEIGHT//2 - 100))
-        input_surface = FONT.render(player_input, True, BLACK)
-        WIN.blit(input_surface, (WIDTH//2 - input_surface.get_width()//2, HEIGHT//2 + 20))
+        # Draw a semi-transparent dark overlay behind the popup for better visibility
+        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 128))  # Black with 128 alpha (semi-transparent)
+        WIN.blit(overlay, (0, 0))
+        
+        # Draw the main popup
+        WIN.blit(popup, (WIDTH//2 - 302, HEIGHT//2 - 102))
+        
+        # Draw the player input with a matching theme
+        input_surface = FONT.render(player_input, True, (255, 98, 0))  # Orange text
+        
+        # Optional: Add a text cursor effect
+        if pygame.time.get_ticks() % 1000 < 500:  # Blink every half second
+            input_surface = FONT.render(player_input + "|", True, (255, 98, 0))
+            
+        # Center the input text
+        input_rect = input_surface.get_rect(center=(WIDTH//2, HEIGHT//2 + 20))
+        WIN.blit(input_surface, input_rect)
 
+    # Draw game over screen
     if game_over:
+        # Create overlay for game over text
+        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 180))  # Darker overlay for game over
+        WIN.blit(overlay, (0, 0))
+        
+        # Create game over text
         game_over_text = "YOU WIN!" if win else "DEFEAT"
-        game_over_surface = FONT.render(game_over_text, True, WHITE)
-        WIN.blit(game_over_surface, (WIDTH//2 - game_over_surface.get_width()//2, 
-                                   HEIGHT//2 - game_over_surface.get_height()//2))
+        game_over_color = (255, 223, 0) if win else (255, 0, 0)  # Gold for win, red for defeat
+        
+        # Create glowing text effect
+        for offset in range(3):
+            # Draw multiple layers of text with decreasing alpha for glow effect
+            alpha = 255 - (offset * 50)
+            glow_color = (*game_over_color[:3], alpha)
+            glow_font = pygame.font.Font('LEGEND OF ZAHIR/assets/fonts/nokiafc22.ttf', 30 + offset*2)
+            glow_surface = glow_font.render(game_over_text, True, glow_color)
+            glow_rect = glow_surface.get_rect(center=(WIDTH//2, HEIGHT//2))
+            WIN.blit(glow_surface, glow_rect)
+        
+        # Draw main text
+        game_over_surface = FONT.render(game_over_text, True, game_over_color)
+        game_over_rect = game_over_surface.get_rect(center=(WIDTH//2, HEIGHT//2))
+        WIN.blit(game_over_surface, game_over_rect)
 
+    # Update display
     pygame.display.update()
 
 def player_movement(keys_pressed, player):
@@ -256,8 +358,8 @@ def shooting(playerBullets, player, boss):
 
 def boss_shooting(bossBullets, boss):
     """Create boss bullets in a circular pattern."""
-    if random.randint(1, 90) == 1:  # Random chance to shoot
-        for angle in range(0, 360, 45):  # 8 directions
+    if random.randint(1, 45) == 1:  # Random chance to shoot
+        for angle in range(0, 360, 22):  # 8 directions
             # Calculate direction vector
             direction = pygame.math.Vector2(1, 0).rotate(angle)
             dx = BOSS_BULLET_VEL * direction.x

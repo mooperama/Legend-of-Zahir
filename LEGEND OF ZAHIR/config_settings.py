@@ -1,6 +1,6 @@
 # Screen settings (pixel sizes)
-WIDTH = 960
-HEIGHT = 540
+WIDTH = 1366
+HEIGHT = 768
 FPS = 60
 TILESIZE = 48
 BULLETSIZE = 16
@@ -55,68 +55,63 @@ KP_COLOR = YELLOW
 # "D" - Door position (initially hidden, will appear after enemies are defeated)
 
 TILEMAP = [
-    "WWWWWWWWWWWWWWWWWWWW",
-    "W..................W",
-    "W..................W",
-    "W..................W",
-    "W........E.........W",
-    "W..................W",
-    "W.......WPW........W",
-    "W........E.........W",
-    "W........D.........W",
-    "W....E.............W",
-    "W..................W",
-    "W..................W",
-    "W.........E........W",
-    "W..................W",
-    "WWWWWWWWWWWWWWWWWWWW"
+    "WWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+    "W..........................W",
+    "W..........................W",
+    "W..........................W",
+    "W............E.............W",
+    "W..........................W",
+    "W...........WPW............W",
+    "W............E.............W",
+    "W............D.............W",
+    "W........E.................W",
+    "W..........................W",
+    "W..........................W",
+    "W...........E..............W",
+    "W..........................W",
+    "W..........................W",
+    "WWWWWWWWWWWWWWWWWWWWWWWWWWWW"
 ]
 
-# Alternative slightly more complex tilemap with corridors:
+# Alternative more complex tilemap with corridors (28x16)
 TILEMAP_ALTERNATE = [
-    "WWWWWWWWWWWWWWWWWWWW",
-    "W..............D...W",
-    "W..................W",
-    "W......WWWW........W",
-    "W........E.........W",
-    "W..................W",
-    "W....WWW...........W",
-    "W........E.........W",
-    "W........P.........W",
-    "W....E....WWWW.....W",
-    "W..................W",
-    "W.......WWW........W",
-    "W.........E........W",
-    "W..................W",
-    "WWWWWWWWWWWWWWWWWWWW"
+    "WWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+    "W..................D.......W",
+    "W..........................W",
+    "W.........WWWW............W",
+    "W............E.............W",
+    "W..........................W",
+    "W.......WWW................W",
+    "W............E.............W",
+    "W............P.............W",
+    "W........E....WWWW........W",
+    "W..........................W",
+    "W..........WWW............W",
+    "W.............E............W",
+    "W..........................W",
+    "W..........................W",
+    "WWWWWWWWWWWWWWWWWWWWWWWWWWWW"
 ]
 
-# You can choose which tilemap to use by setting:
-# TILEMAP = TILEMAP_ALTERNATE  # For the more complex version
-
+# Memory game tilemap (28x16)
 MEMORY_TILEMAP = [
-    'WWWWWWWWWWWWWWWWWWWW',
-    'W..................W',
-    'W..................W',
-    'W..................W',
-    'W........WW........W',
-    'W.......WWWW.......W',
-    'W......WW..WW......W',
-    'W.....WW....WW.....W',
-    'W....WW......WW....W',
-    'W...WW...P....WW...W',
-    'W...WW........WW...W',
-    'W....WW......WW....W',
-    'W.....WW....WW.....W',
-    'W......WW..WW......W',
-    'W.......WWWW.......W',
-    'W........WW........W',
-    'W..................W',
-    'W..................W',
-    'W..................W',
-    'WWWWWWWWWWWWWWWWWWWW'
+    'WWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+    'W..........................W',
+    'W..........................W',
+    'W..........................W',
+    'W...........WW.............W',
+    'W..........WWWW............W',
+    'W.........WW..WW...........W',
+    'W........WW....WW..........W',
+    'W.......WW......WW.........W',
+    'W......WW...P....WW........W',
+    'W......WW........WW........W',
+    'W.......WW......WW.........W',
+    'W........WW....WW..........W',
+    'W.........WW..WW...........W',
+    'W..........WWWW............W',
+    'WWWWWWWWWWWWWWWWWWWWWWWWWWWW'
 ]
-
 
 # Game states
 INTRO = 0
