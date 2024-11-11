@@ -44,7 +44,9 @@ In a mystical world where knowledge is a precious and powerful resource, an anci
    - **Goal**: Press **SPACE** to proceed to the next step.
 
 6. **Start the Game**
-   - **Action**: Press **SPACE** to officially begin your adventure.
+   - **Initiate**: Start the game by running the **maingame** file.
+   - **Start**: Load a new run by clicking the **New Game** button.
+   - **Name**: Personalize your run with a unique name of your choosing. 
   ---
 
 ## Story Structure
